@@ -1,0 +1,97 @@
+{
+  "common": {
+    "continue": "Dalej",
+    "save": "Zapisz",
+    "cancel": "Anuluj",
+    "delete": "Usuń",
+    "back": "Wstecz",
+    "confirm": "Potwierdź",
+    "currency": "zł"
+  },
+  "tabs": {
+    "home": "Start",
+    "debts": "Długi",
+    "progress": "Postępy",
+    "settings": "Ustawienia"
+  },
+  "onboarding": {
+    "welcome": {
+      "title": "Witaj w GigMoney",
+      "subtitle": "Pomożemy ci rozdzielić każdą wypłatę na potrzeby i spłatę długów.",
+      "privacy": "Twoje dane zostają tylko na twoim telefonie. Niczego nie wysyłamy.",
+      "cta": "Zaczynamy"
+    },
+    "needs": {
+      "title": "Twoje miesięczne wydatki",
+      "housing": "Mieszkanie",
+      "food": "Jedzenie",
+      "transport": "Transport",
+      "other": "Inne",
+      "total": "Razem"
+    },
+    "debts": {
+      "title": "Twoje długi",
+      "addDebt": "Dodaj dług",
+      "skip": "Pomiń na razie"
+    },
+    "ready": {
+      "title": "Gotowe!",
+      "commitment": "Kiedy dostanę pieniądze — najpierw otwieram GigMoney.",
+      "cta": "Rozumiem"
+    }
+  },
+  "home": {
+    "greeting": "Dobrze cię widzieć",
+    "cta": {
+      "receivedMoney": "Otrzymałem pieniądze"
+    },
+    "snowball": {
+      "target": "Aktualny cel",
+      "remaining": "Pozostało {{amount}} zł",
+      "forecast": "Prognoza zamknięcia: {{date}}"
+    }
+  },
+  "income": {
+    "new": {
+      "title": "Nowy przychód",
+      "amount": "Kwota",
+      "source": "Źródło (opcjonalne)",
+      "cta": "Dalej"
+    },
+    "allocate": {
+      "title": "Podział środków",
+      "confirm": "Zatwierdź"
+    },
+    "confirm": {
+      "title": "Podsumowanie",
+      "save": "Zapisz"
+    }
+  },
+  "debts": {
+    "list": {
+      "title": "Długi",
+      "empty": "Nie masz jeszcze żadnych długów.",
+      "addDebt": "Dodaj dług"
+    },
+    "form": {
+      "label": "Nazwa",
+      "type": "Typ",
+      "remainingAmount": "Kwota pozostała",
+      "minimumPayment": "Minimalna rata",
+      "interestRate": "Oprocentowanie (opcjonalne)",
+      "markClosed": "Oznacz jako zamknięty"
+    }
+  },
+  "progress": {
+    "title": "Postępy",
+    "totalDebt": "Łączny dług",
+    "nextMilestone": "Zostało {{amount}} zł do zamknięcia {{debt}}"
+  },
+  "settings": {
+    "title": "Ustawienia",
+    "editNeeds": "Edytuj wydatki miesięczne",
+    "exportData": "Eksportuj dane",
+    "deleteData": "Usuń wszystkie dane",
+    "deleteConfirm": "Czy na pewno chcesz usunąć wszystkie dane? Tej operacji nie można cofnąć."
+  }
+}

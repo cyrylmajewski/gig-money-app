@@ -1,0 +1,97 @@
+{
+  "common": {
+    "continue": "Continue",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "back": "Back",
+    "confirm": "Confirm",
+    "currency": "PLN"
+  },
+  "tabs": {
+    "home": "Home",
+    "debts": "Debts",
+    "progress": "Progress",
+    "settings": "Settings"
+  },
+  "onboarding": {
+    "welcome": {
+      "title": "Welcome to GigMoney",
+      "subtitle": "We'll help you split every payment between needs and debt repayment.",
+      "privacy": "Your data stays only on your phone. We don't send anything.",
+      "cta": "Let's start"
+    },
+    "needs": {
+      "title": "Your monthly expenses",
+      "housing": "Housing",
+      "food": "Food",
+      "transport": "Transport",
+      "other": "Other",
+      "total": "Total"
+    },
+    "debts": {
+      "title": "Your debts",
+      "addDebt": "Add debt",
+      "skip": "Skip for now"
+    },
+    "ready": {
+      "title": "Ready!",
+      "commitment": "When I receive money — I open GigMoney first.",
+      "cta": "I understand"
+    }
+  },
+  "home": {
+    "greeting": "Good to see you",
+    "cta": {
+      "receivedMoney": "I received money"
+    },
+    "snowball": {
+      "target": "Current target",
+      "remaining": "{{amount}} PLN remaining",
+      "forecast": "Estimated payoff: {{date}}"
+    }
+  },
+  "income": {
+    "new": {
+      "title": "New income",
+      "amount": "Amount",
+      "source": "Source (optional)",
+      "cta": "Continue"
+    },
+    "allocate": {
+      "title": "Distribution",
+      "confirm": "Confirm"
+    },
+    "confirm": {
+      "title": "Summary",
+      "save": "Save"
+    }
+  },
+  "debts": {
+    "list": {
+      "title": "Debts",
+      "empty": "You don't have any debts yet.",
+      "addDebt": "Add debt"
+    },
+    "form": {
+      "label": "Name",
+      "type": "Type",
+      "remainingAmount": "Remaining amount",
+      "minimumPayment": "Minimum payment",
+      "interestRate": "Interest rate (optional)",
+      "markClosed": "Mark as closed"
+    }
+  },
+  "progress": {
+    "title": "Progress",
+    "totalDebt": "Total debt",
+    "nextMilestone": "{{amount}} PLN left to close {{debt}}"
+  },
+  "settings": {
+    "title": "Settings",
+    "editNeeds": "Edit monthly expenses",
+    "exportData": "Export data",
+    "deleteData": "Delete all data",
+    "deleteConfirm": "Are you sure you want to delete all data? This action cannot be undone."
+  }
+}
