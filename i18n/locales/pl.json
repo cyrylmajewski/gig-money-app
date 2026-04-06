@@ -1,5 +1,6 @@
 {
   "common": {
+    "appName": "GigMoney",
     "continue": "Dalej",
     "save": "Zapisz",
     "cancel": "Anuluj",
@@ -16,7 +17,6 @@
   },
   "onboarding": {
     "welcome": {
-      "title": "Witaj w GigMoney",
       "subtitle": "Pomożemy ci rozdzielić każdą wypłatę na potrzeby i spłatę długów.",
       "privacy": "Twoje dane zostają tylko na twoim telefonie. Niczego nie wysyłamy.",
       "cta": "Zaczynamy"
@@ -27,12 +27,28 @@
       "food": "Jedzenie",
       "transport": "Transport",
       "other": "Inne",
-      "total": "Razem"
+      "total": "Razem",
+      "validationError": "Wprowadź co najmniej jedną kwotę.",
+      "housingPlaceholder": "np. 1500",
+      "foodPlaceholder": "np. 800",
+      "transportPlaceholder": "np. 300",
+      "otherPlaceholder": "np. 200"
     },
     "debts": {
       "title": "Twoje długi",
       "addDebt": "Dodaj dług",
-      "skip": "Pomiń na razie"
+      "skip": "Pomiń na razie",
+      "types": {
+        "payday_loan": "Chwilówka",
+        "credit": "Kredyt",
+        "credit_card": "Karta kredytowa",
+        "installment": "Raty",
+        "other": "Inny"
+      },
+      "labelPlaceholder": "np. Chwilówka Provident",
+      "remainingAmountPlaceholder": "np. 3500",
+      "minimumPaymentPlaceholder": "np. 250",
+      "interestRatePlaceholder": "np. 29,9"
     },
     "ready": {
       "title": "Gotowe!",
@@ -47,24 +63,81 @@
     },
     "snowball": {
       "target": "Aktualny cel",
-      "remaining": "Pozostało {{amount}} zł",
-      "forecast": "Prognoza zamknięcia: {{date}}"
+      "remaining": "Pozostało {{amount}}",
+      "of": "z {{amount}}",
+      "forecast": "Prognoza zamknięcia: {{date}}",
+      "forecastApprox": "Szacunkowo ok. {{date}} (mało danych)",
+      "noDebts": "Nie masz aktywnych długów. Świetna robota!"
+    },
+    "lastDistribution": {
+      "title": "Ostatni podział",
+      "needs": "Potrzeby",
+      "minimums": "Minimalne raty",
+      "extra": "Dodatkowa spłata",
+      "shortfall": "Niedobór"
+    },
+    "deferred": {
+      "pending_one": "Masz {{count}} odroczoną płatność do nadrobienia",
+      "pending_other": "Masz {{count}} odroczone płatności do nadrobienia"
     }
   },
   "income": {
     "new": {
       "title": "Nowy przychód",
+      "subtitle": "Ile dostałeś? Zaraz podzielimy to razem.",
       "amount": "Kwota",
       "source": "Źródło (opcjonalne)",
+      "sourcePlaceholder": "np. Bolt, Glovo, zlecenie...",
+      "amountError": "Podaj kwotę większą niż 0 zł.",
       "cta": "Dalej"
     },
     "allocate": {
       "title": "Podział środków",
-      "confirm": "Zatwierdź"
+      "receivedLabel": "Otrzymałeś:",
+      "confirm": "Zatwierdź podział",
+      "defaultBiasNote": "Podział jest obliczony optymalnie. Możesz go zatwierdzić jednym kliknięciem.",
+      "shortfall": {
+        "title": "Niewystarczające środki",
+        "lossWarning": "Stracisz {{amount}} {{currency}} na brakujących podstawowych wydatkach. Rozważ odroczenie płatności.",
+        "advice": "Możesz zatwierdzić podział i zdecydować, które płatności odroczyć."
+      },
+      "rows": {
+        "deferred": "Odroczone płatności",
+        "deferredSublabel": "Priorytet — zaległości z poprzednich dochodów",
+        "housing": "Mieszkanie",
+        "food": "Jedzenie",
+        "transport": "Transport",
+        "other": "Inne wydatki",
+        "minimumPayment": "Rata min. — {{label}}",
+        "minimumPaymentSublabel": "Minimalna wymagana rata",
+        "extraPayment": "Ekstra spłata — {{label}}",
+        "extraPaymentFallback": "dług priorytetowy",
+        "extraPaymentSublabel": "Kula śnieżna — szybsze wyjście z długu",
+        "unallocated": "Pozostałe środki",
+        "unallocatedSublabel": "Nadwyżka po pokryciu wszystkich potrzeb"
+      }
     },
     "confirm": {
       "title": "Podsumowanie",
-      "save": "Zapisz"
+      "subtitle": "Sprawdź podział i zapisz, gdy wszystko się zgadza.",
+      "incomeSection": "Przychód",
+      "amountLabel": "Kwota",
+      "sourceLabel": "Źródło",
+      "allocationSection": "Podział",
+      "total": "Łącznie",
+      "saveNote": "Po zapisaniu historia przychodów zostaje zaktualizowana.",
+      "save": "Zapisz",
+      "rows": {
+        "deferred": "Odroczone płatności",
+        "housing": "Mieszkanie",
+        "food": "Jedzenie",
+        "transport": "Transport",
+        "other": "Inne wydatki",
+        "minimumPayment": "Rata min. — {{label}}",
+        "extraPayment": "Ekstra spłata — {{label}}",
+        "extraPaymentFallback": "dług priorytetowy",
+        "unallocated": "Pozostałe środki"
+      }
     }
   },
   "debts": {
@@ -80,7 +153,9 @@
       "minimumPayment": "Minimalna rata",
       "interestRate": "Oprocentowanie (opcjonalne)",
       "markClosed": "Oznacz jako zamknięty"
-    }
+    },
+    "validationLabel": "Podaj nazwę długu.",
+    "validationRemainingAmount": "Podaj kwotę większą niż 0 zł."
   },
   "progress": {
     "title": "Postępy",

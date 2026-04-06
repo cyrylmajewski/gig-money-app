@@ -38,6 +38,9 @@ yarn-error.*
 
 app-example
 
+# Tamagui generated
+tamagui-prompt.md
+
 # generated native folders
 /ios
 /android

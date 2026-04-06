@@ -1,5 +1,6 @@
 {
   "common": {
+    "appName": "GigMoney",
     "continue": "Continue",
     "save": "Save",
     "cancel": "Cancel",
@@ -16,7 +17,6 @@
   },
   "onboarding": {
     "welcome": {
-      "title": "Welcome to GigMoney",
       "subtitle": "We'll help you split every payment between needs and debt repayment.",
       "privacy": "Your data stays only on your phone. We don't send anything.",
       "cta": "Let's start"
@@ -27,12 +27,28 @@
       "food": "Food",
       "transport": "Transport",
       "other": "Other",
-      "total": "Total"
+      "total": "Total",
+      "validationError": "Enter at least one amount.",
+      "housingPlaceholder": "e.g. 1500",
+      "foodPlaceholder": "e.g. 800",
+      "transportPlaceholder": "e.g. 300",
+      "otherPlaceholder": "e.g. 200"
     },
     "debts": {
       "title": "Your debts",
       "addDebt": "Add debt",
-      "skip": "Skip for now"
+      "skip": "Skip for now",
+      "types": {
+        "payday_loan": "Payday loan",
+        "credit": "Credit",
+        "credit_card": "Credit card",
+        "installment": "Installment",
+        "other": "Other"
+      },
+      "labelPlaceholder": "e.g. Provident payday loan",
+      "remainingAmountPlaceholder": "e.g. 3500",
+      "minimumPaymentPlaceholder": "e.g. 250",
+      "interestRatePlaceholder": "e.g. 29.9"
     },
     "ready": {
       "title": "Ready!",
@@ -47,24 +63,81 @@
     },
     "snowball": {
       "target": "Current target",
-      "remaining": "{{amount}} PLN remaining",
-      "forecast": "Estimated payoff: {{date}}"
+      "remaining": "{{amount}} remaining",
+      "of": "of {{amount}}",
+      "forecast": "Estimated payoff: {{date}}",
+      "forecastApprox": "Roughly {{date}} (limited data)",
+      "noDebts": "You have no active debts. Great work!"
+    },
+    "lastDistribution": {
+      "title": "Last distribution",
+      "needs": "Needs",
+      "minimums": "Minimum payments",
+      "extra": "Extra payment",
+      "shortfall": "Shortfall"
+    },
+    "deferred": {
+      "pending_one": "You have {{count}} deferred payment to catch up on",
+      "pending_other": "You have {{count}} deferred payments to catch up on"
     }
   },
   "income": {
     "new": {
       "title": "New income",
+      "subtitle": "How much did you receive? We'll split it together.",
       "amount": "Amount",
       "source": "Source (optional)",
+      "sourcePlaceholder": "e.g. Bolt, Glovo, freelance...",
+      "amountError": "Enter an amount greater than 0.",
       "cta": "Continue"
     },
     "allocate": {
       "title": "Distribution",
-      "confirm": "Confirm"
+      "receivedLabel": "You received:",
+      "confirm": "Confirm allocation",
+      "defaultBiasNote": "The split is calculated optimally. You can confirm it with one tap.",
+      "shortfall": {
+        "title": "Insufficient funds",
+        "lossWarning": "You will lose {{amount}} {{currency}} on uncovered essential expenses. Consider deferring a payment.",
+        "advice": "You can confirm the allocation and decide which payments to defer."
+      },
+      "rows": {
+        "deferred": "Deferred payments",
+        "deferredSublabel": "Priority — arrears from previous income",
+        "housing": "Housing",
+        "food": "Food",
+        "transport": "Transport",
+        "other": "Other expenses",
+        "minimumPayment": "Min. payment — {{label}}",
+        "minimumPaymentSublabel": "Required minimum payment",
+        "extraPayment": "Extra payment — {{label}}",
+        "extraPaymentFallback": "priority debt",
+        "extraPaymentSublabel": "Snowball — faster debt exit",
+        "unallocated": "Remaining funds",
+        "unallocatedSublabel": "Surplus after covering all needs"
+      }
     },
     "confirm": {
       "title": "Summary",
-      "save": "Save"
+      "subtitle": "Review the allocation and save when everything looks right.",
+      "incomeSection": "Income",
+      "amountLabel": "Amount",
+      "sourceLabel": "Source",
+      "allocationSection": "Allocation",
+      "total": "Total",
+      "saveNote": "After saving, your income history will be updated.",
+      "save": "Save",
+      "rows": {
+        "deferred": "Deferred payments",
+        "housing": "Housing",
+        "food": "Food",
+        "transport": "Transport",
+        "other": "Other expenses",
+        "minimumPayment": "Min. payment — {{label}}",
+        "extraPayment": "Extra payment — {{label}}",
+        "extraPaymentFallback": "priority debt",
+        "unallocated": "Remaining funds"
+      }
     }
   },
   "debts": {
@@ -80,7 +153,9 @@
       "minimumPayment": "Minimum payment",
       "interestRate": "Interest rate (optional)",
       "markClosed": "Mark as closed"
-    }
+    },
+    "validationLabel": "Enter a debt name.",
+    "validationRemainingAmount": "Enter an amount greater than 0 PLN."
   },
   "progress": {
     "title": "Progress",
