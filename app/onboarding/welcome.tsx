@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { YStack, XStack, Text, H2, Paragraph, Button } from 'tamagui';
 import { Lock } from 'lucide-react-native';
 
@@ -19,19 +19,18 @@ const C = {
 export default function WelcomeScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const insets = useSafeAreaInsets();
 
   return (
-    <YStack
-      flex={1}
-      bg={C.bg}
-      pt={insets.top}
-      pb={insets.bottom}
-      px="$5"
-    >
-      {/* App title */}
-      <YStack pt="$6">
+    <SafeAreaView style={{ flex: 1, backgroundColor: C.bg }}>
+      <YStack
+        flex={1}
+        px="$5"
+      >
+      <YStack flex={1} />
+
+      <YStack items="center">
         <H2
+          fontFamily="$body"
           color={C.accent}
           fontSize={40}
           fontWeight="700"
@@ -41,12 +40,11 @@ export default function WelcomeScreen() {
         </H2>
       </YStack>
 
-      {/* Flex spacer */}
       <YStack flex={1} />
 
-      {/* Subtitle */}
       <YStack mb="$6">
         <Paragraph
+          fontFamily="$body"
           color={C.text}
           fontSize={22}
           lineHeight={32}
@@ -56,7 +54,6 @@ export default function WelcomeScreen() {
         </Paragraph>
       </YStack>
 
-      {/* Privacy promise card */}
       <YStack
         bg={C.card}
         borderWidth={1}
@@ -68,6 +65,7 @@ export default function WelcomeScreen() {
         <XStack items="flex-start" gap="$3">
           <Lock size={20} color={C.accent} style={{ marginTop: 2 }} />
           <Text
+            fontFamily="$body"
             color={C.textSec}
             fontSize={14}
             lineHeight={20}
@@ -78,18 +76,16 @@ export default function WelcomeScreen() {
         </XStack>
       </YStack>
 
-      {/* CTA button */}
       <Button
         size="$5"
         bg={C.accent}
-        color={C.bg}
-        fontWeight="700"
         pressStyle={{ bg: C.accentPress }}
         mb="$3"
         onPress={() => router.push('/onboarding/needs')}
       >
-        {t('onboarding.welcome.cta')}
+        <Text fontFamily="$body" color={C.bg} fontWeight="700">{t('onboarding.welcome.cta')}</Text>
       </Button>
-    </YStack>
+      </YStack>
+    </SafeAreaView>
   );
 }

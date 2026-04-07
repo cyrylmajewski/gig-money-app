@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { KeyboardAvoidingView, Platform, ScrollView, Pressable, InputAccessoryView, View } from 'react-native';
-import { YStack, XStack, Text, H2, Input, Button, Label, Paragraph } from 'tamagui';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { ScrollView, Pressable, TextInput } from 'react-native';
+import { YStack, XStack, Text, H2, Button, Paragraph } from 'tamagui';
 import { X } from 'lucide-react-native';
 import { useAppStore } from '@/store';
 import type { DebtType } from '@/types/models';
@@ -51,6 +51,7 @@ interface FormState {
   remainingAmount: string;
   minimumPayment: string;
   interestRate: string;
+  overdueAmount: string;
 }
 
 const EMPTY_FORM: FormState = {
@@ -59,16 +60,17 @@ const EMPTY_FORM: FormState = {
   remainingAmount: '',
   minimumPayment: '',
   interestRate: '',
+  overdueAmount: '',
 };
 
 export default function OnboardingDebtsScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const insets = useSafeAreaInsets();
 
   const debts = useAppStore((s) => s.debts);
   const addDebt = useAppStore((s) => s.addDebt);
   const removeDebt = useAppStore((s) => s.removeDebt);
+  const addDeferredPayment = useAppStore((s) => s.addDeferredPayment);
 
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
@@ -95,6 +97,8 @@ export default function OnboardingDebtsScreen() {
     }
 
     const id = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    const minPayment = parseAmount(form.minimumPayment);
+
     addDebt({
       id,
       label,
@@ -102,11 +106,25 @@ export default function OnboardingDebtsScreen() {
       creditorKind: 'other',
       originalAmount: remaining,
       remainingAmount: remaining,
-      minimumPayment: parseAmount(form.minimumPayment),
+      minimumPayment: minPayment,
       interestRate: parseAmount(form.interestRate),
       createdAt: new Date().toISOString(),
       closedAt: null,
     });
+
+    // Create deferred payment for overdue amount
+    const overdue = parseAmount(form.overdueAmount);
+    if (overdue > 0) {
+      addDeferredPayment({
+        id: `${id}-overdue`,
+        kind: 'minimum_payment',
+        debtId: id,
+        amount: overdue,
+        deferredAt: new Date().toISOString(),
+        reason: 'postponing',
+        resolved: false,
+      });
+    }
 
     setForm(EMPTY_FORM);
     setShowForm(false);
@@ -125,24 +143,22 @@ export default function OnboardingDebtsScreen() {
   }
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: C.bg }}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={0}
-    >
+    <SafeAreaView style={{ flex: 1, backgroundColor: C.bg }} edges={['bottom']}>
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{ flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
         showsVerticalScrollIndicator={false}
+        automaticallyAdjustKeyboardInsets
       >
-        <YStack
-          bg={C.bg}
-          px="$5"
-          pt={insets.top + 32}
-          pb="$5"
-          gap="$5"
-        >
+          <YStack
+            bg={C.bg}
+            px="$5"
+            pt="$4"
+            pb="$5"
+            gap="$5"
+          >
           {/* Title */}
           <H2 color={C.text} fontWeight="700" letterSpacing={-0.5}>
             {t('onboarding.debts.title')}
@@ -151,7 +167,7 @@ export default function OnboardingDebtsScreen() {
           {/* Debt list */}
           <YStack gap="$3">
             {!hasDebts ? (
-              <Paragraph fontSize="$3" color={C.muted} textAlign="center" py="$4">
+              <Paragraph fontFamily="$body" fontSize="$3" color={C.muted} style={{ textAlign: 'center' }} py="$4">
                 {t('debts.list.empty')}
               </Paragraph>
             ) : (
@@ -167,7 +183,7 @@ export default function OnboardingDebtsScreen() {
                 >
                   <XStack justify="space-between" items="flex-start">
                     <YStack flex={1} gap="$1">
-                      <Text fontSize="$5" fontWeight="700" color={C.text}>
+                      <Text fontFamily="$body" fontSize="$5" fontWeight="700" color={C.text}>
                         {debt.label}
                       </Text>
                       {/* Type badge */}
@@ -178,7 +194,7 @@ export default function OnboardingDebtsScreen() {
                         py="$1"
                         self="flex-start"
                       >
-                        <Text fontSize="$2" color={C.muted} fontWeight="600">
+                        <Text fontFamily="$body" fontSize="$2" color={C.muted} fontWeight="600">
                           {t(`onboarding.debts.types.${debt.type}`)}
                         </Text>
                       </YStack>
@@ -198,28 +214,28 @@ export default function OnboardingDebtsScreen() {
 
                   <XStack gap="$4" mt="$1">
                     <YStack gap="$1">
-                      <Text fontSize="$2" color={C.muted} fontWeight="600">
+                      <Text fontFamily="$body" fontSize="$2" color={C.muted} fontWeight="600">
                         {t('debts.form.remainingAmount')}
                       </Text>
                       <XStack items="baseline" gap="$1">
-                        <Text fontSize="$4" fontWeight="700" color={C.text}>
+                        <Text fontFamily="$body" fontSize="$4" fontWeight="700" color={C.text}>
                           {formatAmount(debt.remainingAmount)}
                         </Text>
-                        <Text fontSize="$3" color={C.textSec}>
+                        <Text fontFamily="$body" fontSize="$3" color={C.textSec}>
                           {t('common.currency')}
                         </Text>
                       </XStack>
                     </YStack>
                     {debt.minimumPayment > 0 && (
                       <YStack gap="$1">
-                        <Text fontSize="$2" color={C.muted} fontWeight="600">
+                        <Text fontFamily="$body" fontSize="$2" color={C.muted} fontWeight="600">
                           {t('debts.form.minimumPayment')}
                         </Text>
                         <XStack items="baseline" gap="$1">
-                          <Text fontSize="$4" fontWeight="700" color={C.text}>
+                          <Text fontFamily="$body" fontSize="$4" fontWeight="700" color={C.text}>
                             {formatAmount(debt.minimumPayment)}
                           </Text>
-                          <Text fontSize="$3" color={C.textSec}>
+                          <Text fontFamily="$body" fontSize="$3" color={C.textSec}>
                             {t('common.currency')}
                           </Text>
                         </XStack>
@@ -236,14 +252,12 @@ export default function OnboardingDebtsScreen() {
             <Button
               size="$4"
               bg={C.card}
-              color={C.accent}
               borderWidth={1}
               borderColor={C.accent}
               pressStyle={{ bg: C.border }}
               onPress={() => setShowForm(true)}
-              fontWeight="700"
             >
-              {t('onboarding.debts.addDebt')}
+              <Text fontFamily="$body" color={C.accent} fontWeight="700">{t('onboarding.debts.addDebt')}</Text>
             </Button>
           )}
 
@@ -259,16 +273,16 @@ export default function OnboardingDebtsScreen() {
             >
               {/* Label field */}
               <YStack gap="$2">
-                <Label
-                  htmlFor="debt-label"
+                <Text
+                  fontFamily="$body"
                   fontSize="$3"
                   fontWeight="600"
-                  color={C.muted}
+                  color={C.textSec}
                   textTransform="uppercase"
                   letterSpacing={0.5}
                 >
                   {t('debts.form.label')}
-                </Label>
+                </Text>
                 <YStack
                   bg={C.bg}
                   borderWidth={1}
@@ -278,16 +292,12 @@ export default function OnboardingDebtsScreen() {
                   px="$4"
                   justify="center"
                 >
-                  <Input
-                    id="debt-label"
-                    unstyled
-                    fontSize="$5"
-                    color={C.text}
+                  <TextInput
+                    style={{ fontSize: 18, color: C.text, fontFamily: 'Jersey25_400Regular' }}
                     placeholderTextColor={C.muted}
                     placeholder={t('onboarding.debts.labelPlaceholder')}
                     value={form.label}
                     onChangeText={(v) => updateField('label', v)}
-                    {...(Platform.OS === 'ios' ? { inputAccessoryViewID: 'debts-empty' } : {})}
                     accessibilityLabel={t('debts.form.label')}
                   />
                 </YStack>
@@ -295,15 +305,16 @@ export default function OnboardingDebtsScreen() {
 
               {/* Type chips */}
               <YStack gap="$2">
-                <Label
+                <Text
+                  fontFamily="$body"
                   fontSize="$3"
                   fontWeight="600"
-                  color={C.muted}
+                  color={C.textSec}
                   textTransform="uppercase"
                   letterSpacing={0.5}
                 >
                   {t('debts.form.type')}
-                </Label>
+                </Text>
                 <XStack flexWrap="wrap" gap="$2">
                   {DEBT_TYPES.map((type) => {
                     const selected = form.type === type;
@@ -323,6 +334,7 @@ export default function OnboardingDebtsScreen() {
                           py="$2"
                         >
                           <Text
+                            fontFamily="$body"
                             fontSize="$3"
                             fontWeight="600"
                             color={selected ? C.bg : C.textSec}
@@ -334,20 +346,26 @@ export default function OnboardingDebtsScreen() {
                     );
                   })}
                 </XStack>
+                <Paragraph fontFamily="$body" fontSize="$2" color={C.muted}>
+                  {t(`onboarding.debts.typeHints.${form.type}`)}
+                </Paragraph>
               </YStack>
 
               {/* Remaining amount */}
               <YStack gap="$2">
-                <Label
-                  htmlFor="debt-remaining"
+                <Text
+                  fontFamily="$body"
                   fontSize="$3"
                   fontWeight="600"
-                  color={C.muted}
+                  color={C.textSec}
                   textTransform="uppercase"
                   letterSpacing={0.5}
                 >
                   {t('debts.form.remainingAmount')}
-                </Label>
+                </Text>
+                <Paragraph fontFamily="$body" fontSize="$2" color={C.muted} mt={-4}>
+                  {t('debts.form.remainingAmountHint')}
+                </Paragraph>
                 <XStack
                   bg={C.bg}
                   borderWidth={1}
@@ -357,21 +375,16 @@ export default function OnboardingDebtsScreen() {
                   px="$4"
                   height={52}
                 >
-                  <Input
-                    id="debt-remaining"
-                    flex={1}
-                    unstyled
-                    fontSize="$5"
-                    color={C.text}
+                  <TextInput
+                    style={{ flex: 1, fontSize: 18, color: C.text, fontFamily: 'Jersey25_400Regular', paddingVertical: 8 }}
                     placeholderTextColor={C.muted}
                     placeholder={t('onboarding.debts.remainingAmountPlaceholder')}
                     keyboardType="decimal-pad"
                     value={form.remainingAmount}
                     onChangeText={(v) => updateField('remainingAmount', sanitiseDecimal(v))}
-                    {...(Platform.OS === 'ios' ? { inputAccessoryViewID: 'debts-empty' } : {})}
                     accessibilityLabel={t('debts.form.remainingAmount')}
                   />
-                  <Text fontSize="$4" color={C.textSec} fontWeight="600" ml="$2">
+                  <Text fontFamily="$body" fontSize="$4" color={C.textSec} fontWeight="600" ml="$2">
                     {t('common.currency')}
                   </Text>
                 </XStack>
@@ -379,16 +392,19 @@ export default function OnboardingDebtsScreen() {
 
               {/* Minimum payment */}
               <YStack gap="$2">
-                <Label
-                  htmlFor="debt-minimum"
+                <Text
+                  fontFamily="$body"
                   fontSize="$3"
                   fontWeight="600"
-                  color={C.muted}
+                  color={C.textSec}
                   textTransform="uppercase"
                   letterSpacing={0.5}
                 >
                   {t('debts.form.minimumPayment')}
-                </Label>
+                </Text>
+                <Paragraph fontFamily="$body" fontSize="$2" color={C.muted} mt={-4}>
+                  {t('debts.form.minimumPaymentHint')}
+                </Paragraph>
                 <XStack
                   bg={C.bg}
                   borderWidth={1}
@@ -398,21 +414,16 @@ export default function OnboardingDebtsScreen() {
                   px="$4"
                   height={52}
                 >
-                  <Input
-                    id="debt-minimum"
-                    flex={1}
-                    unstyled
-                    fontSize="$5"
-                    color={C.text}
+                  <TextInput
+                    style={{ flex: 1, fontSize: 18, color: C.text, fontFamily: 'Jersey25_400Regular', paddingVertical: 8 }}
                     placeholderTextColor={C.muted}
                     placeholder={t('onboarding.debts.minimumPaymentPlaceholder')}
                     keyboardType="decimal-pad"
                     value={form.minimumPayment}
                     onChangeText={(v) => updateField('minimumPayment', sanitiseDecimal(v))}
-                    {...(Platform.OS === 'ios' ? { inputAccessoryViewID: 'debts-empty' } : {})}
                     accessibilityLabel={t('debts.form.minimumPayment')}
                   />
-                  <Text fontSize="$4" color={C.textSec} fontWeight="600" ml="$2">
+                  <Text fontFamily="$body" fontSize="$4" color={C.textSec} fontWeight="600" ml="$2">
                     {t('common.currency')}
                   </Text>
                 </XStack>
@@ -420,16 +431,19 @@ export default function OnboardingDebtsScreen() {
 
               {/* Interest rate (optional) */}
               <YStack gap="$2">
-                <Label
-                  htmlFor="debt-interest"
+                <Text
+                  fontFamily="$body"
                   fontSize="$3"
                   fontWeight="600"
-                  color={C.muted}
+                  color={C.textSec}
                   textTransform="uppercase"
                   letterSpacing={0.5}
                 >
                   {t('debts.form.interestRate')}
-                </Label>
+                </Text>
+                <Paragraph fontFamily="$body" fontSize="$2" color={C.muted} mt={-4}>
+                  {t('debts.form.interestRateHint')}
+                </Paragraph>
                 <XStack
                   bg={C.bg}
                   borderWidth={1}
@@ -439,30 +453,65 @@ export default function OnboardingDebtsScreen() {
                   px="$4"
                   height={52}
                 >
-                  <Input
-                    id="debt-interest"
-                    flex={1}
-                    unstyled
-                    fontSize="$5"
-                    color={C.text}
+                  <TextInput
+                    style={{ flex: 1, fontSize: 18, color: C.text, fontFamily: 'Jersey25_400Regular', paddingVertical: 8 }}
                     placeholderTextColor={C.muted}
                     placeholder={t('onboarding.debts.interestRatePlaceholder')}
                     keyboardType="decimal-pad"
                     value={form.interestRate}
                     onChangeText={(v) => updateField('interestRate', sanitiseDecimal(v))}
-                    {...(Platform.OS === 'ios' ? { inputAccessoryViewID: 'debts-empty' } : {})}
                     onSubmitEditing={handleSave}
                     accessibilityLabel={t('debts.form.interestRate')}
                   />
-                  <Text fontSize="$4" color={C.textSec} fontWeight="600" ml="$2">
+                  <Text fontFamily="$body" fontSize="$4" color={C.textSec} fontWeight="600" ml="$2">
                     %
+                  </Text>
+                </XStack>
+              </YStack>
+
+              {/* Overdue amount */}
+              <YStack gap="$2">
+                <Text
+                  fontFamily="$body"
+                  fontSize="$3"
+                  fontWeight="600"
+                  color={C.textSec}
+                  textTransform="uppercase"
+                  letterSpacing={0.5}
+                >
+                  {t('debts.form.overdueAmount')}
+                </Text>
+                <Paragraph fontFamily="$body" fontSize="$2" color={C.muted} mt={-4}>
+                  {t('debts.form.overdueAmountHint')}
+                </Paragraph>
+                <XStack
+                  bg={C.bg}
+                  borderWidth={1}
+                  borderColor={C.border}
+                  rounded="$4"
+                  items="center"
+                  px="$4"
+                  height={52}
+                >
+                  <TextInput
+                    style={{ flex: 1, fontSize: 18, color: C.text, fontFamily: 'Jersey25_400Regular', paddingVertical: 8 }}
+                    placeholderTextColor={C.muted}
+                    placeholder={t('onboarding.debts.overdueAmountPlaceholder')}
+                    keyboardType="decimal-pad"
+                    value={form.overdueAmount}
+                    onChangeText={(v) => updateField('overdueAmount', sanitiseDecimal(v))}
+                    onSubmitEditing={handleSave}
+                    accessibilityLabel={t('debts.form.overdueAmount')}
+                  />
+                  <Text fontFamily="$body" fontSize="$4" color={C.textSec} fontWeight="600" ml="$2">
+                    {t('common.currency')}
                   </Text>
                 </XStack>
               </YStack>
 
               {/* Form validation error */}
               {formError && (
-                <Paragraph fontSize="$3" color={C.error}>
+                <Paragraph fontFamily="$body" fontSize="$3" color={C.error}>
                   {formError}
                 </Paragraph>
               )}
@@ -473,7 +522,6 @@ export default function OnboardingDebtsScreen() {
                   flex={1}
                   size="$4"
                   bg="transparent"
-                  color={C.muted}
                   borderWidth={1}
                   borderColor={C.border}
                   pressStyle={{ bg: C.border }}
@@ -482,63 +530,51 @@ export default function OnboardingDebtsScreen() {
                     setForm(EMPTY_FORM);
                     setFormError(null);
                   }}
-                  fontWeight="600"
                 >
-                  {t('common.cancel')}
+                  <Text fontFamily="$body" color={C.muted} fontWeight="600">{t('common.cancel')}</Text>
                 </Button>
                 <Button
                   flex={1}
                   size="$4"
                   bg={C.accent}
-                  color={C.bg}
                   pressStyle={{ bg: C.accentPress }}
                   onPress={handleSave}
-                  fontWeight="700"
                 >
-                  {t('common.save')}
+                  <Text fontFamily="$body" color={C.bg} fontWeight="700">{t('common.save')}</Text>
                 </Button>
               </XStack>
             </YStack>
           )}
 
-        </YStack>
-      </ScrollView>
-
-      {/* Sticky bottom navigation — hidden while form is open */}
-      {!showForm && (
-        <YStack px="$5" pb={insets.bottom + 16} pt="$3" bg={C.bg}>
-          {hasDebts ? (
-            <Button
-              size="$5"
-              bg={C.accent}
-              color={C.bg}
-              pressStyle={{ bg: C.accentPress }}
-              onPress={handleContinue}
-              fontWeight="700"
-              accessibilityRole="button"
-            >
-              {t('common.continue')}
-            </Button>
-          ) : (
-            <Button
-              size="$5"
-              bg="transparent"
-              color={C.muted}
-              pressStyle={{ opacity: 0.7 }}
-              onPress={handleContinue}
-              fontWeight="600"
-              accessibilityRole="button"
-            >
-              {t('onboarding.debts.skip')}
-            </Button>
+          {/* Bottom navigation — hidden while form is open */}
+          {!showForm && (
+            <YStack px="$5" pb="$3" pt="$3">
+              {hasDebts ? (
+                <Button
+                  size="$5"
+                  bg={C.accent}
+                  pressStyle={{ bg: C.accentPress }}
+                  onPress={handleContinue}
+                  accessibilityRole="button"
+                >
+                  <Text fontFamily="$body" color={C.bg} fontWeight="700">{t('common.continue')}</Text>
+                </Button>
+              ) : (
+                <Button
+                  size="$5"
+                  bg="transparent"
+                  pressStyle={{ opacity: 0.7 }}
+                  onPress={handleContinue}
+                  accessibilityRole="button"
+                >
+                  <Text fontFamily="$body" color={C.muted} fontWeight="600">{t('onboarding.debts.skip')}</Text>
+                </Button>
+              )}
+            </YStack>
           )}
-        </YStack>
-      )}
-      {Platform.OS === 'ios' && (
-        <InputAccessoryView nativeID="debts-empty">
-          <View />
-        </InputAccessoryView>
-      )}
-    </KeyboardAvoidingView>
+
+          </YStack>
+        </ScrollView>
+    </SafeAreaView>
   );
 }

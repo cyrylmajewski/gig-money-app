@@ -45,10 +45,18 @@
         "installment": "Raty",
         "other": "Inny"
       },
+      "typeHints": {
+        "payday_loan": "Provident, Wonga, Vivus i podobne — krótkoterminowa pożyczka z wysokim oprocentowaniem.",
+        "credit": "Pożyczka z banku ze stałą ratą miesięczną, np. pożyczka gotówkowa, konsolidacyjna.",
+        "credit_card": "Karta kredytowa z limitem odnawialnym, np. mBank, PKO, Pekao. Minimalna spłata to % zadłużenia.",
+        "installment": "Raty za zakup — Allegro Raty, PayPo, raty w sklepie. Często 0%.",
+        "other": "Pożyczka od znajomego, rodziny, pracodawcy lub inna nieformalna."
+      },
       "labelPlaceholder": "np. Chwilówka Provident",
       "remainingAmountPlaceholder": "np. 3500",
       "minimumPaymentPlaceholder": "np. 250",
-      "interestRatePlaceholder": "np. 29,9"
+      "interestRatePlaceholder": "np. 29,9",
+      "overdueAmountPlaceholder": "np. 1186"
     },
     "ready": {
       "title": "Gotowe!",
@@ -141,26 +149,59 @@
     }
   },
   "debts": {
+    "new": {
+      "title": "Nowy dług"
+    },
     "list": {
       "title": "Długi",
       "empty": "Nie masz jeszcze żadnych długów.",
-      "addDebt": "Dodaj dług"
+      "addDebt": "Dodaj dług",
+      "closedSection": "Zamknięte",
+      "snowballTarget": "Aktualny cel"
     },
     "form": {
       "label": "Nazwa",
       "type": "Typ",
-      "remainingAmount": "Kwota pozostała",
-      "minimumPayment": "Minimalna rata",
-      "interestRate": "Oprocentowanie (opcjonalne)",
+      "remainingAmount": "Pozostało",
+      "remainingAmountHint": "Kredyt: pozostały kapitał. Karta: pozostała do spłaty.",
+      "minimumPayment": "Rata min.",
+      "minimumPaymentHint": "Kredyt: kwota raty. Karta: minimalna kwota spłaty.",
+      "interestRate": "Oprocentowanie nominalne (opcjonalne)",
+      "interestRateHint": "Roczna stopa z umowy, nie RRSO. Dla PayPo/BNPL wpisz 0.",
+      "overdueAmount": "Zaległa spłata (opcjonalne)",
+      "overdueAmountHint": "Kwota zaległej spłaty z banku, jeśli jest.",
       "markClosed": "Oznacz jako zamknięty"
     },
     "validationLabel": "Podaj nazwę długu.",
-    "validationRemainingAmount": "Podaj kwotę większą niż 0 zł."
+    "validationRemainingAmount": "Podaj kwotę większą niż 0 zł.",
+    "edit": {
+      "title": "Edytuj dług",
+      "closeConfirm": "Czy na pewno chcesz zamknąć ten dług? Tej operacji nie można cofnąć.",
+      "closed": "Zamknięty",
+      "notFound": "Nie znaleziono długu.",
+      "closedBadgeLabel": "Ten dług jest już zamknięty i nie można go edytować."
+    }
   },
   "progress": {
     "title": "Postępy",
     "totalDebt": "Łączny dług",
-    "nextMilestone": "Zostało {{amount}} zł do zamknięcia {{debt}}"
+    "totalPaid": "Łącznie spłacono",
+    "nextMilestone": "Zostało {{amount}} zł do zamknięcia {{debt}}",
+    "nextMilestoneLabel": "Kolejny cel",
+    "monthlyComparison": "Porównanie miesięczne",
+    "thisMonth": "Ten miesiąc",
+    "lastMonth": "Poprzedni miesiąc",
+    "noDebts": "Nie masz żadnych długów. Świetna robota!",
+    "closedDebts_one": "{{count}} zamknięty dług",
+    "closedDebts_few": "{{count}} zamknięte długi",
+    "closedDebts_many": "{{count}} zamkniętych długów",
+    "closedDebts_other": "{{count}} zamkniętych długów",
+    "debtsSection": "Twoje długi",
+    "paidSoFar": "Spłacono",
+    "remaining": "Pozostało",
+    "milestone25": "25%",
+    "milestone50": "50%",
+    "milestone75": "75%"
   },
   "settings": {
     "title": "Ustawienia",

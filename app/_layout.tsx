@@ -5,26 +5,8 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import { TamaguiProvider } from 'tamagui';
-import {
-  useFonts as useJakarta,
-  PlusJakartaSans_200ExtraLight,
-  PlusJakartaSans_300Light,
-  PlusJakartaSans_400Regular,
-  PlusJakartaSans_500Medium,
-  PlusJakartaSans_600SemiBold,
-  PlusJakartaSans_700Bold,
-  PlusJakartaSans_800ExtraBold,
-  PlusJakartaSans_200ExtraLight_Italic,
-  PlusJakartaSans_300Light_Italic,
-  PlusJakartaSans_400Regular_Italic,
-  PlusJakartaSans_500Medium_Italic,
-  PlusJakartaSans_600SemiBold_Italic,
-  PlusJakartaSans_700Bold_Italic,
-  PlusJakartaSans_800ExtraBold_Italic,
-} from '@expo-google-fonts/plus-jakarta-sans';
-import {
-  Jersey25_400Regular,
-} from '@expo-google-fonts/jersey-25';
+import { useFonts } from 'expo-font';
+import { Jersey25_400Regular } from '@expo-google-fonts/jersey-25';
 import 'react-native-reanimated';
 
 import tamaguiConfig from '../tamagui.config';
@@ -40,21 +22,7 @@ export const unstable_settings = {
 export default function RootLayout() {
   const onboardingCompleted = useAppStore((s) => s.onboardingCompleted);
 
-  const [fontsLoaded, fontError] = useJakarta({
-    PlusJakartaSans_200ExtraLight,
-    PlusJakartaSans_300Light,
-    PlusJakartaSans_400Regular,
-    PlusJakartaSans_500Medium,
-    PlusJakartaSans_600SemiBold,
-    PlusJakartaSans_700Bold,
-    PlusJakartaSans_800ExtraBold,
-    PlusJakartaSans_200ExtraLight_Italic,
-    PlusJakartaSans_300Light_Italic,
-    PlusJakartaSans_400Regular_Italic,
-    PlusJakartaSans_500Medium_Italic,
-    PlusJakartaSans_600SemiBold_Italic,
-    PlusJakartaSans_700Bold_Italic,
-    PlusJakartaSans_800ExtraBold_Italic,
+  const [fontsLoaded, fontError] = useFonts({
     Jersey25_400Regular,
   });
 

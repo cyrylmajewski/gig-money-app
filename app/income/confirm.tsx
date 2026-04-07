@@ -57,6 +57,7 @@ function SummaryRow({ label, amount, currency, muted, bold }: SummaryRowProps) {
   return (
     <XStack py="$3" items="center" justify="space-between">
       <Text
+        fontFamily="$body"
         fontSize="$4"
         color={muted ? C.muted : C.textSec}
         fontWeight={bold ? '700' : '400'}
@@ -66,10 +67,11 @@ function SummaryRow({ label, amount, currency, muted, bold }: SummaryRowProps) {
         {label}
       </Text>
       <Text
+        fontFamily="$body"
         fontSize="$4"
         fontWeight={bold ? '700' : '500'}
         color={muted ? C.muted : C.text}
-        text="right"
+        style={{ textAlign: 'right' }}
         minW={80}
       >
         {formatPLN(amount)} {currency}
@@ -153,7 +155,7 @@ export default function ConfirmScreen() {
           title: t('income.confirm.title'),
           headerLeft: () => (
             <Pressable onPress={() => router.back()} hitSlop={8} style={{ paddingHorizontal: 8, paddingVertical: 4 }}>
-              <Text color={C.accent} fontSize="$4">
+              <Text fontFamily="$body" color={C.accent} fontSize="$4">
                 {t('common.back')}
               </Text>
             </Pressable>
@@ -164,30 +166,30 @@ export default function ConfirmScreen() {
       <YStack flex={1}>
         <ScrollView>
           <YStack px="$5" pt="$4" pb="$6" gap="$4">
-            <Paragraph color={C.muted} fontSize="$4">
+            <Paragraph fontFamily="$body" color={C.muted} fontSize="$4">
               {t('income.confirm.subtitle')}
             </Paragraph>
 
             {/* Income summary card */}
             <YStack p="$4" rounded="$5" bg={C.card} borderWidth={1} borderColor={C.border}>
               <YStack gap="$2">
-                <Text fontSize="$3" fontWeight="700" color={C.muted}>
+                <Text fontFamily="$body" fontSize="$3" fontWeight="700" color={C.muted}>
                   {t('income.confirm.incomeSection').toUpperCase()}
                 </Text>
                 <XStack items="center" justify="space-between">
-                  <Text fontSize="$4" color={C.textSec}>
+                  <Text fontFamily="$body" fontSize="$4" color={C.textSec}>
                     {t('income.confirm.amountLabel')}
                   </Text>
-                  <Text fontSize="$6" fontWeight="700" color={C.text}>
+                  <Text fontFamily="$body" fontSize="$6" fontWeight="700" color={C.text}>
                     {formatPLN(incomeAmount)} {currency}
                   </Text>
                 </XStack>
                 {source.length > 0 && (
                   <XStack items="center" justify="space-between">
-                    <Text fontSize="$4" color={C.textSec}>
+                    <Text fontFamily="$body" fontSize="$4" color={C.textSec}>
                       {t('income.confirm.sourceLabel')}
                     </Text>
-                    <Text fontSize="$4" color={C.muted}>
+                    <Text fontFamily="$body" fontSize="$4" color={C.muted}>
                       {source}
                     </Text>
                   </XStack>
@@ -198,7 +200,7 @@ export default function ConfirmScreen() {
             {/* Allocation breakdown card */}
             <YStack p="$4" rounded="$5" bg={C.card} borderWidth={1} borderColor={C.border}>
               <YStack gap="$0">
-                <Text fontSize="$3" fontWeight="700" color={C.muted} mb="$2">
+                <Text fontFamily="$body" fontSize="$3" fontWeight="700" color={C.muted} mb="$2">
                   {t('income.confirm.allocationSection').toUpperCase()}
                 </Text>
 
@@ -303,17 +305,17 @@ export default function ConfirmScreen() {
                 {/* Total row */}
                 <Separator borderColor={C.border} mb="$2" />
                 <XStack items="center" justify="space-between" pt="$1">
-                  <Text fontSize="$4" fontWeight="700" color={C.text}>
+                  <Text fontFamily="$body" fontSize="$4" fontWeight="700" color={C.text}>
                     {t('income.confirm.total')}
                   </Text>
-                  <Text fontSize="$5" fontWeight="700" color={C.text}>
+                  <Text fontFamily="$body" fontSize="$5" fontWeight="700" color={C.text}>
                     {formatPLN(totalAllocated)} {currency}
                   </Text>
                 </XStack>
               </YStack>
             </YStack>
 
-            <Paragraph fontSize="$3" color={C.muted} text="center">
+            <Paragraph fontFamily="$body" fontSize="$3" color={C.muted} style={{ textAlign: 'center' }}>
               {t('income.confirm.saveNote')}
             </Paragraph>
           </YStack>
@@ -331,12 +333,11 @@ export default function ConfirmScreen() {
           <Button
             size="$5"
             bg={C.accent}
-            color={C.bg}
             pressStyle={{ bg: C.accentPress }}
             onPress={handleSave}
             accessibilityRole="button"
           >
-            {t('income.confirm.save')}
+            <Text fontFamily="$body" color={C.bg} fontWeight="700">{t('income.confirm.save')}</Text>
           </Button>
         </YStack>
       </YStack>

@@ -1,11 +1,18 @@
 import { Stack } from 'expo-router';
 
+const C = {
+  bg: '#0F1419',
+  text: '#ECEFF3',
+} as const;
+
 export default function IncomeLayout() {
   return (
-    <Stack>
-      <Stack.Screen name="new" options={{ headerShown: true }} />
-      <Stack.Screen name="allocate" options={{ headerShown: true }} />
-      <Stack.Screen name="confirm" options={{ headerShown: true }} />
-    </Stack>
+    <Stack
+      screenOptions={{
+        headerStyle: { backgroundColor: C.bg },
+        headerTintColor: '#4ADE80',
+        headerShadowVisible: false,
+      }}
+    />
   );
 }

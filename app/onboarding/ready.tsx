@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { YStack, Text, H2, Button } from 'tamagui';
 import { useAppStore } from '@/store';
 
@@ -19,7 +19,6 @@ const C = {
 export default function ReadyScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const setOnboardingCompleted = useAppStore((s) => s.setOnboardingCompleted);
 
   function handlePress() {
@@ -28,54 +27,48 @@ export default function ReadyScreen() {
   }
 
   return (
-    <YStack
-      flex={1}
-      bg={C.bg}
-      pt={insets.top}
-      pb={insets.bottom}
-      px="$5"
-    >
-      {/* Flex spacer — push content to center */}
+    <SafeAreaView style={{ flex: 1, backgroundColor: C.bg }} edges={['bottom']}>
+      <YStack
+        flex={1}
+        px="$5"
+      >
       <YStack flex={1} />
 
-      {/* Centered content */}
       <YStack items="center" gap="$5">
         <H2
+          fontFamily="$body"
           color={C.accent}
           fontSize={40}
           fontWeight="700"
-          letterSpacing={-0.5}
-          textAlign="center"
+          style={{ textAlign: 'center' }}
         >
           {t('onboarding.ready.title')}
         </H2>
 
         <Text
+          fontFamily="$body"
           color={C.text}
           fontSize={22}
           lineHeight={32}
           fontWeight="600"
-          textAlign="center"
+          style={{ textAlign: 'center' }}
         >
           {t('onboarding.ready.commitment')}
         </Text>
       </YStack>
 
-      {/* Flex spacer — push button to bottom */}
       <YStack flex={1} />
 
-      {/* CTA */}
       <Button
         size="$5"
         bg={C.accent}
-        color={C.bg}
-        fontWeight="700"
         pressStyle={{ bg: C.accentPress }}
         mb="$3"
         onPress={handlePress}
       >
-        {t('onboarding.ready.cta')}
+        <Text fontFamily="$body" color={C.bg} fontWeight="700">{t('onboarding.ready.cta')}</Text>
       </Button>
-    </YStack>
+      </YStack>
+    </SafeAreaView>
   );
 }

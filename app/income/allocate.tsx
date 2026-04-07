@@ -58,6 +58,7 @@ function AllocationRow({ label, amount, sublabel, highlight, currency }: Allocat
     >
       <YStack flex={1} gap="$1" pr="$4">
         <Text
+          fontFamily="$body"
           fontSize="$4"
           fontWeight={highlight ? '700' : '500'}
           color={highlight ? C.text : C.textSec}
@@ -65,17 +66,18 @@ function AllocationRow({ label, amount, sublabel, highlight, currency }: Allocat
           {label}
         </Text>
         {sublabel ? (
-          <Paragraph fontSize="$2" color={C.muted}>
+          <Paragraph fontFamily="$body" fontSize="$2" color={C.muted}>
             {sublabel}
           </Paragraph>
         ) : null}
       </YStack>
       <Text
+        fontFamily="$body"
         fontSize="$5"
         fontWeight="700"
         color={highlight ? C.text : C.textSec}
         minW={80}
-        text="right"
+        style={{ textAlign: 'right' }}
       >
         {formatPLN(amount)} {currency}
       </Text>
@@ -165,7 +167,7 @@ export default function AllocateScreen() {
           title: t('income.allocate.title'),
           headerLeft: () => (
             <Pressable onPress={() => router.back()} hitSlop={8} style={{ paddingHorizontal: 8, paddingVertical: 4 }}>
-              <Text color={C.accent} fontSize="$4">
+              <Text fontFamily="$body" color={C.accent} fontSize="$4">
                 {t('common.back')}
               </Text>
             </Pressable>
@@ -179,10 +181,10 @@ export default function AllocateScreen() {
 
             {/* Received amount header */}
             <XStack items="center" gap="$2">
-              <Text color={C.muted} fontSize="$4">
+              <Text fontFamily="$body" color={C.muted} fontSize="$4">
                 {t('income.allocate.receivedLabel')}
               </Text>
-              <Text fontSize="$5" fontWeight="700" color={C.text}>
+              <Text fontFamily="$body" fontSize="$5" fontWeight="700" color={C.text}>
                 {formatPLN(incomeAmount)} {currency}
               </Text>
             </XStack>
@@ -191,16 +193,16 @@ export default function AllocateScreen() {
             {shortfall > 0 && (
               <YStack p="$4" rounded="$4" bg="#2A1215" borderWidth={1} borderColor="#5C2B2E">
                 <YStack gap="$2">
-                  <H3 fontSize="$4" fontWeight="700" color={C.error}>
+                  <H3 fontFamily="$body" fontSize="$4" fontWeight="700" color={C.error}>
                     {t('income.allocate.shortfall.title')}
                   </H3>
-                  <Paragraph fontSize="$4" fontWeight="700" color={C.error}>
+                  <Paragraph fontFamily="$body" fontSize="$4" fontWeight="700" color={C.error}>
                     {t('income.allocate.shortfall.lossWarning', {
                       amount: formatPLN(shortfall),
                       currency,
                     })}
                   </Paragraph>
-                  <Paragraph fontSize="$3" color={C.textSec}>
+                  <Paragraph fontFamily="$body" fontSize="$3" color={C.textSec}>
                     {t('income.allocate.shortfall.advice')}
                   </Paragraph>
                 </YStack>
@@ -325,7 +327,7 @@ export default function AllocateScreen() {
             </YStack>
 
             {/* Default bias note */}
-            <Paragraph fontSize="$3" color={C.muted} text="center">
+            <Paragraph fontFamily="$body" fontSize="$3" color={C.muted} style={{ textAlign: 'center' }}>
               {t('income.allocate.defaultBiasNote')}
             </Paragraph>
           </YStack>
@@ -343,12 +345,11 @@ export default function AllocateScreen() {
           <Button
             size="$5"
             bg={C.accent}
-            color={C.bg}
             pressStyle={{ bg: C.accentPress }}
             onPress={handleConfirm}
             accessibilityRole="button"
           >
-            {t('income.allocate.confirm')}
+            <Text fontFamily="$body" color={C.bg} fontWeight="700">{t('income.allocate.confirm')}</Text>
           </Button>
         </YStack>
       </YStack>

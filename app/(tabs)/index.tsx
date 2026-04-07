@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { useRouter, Stack } from 'expo-router';
 import { ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   YStack,
@@ -17,8 +18,6 @@ import {
 import { useAppStore } from '@/store';
 import type { Debt, Income } from '@/types/models';
 
-// ── Hardcoded dark palette (Tamagui sub-theme tokens are unreliable) ────────
-
 const C = {
   bg: '#0F1419',
   card: '#1A2029',
@@ -32,23 +31,10 @@ const C = {
   gold: '#FBBF24',
 } as const;
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
 function getActiveDebts(debts: Debt[]): Debt[] {
   return debts
     .filter((d) => d.closedAt === null)
     .sort((a, b) => a.remainingAmount - b.remainingAmount);
-}
-
-function rollingAverage(incomes: Income[]): number | null {
-  if (incomes.length === 0) return null;
-  const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
-  const recent = incomes.filter((i) => new Date(i.date).getTime() >= cutoff);
-  const source = recent.length > 0 ? recent : incomes;
-  const total = source.reduce((sum, i) => sum + i.amount, 0);
-  return total / source.length;
 }
 
 function forecastClosureDate(
@@ -106,16 +92,9 @@ function getRecentIncome(incomes: Income[]): Income | null {
   return new Date(latest.date).getTime() >= sevenDaysAgo ? latest : null;
 }
 
-// ---------------------------------------------------------------------------
-// Sub-components
-// ---------------------------------------------------------------------------
+// ── Sub-components ───────────────────────────────────────────────────────────
 
-interface SnowballCardProps {
-  debt: Debt;
-  incomes: Income[];
-}
-
-function SnowballCard({ debt, incomes }: SnowballCardProps) {
+function SnowballCard({ debt, incomes }: { debt: Debt; incomes: Income[] }) {
   const { t } = useTranslation();
   const paid = debt.originalAmount - debt.remainingAmount;
   const progressValue =
@@ -135,38 +114,33 @@ function SnowballCard({ debt, incomes }: SnowballCardProps) {
     <YStack bg={C.card} borderWidth={1} borderColor={C.border} rounded="$6" overflow="hidden">
       <YStack p="$4">
         <XStack items="center" justify="space-between" mb="$2">
-          <Text fontSize="$2" color={C.muted} fontWeight="600" letterSpacing={1}>
+          <Text fontFamily="$body" fontSize="$2" color={C.muted} fontWeight="600" letterSpacing={1}>
             {t('home.snowball.target').toUpperCase()}
           </Text>
-          <Text fontSize="$2" color={C.muted}>
+          <Text fontFamily="$body" fontSize="$2" color={C.muted}>
             {Math.round(progressValue)}%
           </Text>
         </XStack>
-        <H3 fontWeight="700" color={C.text} numberOfLines={1}>
+        <H3 fontFamily="$body" fontWeight="700" color={C.text} numberOfLines={1}>
           {debt.label}
         </H3>
       </YStack>
-
       <YStack px="$4" pb="$2" gap="$3">
         <Progress value={progressValue} size="$2" bg={C.border}>
           <Progress.Indicator bg={C.accent} />
         </Progress>
-
         <XStack justify="space-between" items="center">
-          <Text fontSize="$3" color={C.textSec}>
-            {t('home.snowball.remaining', {
-              amount: formatPLN(debt.remainingAmount),
-            })}
+          <Text fontFamily="$body" fontSize="$3" color={C.textSec}>
+            {t('home.snowball.remaining', { amount: formatPLN(debt.remainingAmount) })}
           </Text>
-          <Text fontSize="$3" color={C.muted}>
+          <Text fontFamily="$body" fontSize="$3" color={C.muted}>
             {t('home.snowball.of', { amount: formatPLN(debt.originalAmount) })}
           </Text>
         </XStack>
       </YStack>
-
       {forecastText ? (
         <YStack p="$4" pt="$3">
-          <Paragraph fontSize="$2" color={C.muted}>
+          <Paragraph fontFamily="$body" fontSize="$2" color={C.muted}>
             {forecastText}
           </Paragraph>
         </YStack>
@@ -175,11 +149,7 @@ function SnowballCard({ debt, incomes }: SnowballCardProps) {
   );
 }
 
-interface LastDistributionCardProps {
-  income: Income;
-}
-
-function LastDistributionCard({ income }: LastDistributionCardProps) {
+function LastDistributionCard({ income }: { income: Income }) {
   const { t } = useTranslation();
   const alloc = income.allocation;
   const totalNeeds = Object.values(alloc.needs).reduce((s, v) => s + v, 0);
@@ -194,62 +164,41 @@ function LastDistributionCard({ income }: LastDistributionCardProps) {
     <YStack bg={C.card} borderWidth={1} borderColor={C.border} rounded="$6">
       <YStack p="$4" pb="$3">
         <XStack items="center" justify="space-between">
-          <Text fontSize="$2" color={C.muted} fontWeight="600" letterSpacing={1}>
+          <Text fontFamily="$body" fontSize="$2" color={C.muted} fontWeight="600" letterSpacing={1}>
             {t('home.lastDistribution.title').toUpperCase()}
           </Text>
-          <Text fontSize="$2" color={C.muted}>
+          <Text fontFamily="$body" fontSize="$2" color={C.muted}>
             {dateStr}
           </Text>
         </XStack>
-        <Text fontSize="$5" fontWeight="700" color={C.text} mt="$1">
+        <Text fontFamily="$body" fontSize="$5" fontWeight="700" color={C.text} mt="$1">
           {formatPLN(income.amount)}
         </Text>
       </YStack>
-
       <Separator borderColor={C.border} />
-
       <YStack px="$4" py="$3" gap="$2">
         {totalNeeds > 0 ? (
           <XStack justify="space-between">
-            <Text fontSize="$3" color={C.textSec}>
-              {t('home.lastDistribution.needs')}
-            </Text>
-            <Text fontSize="$3" fontWeight="600" color={C.text}>
-              {formatPLN(totalNeeds)}
-            </Text>
+            <Text fontFamily="$body" fontSize="$3" color={C.textSec}>{t('home.lastDistribution.needs')}</Text>
+            <Text fontFamily="$body" fontSize="$3" fontWeight="600" color={C.text}>{formatPLN(totalNeeds)}</Text>
           </XStack>
         ) : null}
-
         {totalMinimums > 0 ? (
           <XStack justify="space-between">
-            <Text fontSize="$3" color={C.textSec}>
-              {t('home.lastDistribution.minimums')}
-            </Text>
-            <Text fontSize="$3" fontWeight="600" color={C.text}>
-              {formatPLN(totalMinimums)}
-            </Text>
+            <Text fontFamily="$body" fontSize="$3" color={C.textSec}>{t('home.lastDistribution.minimums')}</Text>
+            <Text fontFamily="$body" fontSize="$3" fontWeight="600" color={C.text}>{formatPLN(totalMinimums)}</Text>
           </XStack>
         ) : null}
-
         {extra > 0 ? (
           <XStack justify="space-between">
-            <Text fontSize="$3" color={C.textSec}>
-              {t('home.lastDistribution.extra')}
-            </Text>
-            <Text fontSize="$3" fontWeight="700" color={C.accent}>
-              +{formatPLN(extra)}
-            </Text>
+            <Text fontFamily="$body" fontSize="$3" color={C.textSec}>{t('home.lastDistribution.extra')}</Text>
+            <Text fontFamily="$body" fontSize="$3" fontWeight="700" color={C.accent}>+{formatPLN(extra)}</Text>
           </XStack>
         ) : null}
-
         {alloc.unallocated > 0 ? (
           <XStack justify="space-between">
-            <Text fontSize="$3" color={C.textSec}>
-              {t('home.lastDistribution.shortfall')}
-            </Text>
-            <Text fontSize="$3" fontWeight="700" color={C.error}>
-              -{formatPLN(alloc.unallocated)}
-            </Text>
+            <Text fontFamily="$body" fontSize="$3" color={C.textSec}>{t('home.lastDistribution.shortfall')}</Text>
+            <Text fontFamily="$body" fontSize="$3" fontWeight="700" color={C.error}>-{formatPLN(alloc.unallocated)}</Text>
           </XStack>
         ) : null}
       </YStack>
@@ -257,9 +206,7 @@ function LastDistributionCard({ income }: LastDistributionCardProps) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Main screen
-// ---------------------------------------------------------------------------
+// ── Main screen ──────────────────────────────────────────────────────────────
 
 export default function HomeScreen() {
   const { t } = useTranslation();
@@ -277,39 +224,30 @@ export default function HomeScreen() {
 
   return (
     <>
-      <Stack.Screen
-        options={{
-          headerShown: false,
-        }}
-      />
+      <Stack.Screen options={{ headerShown: false }} />
 
       <ScrollView
-        contentContainerStyle={{
-          paddingBottom: insets.bottom + 100,
-        }}
+        contentContainerStyle={{ paddingBottom: insets.bottom + 100 }}
         showsVerticalScrollIndicator={false}
       >
         <YStack px="$4" pt={insets.top + 16} gap="$5">
-          {/* Greeting */}
           <YStack gap="$1">
-            <H2 fontWeight="800" color={C.text}>{t('home.greeting')}</H2>
+            <H2 fontFamily="$body" fontWeight="800" color={C.text}>{t('home.greeting')}</H2>
             {pendingDeferred.length > 0 ? (
-              <Paragraph fontSize="$3" color={C.gold}>
+              <Paragraph fontFamily="$body" fontSize="$3" color={C.gold}>
                 {t('home.deferred.pending', { count: pendingDeferred.length })}
               </Paragraph>
             ) : null}
           </YStack>
 
-          {/* Snowball target card */}
           {snowballTarget ? (
             <SnowballCard debt={snowballTarget} incomes={incomes} />
           ) : (
             <YStack bg={C.card} borderWidth={1} borderColor={C.border} rounded="$6" p="$4">
-              <Paragraph color={C.textSec}>{t('home.snowball.noDebts')}</Paragraph>
+              <Paragraph fontFamily="$body" color={C.textSec}>{t('home.snowball.noDebts')}</Paragraph>
             </YStack>
           )}
 
-          {/* Last distribution card */}
           {recentIncome ? <LastDistributionCard income={recentIncome} /> : null}
         </YStack>
       </ScrollView>
@@ -330,12 +268,10 @@ export default function HomeScreen() {
         <Button
           size="$5"
           bg={C.accent}
-          color={C.bg}
-          fontWeight="700"
           pressStyle={{ bg: C.accentPress }}
           onPress={() => router.push('/income/new')}
         >
-          {t('home.cta.receivedMoney')}
+          <Text fontFamily="$body" color={C.bg} fontWeight="700">{t('home.cta.receivedMoney')}</Text>
         </Button>
       </YStack>
     </>

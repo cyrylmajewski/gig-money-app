@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { KeyboardAvoidingView, Platform, ScrollView, InputAccessoryView, View } from 'react-native';
-import { YStack, XStack, Text, H2, Input, Button, Label, Paragraph } from 'tamagui';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { ScrollView, TextInput, Keyboard } from 'react-native';
+import { YStack, XStack, Text, H2, Button, Paragraph } from 'tamagui';
 import { useAppStore } from '@/store';
 
 const C = {
@@ -40,7 +40,6 @@ const FIELDS: NeedsField[] = [
 export default function NeedsScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const setMonthlyNeeds = useAppStore((s) => s.setMonthlyNeeds);
 
   const [values, setValues] = useState<Record<string, string>>({
@@ -62,9 +61,7 @@ export default function NeedsScreen() {
   const hasAnyValue = total > 0;
 
   function handleChange(key: string, raw: string) {
-    // Allow digits, comma, dot only
     const cleaned = raw.replace(/[^0-9.,]/g, '');
-    // One decimal separator max
     const normalised = cleaned.replace(',', '.');
     const parts = normalised.split('.');
     let final = (parts[0] ?? '').slice(0, 6);
@@ -76,6 +73,7 @@ export default function NeedsScreen() {
   }
 
   function handleContinue() {
+    Keyboard.dismiss();
     if (!hasAnyValue) {
       setShowError(true);
       return;
@@ -90,42 +88,38 @@ export default function NeedsScreen() {
   });
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: C.bg }}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={0}
-    >
+    <SafeAreaView style={{ flex: 1, backgroundColor: C.bg }} edges={['bottom']}>
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ paddingBottom: 100 }}
+        contentContainerStyle={{ paddingBottom: 32 }}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
         showsVerticalScrollIndicator={false}
+        automaticallyAdjustKeyboardInsets
       >
         <YStack
           bg={C.bg}
           px="$5"
-          pt={insets.top + 16}
+          pt="$4"
           gap="$4"
         >
-          {/* Title */}
           <H2 color={C.text} fontWeight="700" letterSpacing={-0.5}>
             {t('onboarding.needs.title')}
           </H2>
 
-          {/* Input fields */}
           <YStack gap="$3">
-            {FIELDS.map(({ key, labelKey, placeholder }, index) => (
+            {FIELDS.map(({ key, labelKey, placeholder }) => (
               <YStack key={key} gap="$2">
-                <Label
-                  htmlFor={`needs-${key}`}
+                <Text
+                  fontFamily="$body"
                   fontSize="$3"
                   fontWeight="600"
-                  color={C.muted}
+                  color={C.textSec}
                   textTransform="uppercase"
                   letterSpacing={0.5}
                 >
                   {t(labelKey)}
-                </Label>
+                </Text>
                 <XStack
                   bg={C.card}
                   borderWidth={1}
@@ -135,21 +129,16 @@ export default function NeedsScreen() {
                   px="$4"
                   height={48}
                 >
-                  <Input
-                    id={`needs-${key}`}
-                    flex={1}
-                    unstyled
-                    fontSize="$5"
-                    color={C.text}
+                  <TextInput
+                    style={{ flex: 1, fontSize: 18, color: C.text, fontFamily: 'Jersey25_400Regular', paddingVertical: 8 }}
                     placeholderTextColor={C.muted}
                     placeholder={t(placeholder)}
                     keyboardType="decimal-pad"
                     value={values[key]}
                     onChangeText={(raw) => handleChange(key, raw)}
                     accessibilityLabel={t(labelKey)}
-                    {...(Platform.OS === 'ios' ? { inputAccessoryViewID: 'needs-empty' } : {})}
                   />
-                  <Text fontSize="$4" color={C.textSec} fontWeight="600" ml="$2">
+                  <Text fontFamily="$body" fontSize="$4" color={C.textSec} fontWeight="600" ml="$2">
                     {t('common.currency')}
                   </Text>
                 </XStack>
@@ -168,47 +157,37 @@ export default function NeedsScreen() {
             borderWidth={1}
             borderColor={C.border}
           >
-            <Text fontSize="$4" fontWeight="600" color={C.textSec}>
+            <Text fontFamily="$body" fontSize="$4" fontWeight="600" color={C.textSec}>
               {t('onboarding.needs.total')}
             </Text>
             <XStack items="baseline" gap="$1">
-              <Text fontSize="$6" fontWeight="800" color={hasAnyValue ? C.text : C.muted}>
+              <Text fontFamily="$body" fontSize="$6" fontWeight="800" color={hasAnyValue ? C.text : C.muted}>
                 {formattedTotal}
               </Text>
-              <Text fontSize="$4" fontWeight="600" color={C.textSec}>
+              <Text fontFamily="$body" fontSize="$4" fontWeight="600" color={C.textSec}>
                 {t('common.currency')}
               </Text>
             </XStack>
           </XStack>
 
-          {/* Validation error */}
           {showError && (
-            <Paragraph fontSize="$3" color={C.error} textAlign="center">
+            <Paragraph fontFamily="$body" fontSize="$3" color={C.error} style={{ textAlign: 'center' }}>
               {t('onboarding.needs.validationError')}
             </Paragraph>
           )}
+
+          {/* CTA */}
+          <Button
+            size="$5"
+            bg={hasAnyValue ? C.accent : C.border}
+            pressStyle={{ bg: C.accentPress }}
+            onPress={handleContinue}
+            accessibilityRole="button"
+          >
+            <Text fontFamily="$body" color={hasAnyValue ? C.bg : C.muted} fontWeight="700">{t('common.continue')}</Text>
+          </Button>
         </YStack>
       </ScrollView>
-
-      {/* Sticky CTA */}
-      <YStack px="$5" pb={insets.bottom + 16} pt="$3" bg={C.bg}>
-        <Button
-          size="$5"
-          bg={hasAnyValue ? C.accent : C.border}
-          color={hasAnyValue ? C.bg : C.muted}
-          pressStyle={{ bg: C.accentPress }}
-          onPress={handleContinue}
-          fontWeight="700"
-          accessibilityRole="button"
-        >
-          {t('common.continue')}
-        </Button>
-      </YStack>
-      {Platform.OS === 'ios' && (
-        <InputAccessoryView nativeID="needs-empty">
-          <View />
-        </InputAccessoryView>
-      )}
-    </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }

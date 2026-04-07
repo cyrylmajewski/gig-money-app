@@ -1,17 +1,14 @@
 import { useRef, useState } from 'react';
 import { useRouter, Stack as ExpoStack } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { KeyboardAvoidingView, Platform, Pressable, TextInput } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Pressable, TextInput } from 'react-native';
 import {
   YStack,
   XStack,
   Text,
-  Input,
   Button,
-  Label,
   Paragraph,
-  View,
 } from 'tamagui';
 
 const C = {
@@ -29,7 +26,6 @@ const C = {
 export default function NewIncomeScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const inputRef = useRef<TextInput>(null);
 
   const [amount, setAmount] = useState('');
@@ -38,11 +34,10 @@ export default function NewIncomeScreen() {
 
   function handleAmountChange(raw: string) {
     const cleaned = raw.replace(',', '.').replace(/[^0-9.]/g, '');
-    // Prevent multiple dots
     const parts = cleaned.split('.');
-    let value = parts[0]!.slice(0, 7); // max 7 integer digits (9 999 999)
+    let value = parts[0]!.slice(0, 7);
     if (parts.length > 1) {
-      value += '.' + parts[1]!.slice(0, 2); // max 2 decimal places
+      value += '.' + parts[1]!.slice(0, 2);
     }
     setAmount(value);
     setAmountError(false);
@@ -73,35 +68,34 @@ export default function NewIncomeScreen() {
           title: t('income.new.title'),
           headerLeft: () => (
             <Pressable onPress={() => router.back()} hitSlop={8} style={{ paddingHorizontal: 8, paddingVertical: 4 }}>
-              <Text color={C.accent} fontSize="$4">
+              <Text fontFamily="$body" color={C.accent} fontSize="$4">
                 {t('common.cancel')}
               </Text>
             </Pressable>
           ),
         }}
       />
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
+
+      <SafeAreaView style={{ flex: 1, backgroundColor: C.bg }} edges={['bottom']}>
         <YStack
           flex={1}
           px="$5"
           pt="$4"
-          pb={insets.bottom + 24}
+          pb="$5"
         >
           {/* Subtitle */}
-          <Paragraph color={C.textSec} fontSize="$4" textAlign="center">
+          <Paragraph fontFamily="$body" color={C.textSec} fontSize="$4" style={{ textAlign: 'center' }}>
             {t('income.new.subtitle')}
           </Paragraph>
 
-          {/* Hero amount – tap anywhere to focus hidden input */}
+          {/* Hero amount */}
           <Pressable
             style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
             onPress={() => inputRef.current?.focus()}
           >
             <XStack items="baseline" justify="center" gap="$3">
               <Text
+                fontFamily="$body"
                 fontSize={fontSize}
                 fontWeight="800"
                 color={amount ? C.text : C.muted}
@@ -109,19 +103,19 @@ export default function NewIncomeScreen() {
               >
                 {displayAmount || '0'}
               </Text>
-              <Text fontSize={fontSize / 2} fontWeight="700" color={C.textSec}>
+              <Text fontFamily="$body" fontSize={fontSize / 2} fontWeight="700" color={C.textSec}>
                 {t('common.currency')}
               </Text>
             </XStack>
 
             {amountError && (
-              <Paragraph color={C.error} fontSize="$3" mt="$2">
+              <Paragraph fontFamily="$body" color={C.error} fontSize="$3" mt="$2">
                 {t('income.new.amountError')}
               </Paragraph>
             )}
           </Pressable>
 
-          {/* Hidden native input – drives the decimal keyboard */}
+          {/* Hidden native input */}
           <TextInput
             ref={inputRef}
             style={{ position: 'absolute', opacity: 0, height: 0 }}
@@ -134,41 +128,51 @@ export default function NewIncomeScreen() {
 
           {/* Source field */}
           <YStack gap="$2" mb="$4">
-            <Label htmlFor="source-input" fontSize="$3" color={C.muted} fontWeight="600">
+            <Text
+              fontFamily="$body"
+              fontSize="$3"
+              color={C.muted}
+              fontWeight="600"
+              textTransform="uppercase"
+              letterSpacing={0.5}
+            >
               {t('income.new.source').toUpperCase()}
-            </Label>
-            <Input
-              id="source-input"
-              fontSize="$5"
-              py="$3"
-              px="$4"
-              rounded="$4"
+            </Text>
+            <XStack
               bg={C.card}
               borderWidth={1}
               borderColor={C.border}
-              color={C.text}
-              placeholderTextColor={C.muted}
-              placeholder={t('income.new.sourcePlaceholder')}
-              value={source}
-              onChangeText={setSource}
-              returnKeyType="done"
-              accessibilityLabel={t('income.new.source')}
-            />
+              rounded="$4"
+              items="center"
+              px="$4"
+              height={52}
+            >
+              <TextInput
+                style={{ flex: 1, fontSize: 18, color: C.text, fontFamily: 'Jersey25_400Regular', paddingVertical: 8 }}
+                placeholderTextColor={C.muted}
+                placeholder={t('income.new.sourcePlaceholder')}
+                value={source}
+                onChangeText={setSource}
+                returnKeyType="done"
+                accessibilityLabel={t('income.new.source')}
+              />
+            </XStack>
           </YStack>
 
           <Button
             size="$5"
             bg={!amount ? C.border : C.accent}
-            color={!amount ? C.muted : C.bg}
             pressStyle={{ bg: C.accentPress }}
             onPress={handleContinue}
             disabled={!amount}
             accessibilityRole="button"
           >
-            {t('income.new.cta')}
+            <Text fontFamily="$body" color={!amount ? C.muted : C.bg} fontWeight="700">
+              {t('income.new.cta')}
+            </Text>
           </Button>
         </YStack>
-      </KeyboardAvoidingView>
+      </SafeAreaView>
     </>
   );
 }

@@ -45,10 +45,18 @@
         "installment": "Installment",
         "other": "Other"
       },
+      "typeHints": {
+        "payday_loan": "Provident, Wonga, Vivus etc. — short-term loan with high interest.",
+        "credit": "Bank loan with fixed monthly installments, e.g. cash loan, consolidation.",
+        "credit_card": "Credit card with revolving limit. Minimum payment is % of balance.",
+        "installment": "Buy-now-pay-later — store installments, PayPo, Klarna. Often 0%.",
+        "other": "Loan from a friend, family, employer or other informal arrangement."
+      },
       "labelPlaceholder": "e.g. Provident payday loan",
       "remainingAmountPlaceholder": "e.g. 3500",
       "minimumPaymentPlaceholder": "e.g. 250",
-      "interestRatePlaceholder": "e.g. 29.9"
+      "interestRatePlaceholder": "e.g. 29.9",
+      "overdueAmountPlaceholder": "e.g. 1186"
     },
     "ready": {
       "title": "Ready!",
@@ -141,26 +149,57 @@
     }
   },
   "debts": {
+    "new": {
+      "title": "New debt"
+    },
     "list": {
       "title": "Debts",
       "empty": "You don't have any debts yet.",
-      "addDebt": "Add debt"
+      "addDebt": "Add debt",
+      "closedSection": "Closed",
+      "snowballTarget": "Current target"
     },
     "form": {
       "label": "Name",
       "type": "Type",
-      "remainingAmount": "Remaining amount",
-      "minimumPayment": "Minimum payment",
-      "interestRate": "Interest rate (optional)",
+      "remainingAmount": "Remaining",
+      "remainingAmountHint": "Loan: remaining principal. Card: balance to repay.",
+      "minimumPayment": "Min. payment",
+      "minimumPaymentHint": "Loan: installment amount. Card: minimum payment due.",
+      "interestRate": "Nominal interest rate (optional)",
+      "interestRateHint": "Annual rate from your contract, not APR. For PayPo/BNPL enter 0.",
+      "overdueAmount": "Overdue amount (optional)",
+      "overdueAmountHint": "Overdue payment amount from your bank, if any.",
       "markClosed": "Mark as closed"
     },
     "validationLabel": "Enter a debt name.",
-    "validationRemainingAmount": "Enter an amount greater than 0 PLN."
+    "validationRemainingAmount": "Enter an amount greater than 0 PLN.",
+    "edit": {
+      "title": "Edit debt",
+      "closeConfirm": "Are you sure you want to close this debt? This action cannot be undone.",
+      "closed": "Closed",
+      "notFound": "Debt not found.",
+      "closedBadgeLabel": "This debt is already closed and cannot be edited."
+    }
   },
   "progress": {
     "title": "Progress",
     "totalDebt": "Total debt",
-    "nextMilestone": "{{amount}} PLN left to close {{debt}}"
+    "totalPaid": "Total paid",
+    "nextMilestone": "{{amount}} PLN left to close {{debt}}",
+    "nextMilestoneLabel": "Next target",
+    "monthlyComparison": "Monthly comparison",
+    "thisMonth": "This month",
+    "lastMonth": "Last month",
+    "noDebts": "You have no debts. Great work!",
+    "closedDebts_one": "{{count}} closed debt",
+    "closedDebts_other": "{{count}} closed debts",
+    "debtsSection": "Your debts",
+    "paidSoFar": "Paid",
+    "remaining": "Remaining",
+    "milestone25": "25%",
+    "milestone50": "50%",
+    "milestone75": "75%"
   },
   "settings": {
     "title": "Settings",
