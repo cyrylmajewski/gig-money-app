@@ -35,7 +35,8 @@ export default function OnboardingDebtsScreen() {
               </Paragraph>
             ) : (
               debts.map((debt) => (
-                <Card key={debt.id} borderWidth={1} borderColor="$color5" rounded="$4" p="$4" bg="$color3">
+                <Pressable key={debt.id} onPress={() => router.push(`/debt/${debt.id}`)}>
+                <Card borderWidth={1} borderColor="$color5" rounded="$4" p="$4" bg="$color3">
                   <XStack justify="space-between" items="flex-start">
                     <YStack flex={1} gap="$1.5">
                       <Text color="$color12" fontSize="$5" fontWeight="600">
@@ -88,6 +89,7 @@ export default function OnboardingDebtsScreen() {
                     )}
                   </XStack>
                 </Card>
+                </Pressable>
               ))
             )}
           </YStack>
