@@ -1,9 +1,15 @@
+import { ChartBar, CreditCard, Home, Settings } from '@tamagui/lucide-icons-2';
 import { Tabs } from 'expo-router';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Home, CreditCard, ChartBar, Settings } from 'lucide-react-native';
 
 import { HapticTab } from '@/components/haptic-tab';
+
+function tabIcon(Icon: typeof Home) {
+  return ({ color, size }: { color: string; size: number }) => (
+    <Icon size={size} color={color as never} />
+  );
+}
 
 export default function TabLayout() {
   const { t } = useTranslation();
@@ -11,39 +17,25 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#4ADE80',
-        tabBarInactiveTintColor: '#7C8594',
         headerShown: false,
         tabBarButton: HapticTab,
-        tabBarLabelStyle: { fontFamily: 'Jersey25_400Regular' },
-      }}>
+      }}
+    >
       <Tabs.Screen
         name="index"
-        options={{
-          title: t('tabs.home'),
-          tabBarIcon: ({ color, size }) => <Home size={size} color={color} />,
-        }}
+        options={{ title: t('tabs.home'), tabBarIcon: tabIcon(Home) }}
       />
       <Tabs.Screen
         name="debts"
-        options={{
-          title: t('tabs.debts'),
-          tabBarIcon: ({ color, size }) => <CreditCard size={size} color={color} />,
-        }}
+        options={{ title: t('tabs.debts'), tabBarIcon: tabIcon(CreditCard) }}
       />
       <Tabs.Screen
         name="progress"
-        options={{
-          title: t('tabs.progress'),
-          tabBarIcon: ({ color, size }) => <ChartBar size={size} color={color} />,
-        }}
+        options={{ title: t('tabs.progress'), tabBarIcon: tabIcon(ChartBar) }}
       />
       <Tabs.Screen
         name="settings"
-        options={{
-          title: t('tabs.settings'),
-          tabBarIcon: ({ color, size }) => <Settings size={size} color={color} />,
-        }}
+        options={{ title: t('tabs.settings'), tabBarIcon: tabIcon(Settings) }}
       />
     </Tabs>
   );

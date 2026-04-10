@@ -1,30 +1,25 @@
+import { ChevronLeft } from '@tamagui/lucide-icons-2';
 import { Stack, useRouter } from 'expo-router';
 import { Pressable } from 'react-native';
-import { ChevronLeft } from 'lucide-react-native';
 
-const C = {
-  bg: '#0F1419',
-  text: '#ECEFF3',
-  accent: '#4ADE80',
-} as const;
+import { useNavOptions } from '@/hooks/use-nav-options';
 
 function BackButton() {
   const router = useRouter();
   return (
     <Pressable onPress={() => router.back()} hitSlop={8} style={{ padding: 4 }}>
-      <ChevronLeft size={28} color={C.accent} />
+      <ChevronLeft size={28} />
     </Pressable>
   );
 }
 
 export default function OnboardingLayout() {
+  const navOptions = useNavOptions();
   return (
     <Stack
       screenOptions={{
-        headerStyle: { backgroundColor: C.bg },
-        headerTintColor: C.accent,
+        ...navOptions,
         headerTitle: '',
-        headerShadowVisible: false,
         headerLeft: () => <BackButton />,
       }}
     >

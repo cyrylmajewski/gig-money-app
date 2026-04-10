@@ -3,6 +3,8 @@ import type {
   DeferredPayment,
   MonthlyCoverage,
   MonthlyNeeds,
+  TierCategory,
+  TierResult,
 } from '@/types/models';
 
 /**
@@ -122,4 +124,90 @@ export function getUnresolvedDeferred(
  */
 export function getActiveDebts(debts: Debt[]): Debt[] {
   return debts.filter((d) => d.closedAt === null && d.remainingAmount > 0);
+}
+
+/**
+ * Default floor ratios per need category.
+ * These define the minimum guaranteed share of the outstanding amount.
+ */
+const DEFAULT_FLOOR_RATIOS: Record<string, number> = {
+  food: 0.50,
+  housing: 0.60,
+  transport: 0.30,
+  other: 0,
+};
+
+/**
+ * Get the default floor (minimum guaranteed allocation) for a need category.
+ * The floor is a ratio of the outstanding amount.
+ */
+export function getDefaultFloor(category: string, outstanding: number): number {
+  const ratio = DEFAULT_FLOOR_RATIOS[category] ?? 0;
+  return roundPLN(ratio * outstanding);
+}
+
+/**
+ * Allocate available funds within a single tier using Floor + Waterfall.
+ *
+ * 3-phase algorithm:
+ *   1. FALLBACK: if available < sum of floors, split proportionally across floors
+ *   2. PASS 1: give each category its floor
+ *   3. PASS 2: waterfall by priority (ascending) for the remainder above floors
+ *
+ * Does NOT mutate the input array.
+ *
+ * @param categories - Tier categories with outstanding amounts, floors, and priorities
+ * @param available  - Total funds available for this tier
+ * @returns Allocations per category and leftover for the next tier
+ */
+export function allocateTier(
+  categories: TierCategory[],
+  available: number,
+): TierResult {
+  // Filter out zero-outstanding categories
+  const active = categories
+    .filter((c) => c.outstanding > 0)
+    .map((c) => ({ ...c, floor: Math.min(c.floor, c.outstanding) }));
+
+  if (active.length === 0) return { allocations: {}, remaining: available };
+
+  const sumFloors = roundPLN(active.reduce((s, c) => s + c.floor, 0));
+  const result: Record<string, number> = {};
+
+  // FALLBACK: extreme deficit -- proportional split across floors
+  if (available < sumFloors) {
+    if (sumFloors === 0) {
+      return { allocations: {}, remaining: available };
+    }
+    let distributed = 0;
+    for (let i = 0; i < active.length; i++) {
+      if (i === active.length - 1) {
+        // Last category absorbs rounding residue
+        result[active[i].key] = roundPLN(available - distributed);
+      } else {
+        const share = roundPLN(available * (active[i].floor / sumFloors));
+        result[active[i].key] = share;
+        distributed = roundPLN(distributed + share);
+      }
+    }
+    return { allocations: result, remaining: 0 };
+  }
+
+  // PASS 1: give floors to everyone
+  for (const c of active) {
+    result[c.key] = c.floor;
+  }
+  let rem = roundPLN(available - sumFloors);
+
+  // PASS 2: waterfall by priority for the remainder
+  const sorted = [...active].sort((a, b) => a.priority - b.priority);
+  for (const c of sorted) {
+    const need = roundPLN(c.outstanding - c.floor);
+    const give = roundPLN(Math.min(need, rem));
+    result[c.key] = roundPLN(result[c.key] + give);
+    rem = roundPLN(rem - give);
+    if (rem <= 0) break;
+  }
+
+  return { allocations: result, remaining: rem };
 }

@@ -11,6 +11,7 @@ export interface Debt {
   remainingAmount: number;     // current outstanding balance in PLN
   minimumPayment: number;      // required monthly payment in PLN
   interestRate: number;        // annual rate as decimal, 0 if unknown
+  paymentDay: number | null;   // day of month (1-31) when payment is due, null if unknown
   createdAt: string;           // ISO 8601 date
   closedAt: string | null;     // ISO date when marked as closed
 }
@@ -42,6 +43,20 @@ export interface DeferredPayment {
   deferredAt: string;        // ISO date
   reason: 'agreed_delay' | 'postponing' | 'other';
   resolved: boolean;
+}
+
+/** Category within a distribution tier (internal, not persisted). */
+export interface TierCategory {
+  key: string;
+  outstanding: number;
+  floor: number;
+  priority: number;
+}
+
+/** Result of allocating within a single tier. */
+export interface TierResult {
+  allocations: Record<string, number>;
+  remaining: number;
 }
 
 export interface Allocation {
@@ -79,8 +94,10 @@ export interface RealityCheckResponse {
 
 export interface Settings {
   currency: 'PLN';
-  locale: 'pl' | 'en';
+  locale: 'pl' | 'en' | 'ru';
   lastRealityCheckAt: string | null;
+  tier1PriorityOrder: 'food_first' | 'housing_first';
+  floorOverrides?: Partial<Record<keyof MonthlyNeeds, number>>;
 }
 
 export interface AppState {

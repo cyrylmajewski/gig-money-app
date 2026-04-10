@@ -2,16 +2,35 @@ import type {
   Allocation,
   AppState,
   DeferredPayment,
+  MonthlyNeeds,
 } from '@/types/models';
 import {
+  allocateTier,
   getActiveDebts,
   getCurrentMonthlyCoverage,
+  getDefaultFloor,
   getOutstandingMinimums,
   getOutstandingNeeds,
   getSnowballTarget,
   getUnresolvedDeferred,
   roundPLN,
 } from './helpers';
+
+/**
+ * Resolve the floor for a given need category, respecting user overrides.
+ * If an override exists, it is clamped to the outstanding amount.
+ * Otherwise, the default ratio-based floor is used.
+ */
+function getFloorForCategory(
+  category: keyof MonthlyNeeds,
+  outstanding: number,
+  overrides?: Partial<Record<keyof MonthlyNeeds, number>>,
+): number {
+  if (overrides?.[category] !== undefined) {
+    return roundPLN(Math.min(overrides[category]!, outstanding));
+  }
+  return getDefaultFloor(category, outstanding);
+}
 
 /**
  * Distribute an income amount across the 5-step priority order.
@@ -48,24 +67,20 @@ export function distributeIncome(
   const activeDebts = getActiveDebts(state.debts);
   const unresolvedDeferred = getUnresolvedDeferred(state.deferredPayments);
 
-  // ── Step 1: Deferred payments (oldest first) ──────────────────────────
+  // ── Step 1: Deferred payments — skipped (manual-only feature) ────────
 
-  let deferredTotal = 0;
+  const deferredTotal = 0;
 
-  for (const dp of unresolvedDeferred) {
-    if (remaining <= 0) break;
-    const pay = roundPLN(Math.min(dp.amount, remaining));
-    deferredTotal = roundPLN(deferredTotal + pay);
-    remaining = roundPLN(remaining - pay);
-  }
+  // ── Step 2: Housing + food (Floor + Waterfall) ────────────────────────
 
-  // ── Step 2: Housing + food ────────────────────────────────────────────
-
-  const housingAlloc = roundPLN(Math.min(outstanding.housing, remaining));
-  remaining = roundPLN(remaining - housingAlloc);
-
-  const foodAlloc = roundPLN(Math.min(outstanding.food, remaining));
-  remaining = roundPLN(remaining - foodAlloc);
+  const foodFirst = (state.settings.tier1PriorityOrder ?? 'food_first') === 'food_first';
+  const tier1 = allocateTier([
+    { key: 'housing', outstanding: outstanding.housing, floor: getFloorForCategory('housing', outstanding.housing, state.settings.floorOverrides), priority: foodFirst ? 2 : 1 },
+    { key: 'food', outstanding: outstanding.food, floor: getFloorForCategory('food', outstanding.food, state.settings.floorOverrides), priority: foodFirst ? 1 : 2 },
+  ], remaining);
+  const housingAlloc = tier1.allocations['housing'] ?? 0;
+  const foodAlloc = tier1.allocations['food'] ?? 0;
+  remaining = tier1.remaining;
 
   // ── Step 3: Minimum debt payments ─────────────────────────────────────
 
@@ -105,13 +120,15 @@ export function distributeIncome(
     }
   }
 
-  // ── Step 4: Transport + other needs ───────────────────────────────────
+  // ── Step 4: Transport + other needs (Floor + Waterfall) ───────────────
 
-  const transportAlloc = roundPLN(Math.min(outstanding.transport, remaining));
-  remaining = roundPLN(remaining - transportAlloc);
-
-  const otherAlloc = roundPLN(Math.min(outstanding.other, remaining));
-  remaining = roundPLN(remaining - otherAlloc);
+  const tier3 = allocateTier([
+    { key: 'transport', outstanding: outstanding.transport, floor: getFloorForCategory('transport', outstanding.transport, state.settings.floorOverrides), priority: 1 },
+    { key: 'other', outstanding: outstanding.other, floor: getFloorForCategory('other', outstanding.other, state.settings.floorOverrides), priority: 2 },
+  ], remaining);
+  const transportAlloc = tier3.allocations['transport'] ?? 0;
+  const otherAlloc = tier3.allocations['other'] ?? 0;
+  remaining = tier3.remaining;
 
   // ── Step 5: Extra snowball payment ────────────────────────────────────
 

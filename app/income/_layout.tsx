@@ -1,18 +1,8 @@
 import { Stack } from 'expo-router';
 
-const C = {
-  bg: '#0F1419',
-  text: '#ECEFF3',
-} as const;
+import { useNavOptions } from '@/hooks/use-nav-options';
 
 export default function IncomeLayout() {
-  return (
-    <Stack
-      screenOptions={{
-        headerStyle: { backgroundColor: C.bg },
-        headerTintColor: '#4ADE80',
-        headerShadowVisible: false,
-      }}
-    />
-  );
+  const navOptions = useNavOptions();
+  return <Stack screenOptions={navOptions} />;
 }

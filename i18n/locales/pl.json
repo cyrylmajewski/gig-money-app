@@ -7,6 +7,7 @@
     "delete": "Usuń",
     "back": "Wstecz",
     "confirm": "Potwierdź",
+    "done": "Gotowe",
     "currency": "zł"
   },
   "tabs": {
@@ -18,6 +19,8 @@
   "onboarding": {
     "welcome": {
       "subtitle": "Pomożemy ci rozdzielić każdą wypłatę na potrzeby i spłatę długów.",
+      "feature1": "Rozdziel wypłatę jednym kliknięciem",
+      "feature2": "Śledź spłatę i widź postępy",
       "privacy": "Twoje dane zostają tylko na twoim telefonie. Niczego nie wysyłamy.",
       "cta": "Zaczynamy"
     },
@@ -123,6 +126,19 @@
         "extraPaymentSublabel": "Kula śnieżna — szybsze wyjście z długu",
         "unallocated": "Pozostałe środki",
         "unallocatedSublabel": "Nadwyżka po pokryciu wszystkich potrzeb"
+      },
+      "outOf": "z {{amount}} {{currency}}",
+      "allocated": "Przydzielono:",
+      "needed": "Potrzeba:",
+      "summary": {
+        "coverageLabel": "Pokrycie potrzeb",
+        "tipsLabel": "Co możesz zrobić:"
+      },
+      "tips": {
+        "food": "Poszukaj sposobów na ograniczenie wydatków na jedzenie do końca miesiąca",
+        "transport": "Spróbuj komunikacji miejskiej lub spaceru, żeby zaoszczędzić",
+        "contactCreditor": "Skontaktuj się z wierzycielem i poproś o odroczenie płatności",
+        "nextIncome": "Następny dochód pokryje pozostałe potrzeby"
       }
     },
     "confirm": {
@@ -170,7 +186,17 @@
       "interestRateHint": "Roczna stopa z umowy, nie RRSO. Dla PayPo/BNPL wpisz 0.",
       "overdueAmount": "Zaległa spłata (opcjonalne)",
       "overdueAmountHint": "Kwota zaległej spłaty z banku, jeśli jest.",
-      "markClosed": "Oznacz jako zamknięty"
+      "paymentDay": "Dzień płatności (opcjonalne)",
+      "paymentDayHint": "Dzień miesiąca, w którym przypada rata.",
+      "paymentDayPlaceholder": "Wybierz dzień",
+      "paymentDaySuffix": "dzień miesiąca",
+      "markClosed": "Oznacz jako zamknięty",
+      "recordMissedPayment": "Zgłoś zaległą ratę",
+      "recordMissedPaymentConfirm": "Zapisz",
+      "missedPaymentTitle": "Zaległa rata",
+      "missedPaymentHint": "Kwota zostanie dodana jako priorytet przy następnym wpływie.",
+      "missedPaymentSavedTitle": "Zapisano",
+      "missedPaymentSavedMessage": "Zaległa rata zostanie pokryta jako pierwsza przy następnym wpływie."
     },
     "validationLabel": "Podaj nazwę długu.",
     "validationRemainingAmount": "Podaj kwotę większą niż 0 zł.",
@@ -207,7 +233,68 @@
     "title": "Ustawienia",
     "editNeeds": "Edytuj wydatki miesięczne",
     "exportData": "Eksportuj dane",
+    "exportSuccess": "Dane zostały eksportowane pomyślnie",
     "deleteData": "Usuń wszystkie dane",
-    "deleteConfirm": "Czy na pewno chcesz usunąć wszystkie dane? Tej operacji nie można cofnąć."
+    "deleteConfirm": "Czy na pewno chcesz usunąć wszystkie dane? Tej operacji nie można cofnąć.",
+    "language": "Język",
+    "version": "Wersja",
+    "resetData": "Resetuj wszystkie dane",
+    "resetConfirmTitle": "Zresetować dane?",
+    "resetConfirmMessage": "Spowoduje to usunięcie wszystkich twoich danych. Tej operacji nie można cofnąć.",
+    "resetConfirmButton": "Resetuj"
+  },
+  "triggers": {
+    "realityCheck": {
+      "title": "Sprawdzian rzeczywistości",
+      "q1": "Czy w tym tygodniu wydawałeś tylko na niezbędne rzeczy?",
+      "q2": "Czy mógłbyś zmniejszyć wydatki na jedzenie w tym miesiącu?",
+      "q3": "Czy opłaty za mieszkanie są opłacone na czas?",
+      "q4": "Czy korzystałeś z transportu publicznego, żeby zaoszczędzić?",
+      "q5": "Czy unikałeś niepotrzebnych zakupów?",
+      "q6": "Czy trzymasz się planu spłaty długów?",
+      "yes": "Tak",
+      "barely": "Ledwo",
+      "no": "Nie"
+    },
+    "freshStart": {
+      "title": "Nowy początek!",
+      "milestone7": "Tydzień na dobrej drodze! Tak trzymaj!",
+      "milestone30": "Miesiąc postępów! Budujesz prawdziwe nawyki.",
+      "milestone90": "90 dni wytrwałości! Twoje zaangażowanie się opłaca.",
+      "newMonth": "Nowy miesiąc, nowe możliwości! Nie zwalniaj.",
+      "newWeek": "Nowy tydzień — szansa na postęp!",
+      "dismiss": "Rozumiem!"
+    },
+    "celebration": {
+      "title": "Dług spłacony!",
+      "message": "Całkowicie spłaciłeś {{label}}! Jeden ciężar mniej.",
+      "dismiss": "Świętuj!"
+    }
+  },
+  "creditorTemplates": {
+    "bank": {
+      "subject": "Prośba o restrukturyzację płatności",
+      "body": "Szanowni Państwo, zwracam się z prośbą o restrukturyzację mojego zobowiązania w wysokości {{amount}} {{currency}}. Z powodu tymczasowych trudności finansowych proszę o rozłożenie płatności na raty lub wydłużenie terminu spłaty. Zobowiązuję się do terminowego regulowania ustalonych rat. Proszę o kontakt w celu uzgodnienia warunków. Z poważaniem."
+    },
+    "payday_lender": {
+      "subject": "Wniosek o przedłużenie terminu spłaty",
+      "body": "Szanowni Państwo, zwracam się z prośbą o przedłużenie terminu spłaty lub rozłożenie na raty mojego zobowiązania w wysokości {{amount}} {{currency}}. Aktualnie borykam się z tymczasowymi trudnościami finansowymi, jednak jestem zdecydowany uregulować całość zadłużenia. Proszę o przedstawienie możliwych opcji spłaty. Z poważaniem."
+    },
+    "landlord": {
+      "subject": "Informacja o tymczasowych trudnościach z płatnością",
+      "body": "Szanowny Panie / Szanowna Pani, chciałbym poinformować o tymczasowych trudnościach finansowych, które wpływają na moją zdolność do terminowej zapłaty kwoty {{amount}} {{currency}}. Zobowiązuję się do uregulowania zaległości w najbliższym możliwym terminie. Proszę o wyrozumiałość i kontakt w celu ustalenia formy spłaty. Z poważaniem."
+    },
+    "private_person": {
+      "subject": "W sprawie spłaty pożyczki",
+      "body": "Cześć, chciałem Cię poinformować, że mam chwilowe kłopoty finansowe i nie jestem w stanie w tej chwili zwrócić pełnej kwoty {{amount}} {{currency}}. Bardzo mi zależy na uregulowaniu tego zobowiązania i chciałbym ustalić plan spłaty w ratach. Przepraszam za opóźnienie i dziękuję za cierpliwość."
+    },
+    "employer": {
+      "subject": "Prośba w sprawie zobowiązania finansowego",
+      "body": "Szanowny Panie / Szanowna Pani, zwracam się z prośbą o rozmowę dotyczącą mojego zobowiązania w wysokości {{amount}} {{currency}}. Ze względu na przejściowe trudności finansowe proszę o możliwość rozłożenia spłaty na raty lub zaliczkę na poczet wynagrodzenia. Jestem otwarty na zaproponowane warunki. Z poważaniem."
+    },
+    "other": {
+      "subject": "Prośba o odroczenie płatności",
+      "body": "Szanowni Państwo, zwracam się z prośbą o odroczenie płatności lub rozłożenie na raty mojego zobowiązania w wysokości {{amount}} {{currency}}. Z powodu tymczasowych trudności finansowych nie jestem w stanie uregulować pełnej kwoty w wyznaczonym terminie. Zobowiązuję się do spłaty zgodnie z ustalonym harmonogramem. Z poważaniem."
+    }
   }
 }

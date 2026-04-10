@@ -9,6 +9,7 @@ import type {
   MonthlyNeeds,
   Settings,
 } from '@/types/models';
+import { getMonthKey, roundPLN } from '@/lib/distribution/helpers';
 
 interface AppActions {
   setOnboardingCompleted: (completed: boolean) => void;
@@ -17,6 +18,7 @@ interface AppActions {
   updateDebt: (id: string, updates: Partial<Debt>) => void;
   removeDebt: (id: string) => void;
   addIncome: (income: Income) => void;
+  processIncome: (income: Income) => void;
   addDeferredPayment: (payment: DeferredPayment) => void;
   resolveDeferredPayment: (id: string) => void;
   updateSettings: (settings: Partial<Settings>) => void;
@@ -35,7 +37,7 @@ const initialState: AppState = {
   deferredPayments: [],
   monthlyCoverage: [],
   realityChecks: [],
-  settings: { currency: 'PLN', locale: 'pl', lastRealityCheckAt: null },
+  settings: { currency: 'PLN', locale: 'pl', lastRealityCheckAt: null, tier1PriorityOrder: 'food_first' },
 };
 
 export const useAppStore = create<AppStore>()(
@@ -66,6 +68,71 @@ export const useAppStore = create<AppStore>()(
 
       addIncome: (income) =>
         set((state) => ({ incomes: [...state.incomes, income] })),
+
+      processIncome: (income) =>
+        set((state) => {
+          const allocation = income.allocation;
+          const date = new Date(income.date);
+
+          // 1. Add income record
+          const incomes = [...state.incomes, income];
+
+          // 2. Update monthly coverage
+          const monthKey = getMonthKey(date);
+          let coverageFound = false;
+          const monthlyCoverage = state.monthlyCoverage.map((c) => {
+            if (c.month !== monthKey) return c;
+            coverageFound = true;
+            const needs = {
+              housing: roundPLN(c.needs.housing + allocation.needs.housing),
+              food: roundPLN(c.needs.food + allocation.needs.food),
+              transport: roundPLN(c.needs.transport + allocation.needs.transport),
+              other: roundPLN(c.needs.other + allocation.needs.other),
+            };
+            const minimumPayments = { ...c.minimumPayments };
+            for (const [debtId, amount] of Object.entries(allocation.minimumPayments)) {
+              minimumPayments[debtId] = roundPLN((minimumPayments[debtId] ?? 0) + amount);
+            }
+            return { ...c, needs, minimumPayments };
+          });
+          if (!coverageFound) {
+            const minimumPayments: Record<string, number> = {};
+            for (const [debtId, amount] of Object.entries(allocation.minimumPayments)) {
+              minimumPayments[debtId] = amount;
+            }
+            monthlyCoverage.push({
+              month: monthKey,
+              needs: { ...allocation.needs },
+              minimumPayments,
+            });
+          }
+
+          // 3. Apply payments to debt balances
+          const debts = state.debts.map((d) => {
+            let reduction = 0;
+            if (allocation.minimumPayments[d.id]) {
+              reduction += allocation.minimumPayments[d.id];
+            }
+            if (allocation.extraDebtPayment?.debtId === d.id) {
+              reduction += allocation.extraDebtPayment.amount;
+            }
+            if (reduction <= 0) return d;
+
+            const newRemaining = roundPLN(Math.max(0, d.remainingAmount - reduction));
+            return {
+              ...d,
+              remainingAmount: newRemaining,
+              closedAt: newRemaining <= 0 ? date.toISOString() : d.closedAt,
+            };
+          });
+
+          // 4. Resolve all unresolved deferred payments (cleanup)
+          const deferredPayments = state.deferredPayments.map((p) =>
+            p.resolved ? p : { ...p, resolved: true },
+          );
+
+          return { incomes, monthlyCoverage, debts, deferredPayments };
+        }),
 
       addDeferredPayment: (payment) =>
         set((state) => ({
