@@ -24,7 +24,9 @@ export default function OnboardingLayout() {
       }}
     >
       <Stack.Screen name="welcome" options={{ headerShown: false }} />
+      <Stack.Screen name="needs-intro" />
       <Stack.Screen name="needs" />
+      <Stack.Screen name="debts-intro" />
       <Stack.Screen name="debts" />
       <Stack.Screen name="ready" />
     </Stack>

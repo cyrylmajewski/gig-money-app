@@ -4,6 +4,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { HapticTab } from '@/components/haptic-tab';
+import { useNavOptions } from '@/hooks/use-nav-options';
 
 function tabIcon(Icon: typeof Home) {
   return ({ color, size }: { color: string; size: number }) => (
@@ -13,12 +14,15 @@ function tabIcon(Icon: typeof Home) {
 
 export default function TabLayout() {
   const { t } = useTranslation();
+  const navOptions = useNavOptions();
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarButton: HapticTab,
+        tabBarStyle: { backgroundColor: navOptions.headerStyle.backgroundColor },
+        sceneStyle: navOptions.contentStyle,
       }}
     >
       <Tabs.Screen

@@ -1,34 +1,29 @@
-import { useAppStore } from '@/store';
 import { useRouter } from 'expo-router';
 import LottieView from 'lottie-react-native';
 import { useTranslation } from 'react-i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, H1, Paragraph, YStack } from 'tamagui';
 
-export default function ReadyScreen() {
+export default function NeedsIntroScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const setOnboardingCompleted = useAppStore((s) => s.setOnboardingCompleted);
-
-  function handlePress() {
-    setOnboardingCompleted(true);
-    router.replace('/(tabs)');
-  }
 
   return (
     <SafeAreaView style={{ flex: 1 }} edges={['bottom']}>
       <YStack flex={1} px="$5">
         <YStack flex={1} />
 
-        <YStack items="center" gap="$6">
+        <YStack items="center" gap="$5" px="$2">
           <LottieView
-            source={require('@/assets/animations/coin.json')}
+            source={require('@/assets/animations/contract.json')}
             autoPlay
-            // loop={false}
-            style={{ width: 160, height: 160 }}
+            loop
+            style={{ width: 180, height: 180 }}
           />
 
-          <H1 style={{ textAlign: 'center' }}>{t('onboarding.ready.title')}</H1>
+          <H1 fontSize="$9" letterSpacing={-0.5} style={{ textAlign: 'center' }}>
+            {t('onboarding.needsIntro.title')}
+          </H1>
 
           <Paragraph
             color="$color11"
@@ -36,7 +31,7 @@ export default function ReadyScreen() {
             lineHeight={28}
             style={{ textAlign: 'center' }}
           >
-            {t('onboarding.ready.commitment')}
+            {t('onboarding.needsIntro.subtitle')}
           </Paragraph>
         </YStack>
 
@@ -47,9 +42,9 @@ export default function ReadyScreen() {
           size="$5"
           rounded="$4"
           mb="$3"
-          onPress={handlePress}
+          onPress={() => router.push('/onboarding/needs')}
         >
-          {t('onboarding.ready.cta')}
+          {t('onboarding.needsIntro.cta')}
         </Button>
       </YStack>
     </SafeAreaView>

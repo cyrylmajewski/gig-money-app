@@ -1,4 +1,3 @@
-import { Button } from '@/components/button';
 import { useAppStore } from '@/store';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -6,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Keyboard, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
+  Button,
   H2,
   H3,
   Input,
@@ -16,7 +16,7 @@ import {
   useTheme,
 } from 'tamagui';
 
-import { parseAmount } from '@/lib/format';
+import { formatAmountForInput, parseAmount } from '@/lib/format';
 
 interface NeedsField {
   key: 'housing' | 'food' | 'transport' | 'other';
@@ -50,14 +50,15 @@ const FIELDS: NeedsField[] = [
 export default function NeedsScreen() {
   const { t } = useTranslation();
   const router = useRouter();
+  const monthlyNeeds = useAppStore((s) => s.monthlyNeeds);
   const setMonthlyNeeds = useAppStore((s) => s.setMonthlyNeeds);
   const theme = useTheme();
 
   const [values, setValues] = useState<Record<string, string>>({
-    housing: '',
-    food: '',
-    transport: '',
-    other: '',
+    housing: formatAmountForInput(monthlyNeeds.housing),
+    food: formatAmountForInput(monthlyNeeds.food),
+    transport: formatAmountForInput(monthlyNeeds.transport),
+    other: formatAmountForInput(monthlyNeeds.other),
   });
   const [showError, setShowError] = useState(false);
 
@@ -90,7 +91,7 @@ export default function NeedsScreen() {
       return;
     }
     setMonthlyNeeds(parsed);
-    router.push('/onboarding/debts');
+    router.push('/onboarding/debts-intro');
   }
 
   const formattedTotal = total.toLocaleString('pl-PL', {
@@ -175,7 +176,7 @@ export default function NeedsScreen() {
           )}
 
           {/* CTA */}
-          <Button size="$5" onPress={handleContinue}>
+          <Button theme="accent" size="$5" onPress={handleContinue}>
             {t('common.continue')}
           </Button>
         </YStack>

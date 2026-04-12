@@ -16,6 +16,7 @@ import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
+import { useColorScheme } from 'react-native';
 import 'react-native-reanimated';
 import { TamaguiProvider } from 'tamagui';
 import '../i18n';
@@ -30,6 +31,7 @@ export const unstable_settings = {
 };
 
 export default function RootLayout() {
+  const colorScheme = useColorScheme();
   const onboardingCompleted = useAppStore((s) => s.onboardingCompleted);
   const router = useRouter();
   const segments = useSegments();
@@ -69,7 +71,7 @@ export default function RootLayout() {
   }
 
   return (
-    <TamaguiProvider config={tamaguiConfig} defaultTheme="dark">
+    <TamaguiProvider config={tamaguiConfig} defaultTheme={colorScheme ?? 'dark'}>
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="onboarding" options={{ headerShown: false }} />
@@ -80,7 +82,7 @@ export default function RootLayout() {
         <Stack.Screen name="debt" options={{ headerShown: false }} />
         <Stack.Screen name="settings" options={{ headerShown: false }} />
       </Stack>
-      <StatusBar style="light" />
+      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
     </TamaguiProvider>
   );
 }

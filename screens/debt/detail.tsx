@@ -1,13 +1,15 @@
 import { Badge } from '@/components/badge';
-import { DebtForm } from '@/components/debt-form';
 import type { DebtFormValues } from '@/components/debt-form';
+import { DebtForm } from '@/components/debt-form';
 import {
+  formatAmount,
   formatAmountForInput,
   parseAmount,
   sanitiseDecimal,
 } from '@/lib/format';
 import { useAppStore } from '@/store';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { X } from '@tamagui/lucide-icons-2';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, Pressable, ScrollView, TextInput } from 'react-native';
@@ -26,14 +28,19 @@ export default function DebtDetailScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const theme = useTheme();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, onboarding } = useLocalSearchParams<{ id: string; onboarding?: string }>();
 
   const debts = useAppStore((s) => s.debts);
+  const deferredPayments = useAppStore((s) => s.deferredPayments);
   const updateDebt = useAppStore((s) => s.updateDebt);
   const addDeferredPayment = useAppStore((s) => s.addDeferredPayment);
+  const resolveDeferredPayment = useAppStore((s) => s.resolveDeferredPayment);
 
   const debt = debts.find((d) => d.id === id);
   const isClosed = debt?.closedAt != null;
+  const pendingOverdue = deferredPayments.filter(
+    (p) => p.debtId === id && !p.resolved
+  );
 
   const [showOverdue, setShowOverdue] = useState(false);
   const [overdueAmount, setOverdueAmount] = useState('');
@@ -49,7 +56,7 @@ export default function DebtDetailScreen() {
           }}
         />
         <YStack flex={1} justify="center" items="center" px="$6" gap="$4">
-          <Paragraph color="$color9" style={{ textAlign: 'center' }}>
+          <Paragraph color="$color12" style={{ textAlign: 'center' }}>
             {t('debts.edit.notFound')}
           </Paragraph>
           <Pressable onPress={() => router.back()} accessibilityRole="button">
@@ -102,7 +109,7 @@ export default function DebtDetailScreen() {
     setOverdueAmount('');
     Alert.alert(
       t('debts.form.missedPaymentSavedTitle'),
-      t('debts.form.missedPaymentSavedMessage'),
+      t('debts.form.missedPaymentSavedMessage')
     );
   };
 
@@ -135,7 +142,11 @@ export default function DebtDetailScreen() {
       <ScrollView
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
-        contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 24, paddingBottom: 40 }}
+        contentContainerStyle={{
+          paddingHorizontal: 20,
+          paddingTop: 24,
+          paddingBottom: 40,
+        }}
         showsVerticalScrollIndicator={false}
         automaticallyAdjustKeyboardInsets
       >
@@ -143,7 +154,7 @@ export default function DebtDetailScreen() {
         {isClosed && (
           <XStack items="center" gap="$2" mb="$5">
             <Badge label={t('debts.edit.closed')} variant="muted" />
-            <Paragraph color="$color9" fontSize="$2" flex={1}>
+            <Paragraph color="$color12" fontSize="$2" flex={1}>
               {t('debts.edit.closedBadgeLabel')}
             </Paragraph>
           </XStack>
@@ -155,99 +166,150 @@ export default function DebtDetailScreen() {
             type: debt.type,
             remainingAmount: formatAmountForInput(debt.remainingAmount),
             minimumPayment: formatAmountForInput(debt.minimumPayment),
-            interestRate: debt.interestRate > 0 ? formatAmountForInput(debt.interestRate) : '',
+            interestRate:
+              debt.interestRate > 0
+                ? formatAmountForInput(debt.interestRate)
+                : '',
             paymentDay: debt.paymentDay ? debt.paymentDay.toString() : '',
           }}
           onSubmit={handleSubmit}
           disabled={isClosed}
         >
+          {/* Existing deferred payments */}
+          {pendingOverdue.length > 0 && (
+            <YStack gap="$2" mb="$5">
+              <Text color="$color11" fontSize="$2" textTransform="uppercase" letterSpacing={0.6}>
+                {t('debts.form.pendingOverdue')}
+              </Text>
+              {pendingOverdue.map((p) => (
+                <XStack
+                  key={p.id}
+                  borderWidth={1}
+                  borderColor="$color5"
+                  rounded="$4"
+                  px="$4"
+                  py="$3"
+                  items="center"
+                  justify="space-between"
+                >
+                  <Text color="$color12" fontSize="$4" fontWeight="600">
+                    {formatAmount(p.amount)} {t('common.currency')}
+                  </Text>
+                  <Pressable
+                    hitSlop={8}
+                    onPress={() => {
+                      Alert.alert(
+                        t('debts.form.removeOverdue'),
+                        t('debts.form.removeOverdueConfirm'),
+                        [
+                          { text: t('common.cancel'), style: 'cancel' },
+                          {
+                            text: t('debts.form.removeOverdue'),
+                            style: 'destructive',
+                            onPress: () => resolveDeferredPayment(p.id),
+                          },
+                        ]
+                      );
+                    }}
+                  >
+                    <X size={18} color="$color9" />
+                  </Pressable>
+                </XStack>
+              ))}
+            </YStack>
+          )}
+
           {/* Record missed payment — detail only */}
           {!isClosed && debt.minimumPayment > 0 && (
-            <Theme name="warning">
-              <YStack gap="$3" mb="$5">
-                {!showOverdue ? (
+            <YStack gap="$3" mb="$5">
+              {!showOverdue ? (
+                <Theme name="error">
                   <Button
                     size="$4"
-                    bg="transparent"
+                    bg="$color9"
                     borderWidth={1}
                     borderColor="$color9"
-                    pressStyle={{ opacity: 0.7 }}
+                    pressStyle={{ bg: '$color8', borderColor: '$color8' }}
                     onPress={() => {
-                      setOverdueAmount(formatAmountForInput(debt.minimumPayment));
+                      setOverdueAmount(
+                        formatAmountForInput(debt.minimumPayment)
+                      );
                       setShowOverdue(true);
                     }}
                   >
-                    <Text color="$color9">
+                    <Text color="white">
                       {t('debts.form.recordMissedPayment')}
                     </Text>
                   </Button>
-                ) : (
-                  <YStack
+                </Theme>
+              ) : (
+                <YStack
+                  borderWidth={1}
+                  borderColor="$color5"
+                  rounded="$4"
+                  p="$4"
+                  gap="$3"
+                >
+                  <Text color="$color12" fontWeight="600">
+                    {t('debts.form.missedPaymentTitle')}
+                  </Text>
+                  <Paragraph color="$color11" fontSize="$2">
+                    {t('debts.form.missedPaymentHint')}
+                  </Paragraph>
+                  <XStack
                     borderWidth={1}
-                    borderColor="$color9"
+                    borderColor="$color5"
                     rounded="$4"
-                    p="$4"
-                    gap="$3"
+                    items="center"
+                    px="$3"
+                    height={48}
                   >
-                    <Text color="$color9" fontWeight="600">
-                      {t('debts.form.missedPaymentTitle')}
+                    <TextInput
+                      style={inputStyle}
+                      keyboardType="decimal-pad"
+                      value={overdueAmount}
+                      onChangeText={(v) =>
+                        setOverdueAmount(sanitiseDecimal(v))
+                      }
+                      accessibilityLabel={t('debts.form.missedPaymentTitle')}
+                    />
+                    <Text color="$color12" fontSize="$3">
+                      {t('common.currency')}
                     </Text>
-                    <Paragraph color="$color11" fontSize="$2">
-                      {t('debts.form.missedPaymentHint')}
-                    </Paragraph>
-                    <XStack
+                  </XStack>
+                  <XStack gap="$3">
+                    <Button
+                      flex={1}
+                      size="$4"
+                      bg="transparent"
                       borderWidth={1}
                       borderColor="$color5"
-                      rounded="$4"
-                      items="center"
-                      px="$3"
-                      height={48}
+                      onPress={() => {
+                        setShowOverdue(false);
+                        setOverdueAmount('');
+                      }}
                     >
-                      <TextInput
-                        style={inputStyle}
-                        keyboardType="decimal-pad"
-                        value={overdueAmount}
-                        onChangeText={(v) => setOverdueAmount(sanitiseDecimal(v))}
-                        accessibilityLabel={t('debts.form.missedPaymentTitle')}
-                      />
-                      <Text color="$color9" fontSize="$3">
-                        {t('common.currency')}
+                      <Text color="$color11">{t('common.cancel')}</Text>
+                    </Button>
+                    <Button
+                      flex={1}
+                      size="$4"
+                      bg="$color12"
+                      pressStyle={{ opacity: 0.8 }}
+                      onPress={handleRecordMissedPayment}
+                    >
+                      <Text color="$color1">
+                        {t('debts.form.recordMissedPaymentConfirm')}
                       </Text>
-                    </XStack>
-                    <XStack gap="$3">
-                      <Button
-                        flex={1}
-                        size="$4"
-                        bg="transparent"
-                        borderWidth={1}
-                        borderColor="$color5"
-                        onPress={() => {
-                          setShowOverdue(false);
-                          setOverdueAmount('');
-                        }}
-                      >
-                        <Text color="$color11">{t('common.cancel')}</Text>
-                      </Button>
-                      <Button
-                        flex={1}
-                        size="$4"
-                        bg="$color9"
-                        pressStyle={{ opacity: 0.8 }}
-                        onPress={handleRecordMissedPayment}
-                      >
-                        <Text color="$color1">
-                          {t('debts.form.recordMissedPaymentConfirm')}
-                        </Text>
-                      </Button>
-                    </XStack>
-                  </YStack>
-                )}
-              </YStack>
-            </Theme>
+                    </Button>
+                  </XStack>
+                </YStack>
+              )}
+            </YStack>
           )}
 
-          {/* Mark closed button — detail only */}
-          {!isClosed && (
+          {/* Mark closed button — detail only, hidden during onboarding */}
+          {!isClosed && !onboarding && (
             <Button
               size="$4"
               bg="transparent"
@@ -257,6 +319,7 @@ export default function DebtDetailScreen() {
               pressStyle={{ opacity: 0.7 }}
               onPress={handleMarkClosed}
               mt="$3"
+              mb="$3"
             >
               <Text color="$color11">{t('debts.form.markClosed')}</Text>
             </Button>

@@ -24,6 +24,11 @@
       "privacy": "Your data stays only on your phone. We don't send anything.",
       "cta": "Let's start"
     },
+    "needsIntro": {
+      "title": "Let's start with the basics",
+      "subtitle": "Let's enter your fixed expenses so every payment is split wisely.",
+      "cta": "Continue"
+    },
     "needs": {
       "title": "Your monthly expenses",
       "housing": "Housing",
@@ -36,6 +41,11 @@
       "foodPlaceholder": "e.g. 800",
       "transportPlaceholder": "e.g. 300",
       "otherPlaceholder": "e.g. 200"
+    },
+    "debtsIntro": {
+      "title": "Now your debts",
+      "subtitle": "Add your obligations and we'll make sure payments stay on track.",
+      "cta": "Continue"
     },
     "debts": {
       "title": "Your debts",
@@ -196,7 +206,10 @@
       "missedPaymentTitle": "Missed payment",
       "missedPaymentHint": "This amount will be prioritized when you receive your next income.",
       "missedPaymentSavedTitle": "Saved",
-      "missedPaymentSavedMessage": "The missed payment will be covered first when you receive your next income."
+      "missedPaymentSavedMessage": "The missed payment will be covered first when you receive your next income.",
+      "pendingOverdue": "Pending missed payments",
+      "removeOverdue": "Remove",
+      "removeOverdueConfirm": "Are you sure you want to remove this missed payment?"
     },
     "validationLabel": "Enter a debt name.",
     "validationRemainingAmount": "Enter an amount greater than 0 PLN.",

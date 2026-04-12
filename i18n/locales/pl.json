@@ -24,6 +24,11 @@
       "privacy": "Twoje dane zostają tylko na twoim telefonie. Niczego nie wysyłamy.",
       "cta": "Zaczynamy"
     },
+    "needsIntro": {
+      "title": "Zacznijmy od podstaw",
+      "subtitle": "Wpiszmy Twoje stałe wydatki, żeby każdy wpływ był dobrze rozdzielony.",
+      "cta": "Dalej"
+    },
     "needs": {
       "title": "Twoje miesięczne wydatki",
       "housing": "Mieszkanie",
@@ -36,6 +41,11 @@
       "foodPlaceholder": "np. 800",
       "transportPlaceholder": "np. 300",
       "otherPlaceholder": "np. 200"
+    },
+    "debtsIntro": {
+      "title": "Teraz Twoje długi",
+      "subtitle": "Dodaj swoje zobowiązania, a my zadbamy o terminowe spłaty.",
+      "cta": "Dalej"
     },
     "debts": {
       "title": "Twoje długi",
@@ -196,7 +206,10 @@
       "missedPaymentTitle": "Zaległa rata",
       "missedPaymentHint": "Kwota zostanie dodana jako priorytet przy następnym wpływie.",
       "missedPaymentSavedTitle": "Zapisano",
-      "missedPaymentSavedMessage": "Zaległa rata zostanie pokryta jako pierwsza przy następnym wpływie."
+      "missedPaymentSavedMessage": "Zaległa rata zostanie pokryta jako pierwsza przy następnym wpływie.",
+      "pendingOverdue": "Oczekujące zaległe raty",
+      "removeOverdue": "Usuń",
+      "removeOverdueConfirm": "Czy na pewno chcesz usunąć tę zaległą ratę?"
     },
     "validationLabel": "Podaj nazwę długu.",
     "validationRemainingAmount": "Podaj kwotę większą niż 0 zł.",
