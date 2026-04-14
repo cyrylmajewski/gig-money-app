@@ -1,13 +1,21 @@
-import i18n from '@/i18n';
-import { useAppStore } from '@/store';
-import { ChevronRight } from '@tamagui/lucide-icons-2';
+import {
+  ChevronRight,
+  Download,
+  Globe,
+  Receipt,
+  Trash2,
+} from '@tamagui/lucide-icons-2';
 import Constants from 'expo-constants';
 import { File, Paths } from 'expo-file-system';
+import { GlassView } from 'expo-glass-effect';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Alert, ScrollView, Share } from 'react-native';
+import { Alert, Pressable, ScrollView, Share, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, H2, Text, XStack, YStack } from 'tamagui';
+import { H2, Separator, Text, XStack, YStack } from 'tamagui';
+
+import i18n from '@/i18n';
+import { useAppStore } from '@/store';
 
 const LOCALES = [
   { code: 'pl', label: 'PL' },
@@ -76,75 +84,96 @@ export default function SettingsScreen() {
         <YStack px="$4" pt="$4" gap="$5">
           <H2>{t('settings.title')}</H2>
 
-          {/* Edit monthly needs */}
-          <YStack borderWidth={1} rounded="$4" overflow="hidden">
-            <Button
-              unstyled
-              onPress={handleEditNeeds}
-              accessibilityRole="button"
-            >
-              <XStack px="$4" py="$4" items="center" justify="space-between">
-                <Text>{t('settings.editNeeds')}</Text>
-                <ChevronRight size={18} />
-              </XStack>
-            </Button>
-          </YStack>
+          {/* General section */}
+          <GlassView
+            glassEffectStyle="regular"
+            style={styles.card}
+          >
+            <YStack bg="$color2" rounded="$6" overflow="hidden">
+              <Pressable onPress={handleEditNeeds} accessibilityRole="button">
+                <XStack px="$4" py="$3.5" items="center" gap="$3">
+                  <Receipt size={18} color="$accent9" />
+                  <Text flex={1}>{t('settings.editNeeds')}</Text>
+                  <ChevronRight size={16} color="$color8" />
+                </XStack>
+              </Pressable>
 
-          {/* Language switcher */}
+              <Separator borderColor="$color4" />
+
+              <Pressable onPress={handleExportData} accessibilityRole="button">
+                <XStack px="$4" py="$3.5" items="center" gap="$3">
+                  <Download size={18} color="$accent9" />
+                  <Text flex={1}>{t('settings.exportData')}</Text>
+                  <ChevronRight size={16} color="$color8" />
+                </XStack>
+              </Pressable>
+            </YStack>
+          </GlassView>
+
+          {/* Language section */}
           <YStack gap="$2">
-            <Text textTransform="uppercase" letterSpacing={0.5}>
-              {t('settings.language')}
-            </Text>
-            <XStack borderWidth={1} rounded="$4" overflow="hidden">
-              {LOCALES.map(({ code, label }, index) => {
-                const isActive = currentLocale === code;
-                const isLast = index === LOCALES.length - 1;
-                return (
-                  <XStack key={code} flex={1}>
-                    <Button
-                      unstyled
-                      flex={1}
-                      onPress={() => handleLanguageChange(code)}
-                      accessibilityRole="button"
-                      accessibilityState={{ selected: isActive }}
-                    >
-                      <YStack py="$3" items="center">
-                        <Text>{label}</Text>
-                      </YStack>
-                    </Button>
-                    {!isLast && <YStack width={1} />}
-                  </XStack>
-                );
-              })}
+            <XStack items="center" gap="$2" px="$1">
+              <Globe size={14} color="$color9" />
+              <Text
+                color="$color9"
+                fontSize="$2"
+                textTransform="uppercase"
+                letterSpacing={0.5}
+              >
+                {t('settings.language')}
+              </Text>
             </XStack>
+            <GlassView glassEffectStyle="regular" style={styles.card}>
+              <XStack bg="$color2" rounded="$6" overflow="hidden">
+                {LOCALES.map(({ code, label }, index) => {
+                  const isActive = currentLocale === code;
+                  const isLast = index === LOCALES.length - 1;
+                  return (
+                    <XStack key={code} flex={1}>
+                      <Pressable
+                        style={{ flex: 1 }}
+                        onPress={() => handleLanguageChange(code)}
+                        accessibilityRole="button"
+                        accessibilityState={{ selected: isActive }}
+                      >
+                        <YStack
+                          py="$3"
+                          items="center"
+                          bg={isActive ? '$accent3' : 'transparent'}
+                        >
+                          <Text
+                            fontWeight={isActive ? '700' : '400'}
+                            color={isActive ? '$accent11' : '$color11'}
+                          >
+                            {label}
+                          </Text>
+                        </YStack>
+                      </Pressable>
+                      {!isLast && <Separator vertical borderColor="$color4" />}
+                    </XStack>
+                  );
+                })}
+              </XStack>
+            </GlassView>
           </YStack>
 
-          {/* Export data */}
-          <YStack borderWidth={1} rounded="$4" overflow="hidden">
-            <Button
-              unstyled
-              onPress={handleExportData}
-              accessibilityRole="button"
-            >
-              <XStack px="$4" py="$4" items="center" justify="space-between">
-                <Text>{t('settings.exportData')}</Text>
-                <ChevronRight size={18} />
-              </XStack>
-            </Button>
-          </YStack>
-
-          {/* Reset data */}
-          <YStack borderWidth={1} rounded="$4" overflow="hidden">
-            <Button unstyled onPress={handleReset} accessibilityRole="button">
-              <XStack px="$4" py="$4" items="center" justify="space-between">
-                <Text>{t('settings.resetData')}</Text>
-                <ChevronRight size={18} />
-              </XStack>
-            </Button>
-          </YStack>
+          {/* Danger zone */}
+          <GlassView glassEffectStyle="regular" style={styles.card}>
+            <YStack theme="error" bg="$color2" rounded="$6" overflow="hidden">
+              <Pressable onPress={handleReset} accessibilityRole="button">
+                <XStack px="$4" py="$3.5" items="center" gap="$3">
+                  <Trash2 size={18} color="$color9" />
+                  <Text flex={1} color="$color9">
+                    {t('settings.resetData')}
+                  </Text>
+                  <ChevronRight size={16} color="$color8" />
+                </XStack>
+              </Pressable>
+            </YStack>
+          </GlassView>
 
           {/* App version */}
-          <Text style={{ textAlign: 'center' }}>
+          <Text color="$color8" fontSize="$2" style={{ textAlign: 'center' }}>
             {t('settings.version')} {appVersion}
           </Text>
         </YStack>
@@ -152,3 +181,10 @@ export default function SettingsScreen() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  card: {
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+});

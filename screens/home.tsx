@@ -1,10 +1,14 @@
-import { Stack, useRouter } from 'expo-router';
+import {
+  AlertTriangle,
+  Calendar,
+  Crosshair,
+  Wallet,
+} from '@tamagui/lucide-icons-2';
+import { Stack } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView } from 'react-native';
-
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
+import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Button,
   H2,
@@ -14,15 +18,22 @@ import {
   Separator,
   Text,
   XStack,
-  YStack } from 'tamagui';
+  YStack,
+} from 'tamagui';
 
+import { Badge } from '@/components/badge';
+import { IncomeFab } from '@/components/income-fab';
+import { getActiveDebts } from '@/lib/distribution/helpers';
+import { formatAmount } from '@/lib/format';
 import {
   getDebtCelebration,
   getFreshStartTrigger,
-  getRealityCheckTrigger } from '@/lib/triggers';
+  getRealityCheckTrigger,
+} from '@/lib/triggers';
 import { useAppStore } from '@/store';
-import { getActiveDebts } from '@/lib/distribution/helpers';
 import type { Debt, Income, RealityCheckResponse } from '@/types/models';
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
 
 function forecastClosureDate(
   debt: Debt,
@@ -63,14 +74,6 @@ function formatMonthYear(date: Date): string {
   return date.toLocaleDateString('pl-PL', { month: 'short', year: 'numeric' });
 }
 
-function formatPLN(amount: number): string {
-  return (
-    new Intl.NumberFormat('pl-PL', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0 }).format(amount) + ' zł'
-  );
-}
-
 function getRecentIncome(incomes: Income[]): Income | null {
   if (incomes.length === 0) return null;
   const sorted = [...incomes].sort(
@@ -85,42 +88,37 @@ function getRecentIncome(incomes: Income[]): Income | null {
 
 function RealityCheckCard({
   questionKey,
-  onAnswer }: {
+  onAnswer,
+}: {
   questionKey: string;
   onAnswer: (answer: 'yes' | 'barely' | 'no') => void;
 }) {
   const { t } = useTranslation();
 
   return (
-    <YStack borderWidth={1} rounded="$4" p="$4" gap="$3">
-      <Text letterSpacing={1}>
+    <YStack
+      bg="$color2"
+      borderWidth={1}
+      borderLeftWidth={3}
+      borderColor="$color5"
+      borderLeftColor="$accent7"
+      rounded="$6"
+      p="$4"
+      gap="$3"
+    >
+      <Text color="$color9" fontSize="$1" letterSpacing={1}>
         {t('triggers.realityCheck.title').toUpperCase()}
       </Text>
-      <Text>{t(questionKey)}</Text>
+      <Paragraph>{t(questionKey)}</Paragraph>
       <XStack gap="$2">
-        <Button
-          flex={1}
-          size="$3"
-          borderWidth={1}
-          onPress={() => onAnswer('yes')}
-        >
-          <Text>{t('triggers.realityCheck.yes')}</Text>
+        <Button variant="outlined" size="$3" flex={1} onPress={() => onAnswer('yes')}>
+          {t('triggers.realityCheck.yes')}
         </Button>
-        <Button
-          flex={1}
-          size="$3"
-          borderWidth={1}
-          onPress={() => onAnswer('barely')}
-        >
-          <Text>{t('triggers.realityCheck.barely')}</Text>
+        <Button variant="outlined" size="$3" flex={1} onPress={() => onAnswer('barely')}>
+          {t('triggers.realityCheck.barely')}
         </Button>
-        <Button
-          flex={1}
-          size="$3"
-          borderWidth={1}
-          onPress={() => onAnswer('no')}
-        >
-          <Text>{t('triggers.realityCheck.no')}</Text>
+        <Button variant="outlined" size="$3" flex={1} onPress={() => onAnswer('no')}>
+          {t('triggers.realityCheck.no')}
         </Button>
       </XStack>
     </YStack>
@@ -129,26 +127,30 @@ function RealityCheckCard({
 
 function FreshStartCard({
   messageKey,
-  onDismiss }: {
+  onDismiss,
+}: {
   messageKey: string;
   onDismiss: () => void;
 }) {
   const { t } = useTranslation();
 
   return (
-    <YStack borderWidth={2} rounded="$4" p="$4" gap="$3">
-      <Text letterSpacing={1}>
+    <YStack
+      bg="$color2"
+      borderWidth={1}
+      borderLeftWidth={3}
+      borderColor="$accent5"
+      borderLeftColor="$accent9"
+      rounded="$6"
+      p="$4"
+      gap="$3"
+    >
+      <Text color="$accent9" fontSize="$1" letterSpacing={1}>
         {t('triggers.freshStart.title').toUpperCase()}
       </Text>
-      <Text>{t(messageKey)}</Text>
-      <Button
-        size="$3"
-        bg="transparent"
-        borderWidth={1}
-        self="flex-start"
-        onPress={onDismiss}
-      >
-        <Text>{t('triggers.freshStart.dismiss')}</Text>
+      <Paragraph>{t(messageKey)}</Paragraph>
+      <Button chromeless size="$3" self="flex-start" onPress={onDismiss}>
+        {t('triggers.freshStart.dismiss')}
       </Button>
     </YStack>
   );
@@ -156,27 +158,43 @@ function FreshStartCard({
 
 function DebtCelebrationCard({
   debtLabel,
-  onDismiss }: {
+  onDismiss,
+}: {
   debtLabel: string;
   onDismiss: () => void;
 }) {
   const { t } = useTranslation();
 
   return (
-    <YStack bg="#1A2919" borderWidth={2} rounded="$4" p="$4" gap="$3">
-      <Text letterSpacing={1}>
+    <YStack
+      theme="success"
+      bg="$color2"
+      borderWidth={1}
+      borderLeftWidth={3}
+      borderColor="$color5"
+      borderLeftColor="$color9"
+      rounded="$6"
+      p="$4"
+      gap="$3"
+    >
+      <Text color="$color9" fontSize="$1" letterSpacing={1}>
         {t('triggers.celebration.title').toUpperCase()}
       </Text>
-      <Text>{t('triggers.celebration.message', { label: debtLabel })}</Text>
-      <Button size="$3" self="flex-start" onPress={onDismiss}>
-        <Text>{t('triggers.celebration.dismiss')}</Text>
+      <Paragraph>
+        {t('triggers.celebration.message', { label: debtLabel })}
+      </Paragraph>
+      <Button chromeless size="$3" self="flex-start" onPress={onDismiss}>
+        {t('triggers.celebration.dismiss')}
       </Button>
     </YStack>
   );
 }
 
+// ── Content cards ────────────────────────────────────────────────────────────
+
 function SnowballCard({ debt, incomes }: { debt: Debt; incomes: Income[] }) {
   const { t } = useTranslation();
+  const currency = t('common.currency');
   const paid = debt.originalAmount - debt.remainingAmount;
   const progressValue =
     debt.originalAmount > 0
@@ -192,41 +210,93 @@ function SnowballCard({ debt, incomes }: { debt: Debt; incomes: Income[] }) {
   }
 
   return (
-    <YStack borderWidth={1} rounded="$6" overflow="hidden">
-      <YStack p="$4">
-        <XStack items="center" justify="space-between" mb="$2">
-          <Text letterSpacing={1}>
-            {t('home.snowball.target').toUpperCase()}
-          </Text>
-          <Text>{Math.round(progressValue)}%</Text>
+    <YStack
+      bg="$color3"
+      borderWidth={1}
+      borderLeftWidth={3}
+      borderColor="$color4"
+      borderLeftColor="$accent9"
+      rounded="$6"
+      overflow="hidden"
+    >
+      <YStack p="$4" gap="$2">
+        <XStack items="center" justify="space-between">
+          <XStack items="center" gap="$2">
+            <Crosshair size={14} color="$accent11" />
+            <Text color="$accent11" fontSize="$1" letterSpacing={1}>
+              {t('home.snowball.target').toUpperCase()}
+            </Text>
+          </XStack>
+          <Badge
+            label={`${Math.round(progressValue)}%`}
+            variant={progressValue > 0 ? 'accent' : 'muted'}
+          />
         </XStack>
         <H3 numberOfLines={1}>{debt.label}</H3>
       </YStack>
-      <YStack px="$4" pb="$2" gap="$3">
+
+      <Separator borderColor="$color4" />
+
+      <YStack p="$4" gap="$3">
         <Progress value={progressValue} size="$2">
-          <Progress.Indicator />
+          <Progress.Indicator bg="$accent9" />
         </Progress>
         <XStack justify="space-between" items="center">
-          <Text>
+          <Text color="$color11" fontSize="$5" fontWeight="600">
             {t('home.snowball.remaining', {
-              amount: formatPLN(debt.remainingAmount) })}
+              amount: `${formatAmount(debt.remainingAmount)} ${currency}`,
+            })}
           </Text>
-          <Text>
-            {t('home.snowball.of', { amount: formatPLN(debt.originalAmount) })}
+          <Text color="$color9" fontSize="$3">
+            {t('home.snowball.of', {
+              amount: `${formatAmount(debt.originalAmount)} ${currency}`,
+            })}
           </Text>
         </XStack>
       </YStack>
+
       {forecastText ? (
-        <YStack p="$4" pt="$3">
-          <Paragraph>{forecastText}</Paragraph>
-        </YStack>
+        <>
+          <Separator borderColor="$color4" />
+          <XStack p="$4" items="center" gap="$2">
+            <Calendar size={14} color="$accent11" />
+            <Text color="$accent11" fontSize="$3">
+              {forecastText}
+            </Text>
+          </XStack>
+        </>
       ) : null}
+    </YStack>
+  );
+}
+
+function DeferredBanner({ count }: { count: number }) {
+  const { t } = useTranslation();
+
+  return (
+    <YStack
+      theme="warning"
+      bg="$color3"
+      borderWidth={1}
+      borderLeftWidth={3}
+      borderColor="$color7"
+      borderLeftColor="$color9"
+      rounded="$6"
+      p="$3"
+    >
+      <XStack items="center" gap="$2">
+        <AlertTriangle size={16} color="$color9" />
+        <Paragraph color="$color11" flex={1} fontSize="$3">
+          {t('home.deferred.pending', { count })}
+        </Paragraph>
+      </XStack>
     </YStack>
   );
 }
 
 function LastDistributionCard({ income }: { income: Income }) {
   const { t } = useTranslation();
+  const currency = t('common.currency');
   const alloc = income.allocation;
   const totalNeeds = Object.values(alloc.needs).reduce((s, v) => s + v, 0);
   const totalMinimums = Object.values(alloc.minimumPayments).reduce(
@@ -236,43 +306,67 @@ function LastDistributionCard({ income }: { income: Income }) {
   const extra = alloc.extraDebtPayment?.amount ?? 0;
   const dateStr = new Date(income.date).toLocaleDateString('pl-PL', {
     day: 'numeric',
-    month: 'long' });
+    month: 'long',
+  });
 
   return (
-    <YStack borderWidth={1} rounded="$6">
+    <YStack
+      bg="$color2"
+      borderWidth={1}
+      borderColor="$color4"
+      rounded="$6"
+      overflow="hidden"
+    >
       <YStack p="$4" pb="$3">
         <XStack items="center" justify="space-between">
-          <Text letterSpacing={1}>
-            {t('home.lastDistribution.title').toUpperCase()}
+          <XStack items="center" gap="$2">
+            <Wallet size={14} color="$color9" />
+            <Text color="$color9" fontSize="$1" letterSpacing={1}>
+              {t('home.lastDistribution.title').toUpperCase()}
+            </Text>
+          </XStack>
+          <Text color="$color9" fontSize="$2">
+            {dateStr}
           </Text>
-          <Text>{dateStr}</Text>
         </XStack>
-        <Text mt="$1">{formatPLN(income.amount)}</Text>
+        <Text fontSize="$6" fontWeight="600" mt="$1">
+          {formatAmount(income.amount)} {currency}
+        </Text>
       </YStack>
-      <Separator />
+
+      <Separator borderColor="$color3" />
+
       <YStack px="$4" py="$3" gap="$2">
         {totalNeeds > 0 ? (
           <XStack justify="space-between">
-            <Text>{t('home.lastDistribution.needs')}</Text>
-            <Text>{formatPLN(totalNeeds)}</Text>
+            <Text color="$color9">{t('home.lastDistribution.needs')}</Text>
+            <Text color="$color11">
+              {formatAmount(totalNeeds)} {currency}
+            </Text>
           </XStack>
         ) : null}
         {totalMinimums > 0 ? (
           <XStack justify="space-between">
-            <Text>{t('home.lastDistribution.minimums')}</Text>
-            <Text>{formatPLN(totalMinimums)}</Text>
+            <Text color="$color9">{t('home.lastDistribution.minimums')}</Text>
+            <Text color="$color11">
+              {formatAmount(totalMinimums)} {currency}
+            </Text>
           </XStack>
         ) : null}
         {extra > 0 ? (
           <XStack justify="space-between">
-            <Text>{t('home.lastDistribution.extra')}</Text>
-            <Text>+{formatPLN(extra)}</Text>
+            <Text color="$color9">{t('home.lastDistribution.extra')}</Text>
+            <Text color="$accent9">
+              +{formatAmount(extra)} {currency}
+            </Text>
           </XStack>
         ) : null}
         {alloc.unallocated > 0 ? (
           <XStack justify="space-between">
-            <Text>{t('home.lastDistribution.shortfall')}</Text>
-            <Text>-{formatPLN(alloc.unallocated)}</Text>
+            <Text color="$color9">{t('home.lastDistribution.shortfall')}</Text>
+            <Text theme="error" color="$color9">
+              -{formatAmount(alloc.unallocated)} {currency}
+            </Text>
           </XStack>
         ) : null}
       </YStack>
@@ -284,8 +378,6 @@ function LastDistributionCard({ income }: { income: Income }) {
 
 export default function HomeScreen() {
   const { t } = useTranslation();
-  const router = useRouter();
-  const insets = useSafeAreaInsets();
 
   const debts = useAppStore((s) => s.debts);
   const incomes = useAppStore((s) => s.incomes);
@@ -293,17 +385,17 @@ export default function HomeScreen() {
   const installationDate = useAppStore((s) => s.installationDate);
   const lastRealityCheckAt = useAppStore((s) => s.settings.lastRealityCheckAt);
 
-  // Local dismiss state for trigger cards
   const [dismissedRC, setDismissedRC] = useState(false);
   const [dismissedFS, setDismissedFS] = useState(false);
   const [dismissedCelebration, setDismissedCelebration] = useState(false);
 
-  const activeDebts = getActiveDebts(debts).sort((a, b) => a.remainingAmount - b.remainingAmount);
+  const activeDebts = getActiveDebts(debts).sort(
+    (a, b) => a.remainingAmount - b.remainingAmount
+  );
   const snowballTarget = activeDebts[0] ?? null;
   const recentIncome = getRecentIncome(incomes);
   const pendingDeferred = deferredPayments.filter((p) => !p.resolved);
 
-  // Compute triggers once per render via useMemo
   const realityCheckTrigger = useMemo(
     () => getRealityCheckTrigger(lastRealityCheckAt, installationDate),
     [lastRealityCheckAt, installationDate]
@@ -330,19 +422,16 @@ export default function HomeScreen() {
       date: new Date().toISOString(),
       question: realityCheckTrigger.questionKey,
       category: realityCheckTrigger.category,
-      answer };
+      answer,
+    };
     useAppStore.setState((s) => ({
       realityChecks: [...s.realityChecks, response],
-      settings: { ...s.settings, lastRealityCheckAt: new Date().toISOString() } }));
+      settings: {
+        ...s.settings,
+        lastRealityCheckAt: new Date().toISOString(),
+      },
+    }));
     setDismissedRC(true);
-  }
-
-  function handleFreshStartDismiss() {
-    setDismissedFS(true);
-  }
-
-  function handleCelebrationDismiss() {
-    setDismissedCelebration(true);
   }
 
   const showRealityCheck = realityCheckTrigger.shouldShow && !dismissedRC;
@@ -355,69 +444,60 @@ export default function HomeScreen() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <ScrollView
-        contentContainerStyle={{ paddingBottom: insets.bottom + 100 }}
-        showsVerticalScrollIndicator={false}
-      >
-        <YStack px="$4" pt={insets.top + 16} gap="$5">
-          <YStack gap="$1">
+      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+        <ScrollView
+          contentContainerStyle={{ paddingBottom: 100 }}
+          showsVerticalScrollIndicator={false}
+        >
+          <YStack px="$4" pt="$4" gap="$4">
+            {/* Greeting */}
             <H2>{t('home.greeting')}</H2>
+
+            {/* Deferred payments warning */}
             {pendingDeferred.length > 0 ? (
-              <Paragraph>
-                {t('home.deferred.pending', { count: pendingDeferred.length })}
-              </Paragraph>
+              <DeferredBanner count={pendingDeferred.length} />
             ) : null}
+
+            {/* Trigger cards */}
+            {showCelebration && debtCelebration ? (
+              <DebtCelebrationCard
+                debtLabel={debtCelebration.debtLabel}
+                onDismiss={() => setDismissedCelebration(true)}
+              />
+            ) : null}
+
+            {showFreshStart ? (
+              <FreshStartCard
+                messageKey={freshStartTrigger.messageKey}
+                onDismiss={() => setDismissedFS(true)}
+              />
+            ) : null}
+
+            {showRealityCheck ? (
+              <RealityCheckCard
+                questionKey={realityCheckTrigger.questionKey}
+                onAnswer={handleRealityCheckAnswer}
+              />
+            ) : null}
+
+            {/* Snowball target */}
+            {snowballTarget ? (
+              <SnowballCard debt={snowballTarget} incomes={incomes} />
+            ) : (
+              <YStack bg="$color2" rounded="$6" p="$5" items="center" gap="$3">
+                <Text color="$color9">{t('home.snowball.noDebts')}</Text>
+              </YStack>
+            )}
+
+            {/* Last distribution */}
+            {recentIncome ? (
+              <LastDistributionCard income={recentIncome} />
+            ) : null}
+
           </YStack>
-
-          {/* Trigger cards — shown above snowball and distribution content */}
-          {showCelebration && debtCelebration ? (
-            <DebtCelebrationCard
-              debtLabel={debtCelebration.debtLabel}
-              onDismiss={handleCelebrationDismiss}
-            />
-          ) : null}
-
-          {showFreshStart ? (
-            <FreshStartCard
-              messageKey={freshStartTrigger.messageKey}
-              onDismiss={handleFreshStartDismiss}
-            />
-          ) : null}
-
-          {showRealityCheck ? (
-            <RealityCheckCard
-              questionKey={realityCheckTrigger.questionKey}
-              onAnswer={handleRealityCheckAnswer}
-            />
-          ) : null}
-
-          {snowballTarget ? (
-            <SnowballCard debt={snowballTarget} incomes={incomes} />
-          ) : (
-            <YStack borderWidth={1} rounded="$6" p="$4">
-              <Paragraph>{t('home.snowball.noDebts')}</Paragraph>
-            </YStack>
-          )}
-
-          {recentIncome ? <LastDistributionCard income={recentIncome} /> : null}
-        </YStack>
-      </ScrollView>
-
-      {/* Sticky CTA */}
-      <YStack
-        position="absolute"
-        b={0}
-        l={0}
-        r={0}
-        pb={insets.bottom > 0 ? insets.bottom : '$4'}
-        pt="$3"
-        px="$4"
-        borderTopWidth={1}
-      >
-        <Button size="$5" onPress={() => router.push('/income/new')}>
-          <Text>{t('home.cta.receivedMoney')}</Text>
-        </Button>
-      </YStack>
+        </ScrollView>
+        <IncomeFab />
+      </SafeAreaView>
     </>
   );
 }

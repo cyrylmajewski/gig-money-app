@@ -10,9 +10,18 @@ import {
   H3,
   Paragraph,
   Progress,
-  Separator } from 'tamagui';
-import { TrendingDown, Trophy, Target, CheckCircle2 } from '@tamagui/lucide-icons-2';
+  Separator,
+} from 'tamagui';
+import {
+  TrendingDown,
+  Trophy,
+  Target,
+  CheckCircle2,
+  CalendarRange,
+} from '@tamagui/lucide-icons-2';
 
+import { Badge } from '@/components/badge';
+import { IncomeFab } from '@/components/income-fab';
 import { useAppStore } from '@/store';
 import { formatAmount as fmt } from '@/lib/format';
 import { getMonthKey } from '@/lib/distribution/helpers';
@@ -29,28 +38,44 @@ function sumIncomeForMonth(incomes: Income[], monthKey: string): number {
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
-function HeroCard({ totalRemaining, totalPaid }: { totalRemaining: number; totalPaid: number }) {
+function HeroCard({
+  totalRemaining,
+  totalPaid,
+}: {
+  totalRemaining: number;
+  totalPaid: number;
+}) {
   const { t } = useTranslation();
+  const currency = t('common.currency');
+
   return (
-    <YStack borderWidth={1} rounded="$6" overflow="hidden">
+    <YStack
+      bg="$color3"
+      borderWidth={1}
+      borderLeftWidth={3}
+      borderColor="$color4"
+      borderLeftColor="$accent9"
+      rounded="$6"
+      overflow="hidden"
+    >
       <YStack p="$4" gap="$1">
         <XStack items="center" gap="$2" mb="$1">
-          <TrendingDown size={16} />
-          <Text letterSpacing={1}>
+          <TrendingDown size={14} color="$accent11" />
+          <Text color="$accent11" fontSize="$1" letterSpacing={1}>
             {t('progress.totalDebt').toUpperCase()}
           </Text>
         </XStack>
-        <Text lineHeight={48}>
-          {fmt(totalRemaining)} zł
+        <Text fontSize="$8" fontWeight="700">
+          {fmt(totalRemaining)} {currency}
         </Text>
       </YStack>
-      <Separator />
+      <Separator borderColor="$color4" />
       <YStack p="$4" gap="$1">
-        <Text letterSpacing={1}>
+        <Text color="$color9" fontSize="$1" letterSpacing={1}>
           {t('progress.totalPaid').toUpperCase()}
         </Text>
-        <Text>
-          {fmt(totalPaid)} zł
+        <Text fontSize="$5" fontWeight="600" color="$color11">
+          {fmt(totalPaid)} {currency}
         </Text>
       </YStack>
     </YStack>
@@ -60,46 +85,67 @@ function HeroCard({ totalRemaining, totalPaid }: { totalRemaining: number; total
 function MilestoneCard({ debt }: { debt: Debt }) {
   const { t } = useTranslation();
   return (
-    <YStack borderWidth={1} rounded="$6" p="$4" gap="$2">
+    <YStack
+      bg="$color2"
+      borderWidth={1}
+      borderLeftWidth={3}
+      borderColor="$color4"
+      borderLeftColor="$accent7"
+      rounded="$6"
+      p="$4"
+      gap="$2"
+    >
       <XStack items="center" gap="$2">
-        <Target size={16} />
-        <Text letterSpacing={1}>
+        <Target size={14} color="$accent9" />
+        <Text color="$color9" fontSize="$1" letterSpacing={1}>
           {t('progress.nextMilestoneLabel').toUpperCase()}
         </Text>
       </XStack>
-      <Paragraph lineHeight={22}>
-        {t('progress.nextMilestone', { amount: fmt(debt.remainingAmount), debt: debt.label })}
+      <Paragraph color="$color11">
+        {t('progress.nextMilestone', {
+          amount: fmt(debt.remainingAmount),
+          debt: debt.label,
+        })}
       </Paragraph>
     </YStack>
   );
 }
 
-function MonthlyComparisonCard({ thisMonth, lastMonth }: { thisMonth: number; lastMonth: number }) {
+function MonthlyComparisonCard({
+  thisMonth,
+  lastMonth,
+}: {
+  thisMonth: number;
+  lastMonth: number;
+}) {
   const { t } = useTranslation();
+  const currency = t('common.currency');
+
   return (
-    <YStack borderWidth={1} rounded="$6" overflow="hidden">
-      <YStack px="$4" pt="$4" pb="$3">
-        <Text letterSpacing={1}>
+    <YStack bg="$color2" borderWidth={1} borderColor="$color4" rounded="$6" overflow="hidden">
+      <XStack px="$4" pt="$4" pb="$3" items="center" gap="$2">
+        <CalendarRange size={14} color="$color9" />
+        <Text color="$color9" fontSize="$1" letterSpacing={1}>
           {t('progress.monthlyComparison').toUpperCase()}
         </Text>
-      </YStack>
-      <Separator />
+      </XStack>
+      <Separator borderColor="$color3" />
       <XStack>
         <YStack flex={1} p="$4" gap="$1">
-          <Text>
+          <Text color="$color9" fontSize="$2">
             {t('progress.thisMonth')}
           </Text>
-          <Text>
-            {fmt(thisMonth)} zł
+          <Text color="$color11" fontSize="$5" fontWeight="600">
+            {fmt(thisMonth)} {currency}
           </Text>
         </YStack>
-        <YStack width={1} />
+        <Separator vertical borderColor="$color3" />
         <YStack flex={1} p="$4" gap="$1">
-          <Text>
+          <Text color="$color9" fontSize="$2">
             {t('progress.lastMonth')}
           </Text>
-          <Text>
-            {fmt(lastMonth)} zł
+          <Text color="$color11" fontSize="$5" fontWeight="600">
+            {fmt(lastMonth)} {currency}
           </Text>
         </YStack>
       </XStack>
@@ -109,59 +155,64 @@ function MonthlyComparisonCard({ thisMonth, lastMonth }: { thisMonth: number; la
 
 function DebtProgressCard({ debt }: { debt: Debt }) {
   const { t } = useTranslation();
+  const currency = t('common.currency');
   const paid = debt.originalAmount - debt.remainingAmount;
-  const pct = debt.originalAmount > 0 ? Math.min(100, Math.max(0, (paid / debt.originalAmount) * 100)) : 0;
-  const milestone25 = pct >= 25;
-  const milestone50 = pct >= 50;
-  const milestone75 = pct >= 75;
+  const pct =
+    debt.originalAmount > 0
+      ? Math.min(100, Math.max(0, (paid / debt.originalAmount) * 100))
+      : 0;
 
   return (
-    <YStack borderWidth={1} rounded="$6" overflow="hidden">
+    <YStack bg="$color2" borderWidth={1} borderColor="$color4" rounded="$6" overflow="hidden">
       <YStack p="$4" pb="$3" gap="$2">
         <XStack items="center" justify="space-between">
           <H3 numberOfLines={1} flex={1} mr="$2">
             {debt.label}
           </H3>
-          <YStack rounded="$3" px="$2" py="$1">
-            <Text>
-              {t(`onboarding.debts.types.${debt.type}`)}
-            </Text>
-          </YStack>
+          <Badge label={t(`onboarding.debts.types.${debt.type}`)} />
         </XStack>
         <Progress value={pct} size="$2">
           <Progress.Indicator />
         </Progress>
         <XStack gap="$3" items="center">
-          {[
-            { reached: milestone25, label: t('progress.milestone25') },
-            { reached: milestone50, label: t('progress.milestone50') },
-            { reached: milestone75, label: t('progress.milestone75') },
-          ].map(({ reached, label }) => (
-            <XStack key={label} items="center" gap="$1">
-              <YStack
-                width={6}
-                height={6}
-                rounded="$10"
-              />
-              <Text>
-                {label}
-              </Text>
-            </XStack>
-          ))}
-          <Text ml="auto">
+          {[25, 50, 75].map((milestone) => {
+            const reached = pct >= milestone;
+            return (
+              <XStack key={milestone} items="center" gap="$1">
+                <YStack
+                  width={6}
+                  height={6}
+                  rounded="$10"
+                  bg={reached ? '$accent9' : '$color5'}
+                />
+                <Text color={reached ? '$color11' : '$color8'} fontSize="$1">
+                  {milestone}%
+                </Text>
+              </XStack>
+            );
+          })}
+          <Text ml="auto" color="$color11" fontWeight="600">
             {Math.round(pct)}%
           </Text>
         </XStack>
       </YStack>
-      <Separator />
+      <Separator borderColor="$color3" />
       <XStack px="$4" py="$3" justify="space-between" items="center">
         <YStack gap="$0.5">
-          <Text>{t('progress.paidSoFar')}</Text>
-          <Text>{fmt(paid)} zł</Text>
+          <Text color="$color9" fontSize="$2">
+            {t('progress.paidSoFar')}
+          </Text>
+          <Text color="$color11" fontSize="$4" fontWeight="600">
+            {fmt(paid)} {currency}
+          </Text>
         </YStack>
         <YStack gap="$0.5" items="flex-end">
-          <Text>{t('progress.remaining')}</Text>
-          <Text>{fmt(debt.remainingAmount)} zł</Text>
+          <Text color="$color9" fontSize="$2">
+            {t('progress.remaining')}
+          </Text>
+          <Text color="$color11" fontSize="$4">
+            {fmt(debt.remainingAmount)} {currency}
+          </Text>
         </YStack>
       </XStack>
     </YStack>
@@ -171,12 +222,10 @@ function DebtProgressCard({ debt }: { debt: Debt }) {
 function ClosedDebtsRow({ count }: { count: number }) {
   const { t } = useTranslation();
   return (
-    <YStack borderWidth={1} rounded="$6" p="$4">
+    <YStack bg="$color2" borderWidth={1} borderColor="$color4" rounded="$6" p="$4">
       <XStack items="center" gap="$3">
-        <Trophy size={20} />
-        <Text>
-          {t('progress.closedDebts', { count })}
-        </Text>
+        <Trophy size={20} color="$accent9" />
+        <Text color="$color11">{t('progress.closedDebts', { count })}</Text>
       </XStack>
     </YStack>
   );
@@ -186,8 +235,8 @@ function EmptyState() {
   const { t } = useTranslation();
   return (
     <YStack flex={1} items="center" justify="center" gap="$4" py="$12">
-      <CheckCircle2 size={56} />
-      <Paragraph style={{ textAlign: 'center' }}>
+      <CheckCircle2 size={56} color="$accent9" />
+      <Paragraph color="$color9" style={{ textAlign: 'center' }}>
         {t('progress.noDebts')}
       </Paragraph>
     </YStack>
@@ -201,10 +250,18 @@ export default function ProgressScreen() {
   const debts = useAppStore((s) => s.debts);
   const incomes = useAppStore((s) => s.incomes);
 
-  const activeDebts = debts.filter((d) => d.closedAt === null).sort((a, b) => a.remainingAmount - b.remainingAmount);
+  const activeDebts = debts
+    .filter((d) => d.closedAt === null)
+    .sort((a, b) => a.remainingAmount - b.remainingAmount);
   const closedDebts = debts.filter((d) => d.closedAt !== null);
-  const totalRemaining = activeDebts.reduce((s, d) => s + d.remainingAmount, 0);
-  const totalPaid = debts.reduce((s, d) => s + (d.originalAmount - d.remainingAmount), 0);
+  const totalRemaining = activeDebts.reduce(
+    (s, d) => s + d.remainingAmount,
+    0
+  );
+  const totalPaid = debts.reduce(
+    (s, d) => s + (d.originalAmount - d.remainingAmount),
+    0
+  );
   const snowballTarget: Debt | null = activeDebts[0] ?? null;
 
   const now = new Date();
@@ -218,21 +275,34 @@ export default function ProgressScreen() {
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <SafeAreaView style={{ flex: 1 }} edges={['top']}>
-        <ScrollView contentContainerStyle={{ paddingBottom: 24 }} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          contentContainerStyle={{ paddingBottom: 100 }}
+          showsVerticalScrollIndicator={false}
+        >
           <YStack px="$4" pt="$4" gap="$4">
-            <H2>
-              {t('progress.title')}
-            </H2>
+            <H2>{t('progress.title')}</H2>
             {debts.length === 0 ? (
               <EmptyState />
             ) : (
               <>
-                <HeroCard totalRemaining={totalRemaining} totalPaid={totalPaid} />
-                {snowballTarget ? <MilestoneCard debt={snowballTarget} /> : null}
-                <MonthlyComparisonCard thisMonth={thisMonthPayments} lastMonth={lastMonthPayments} />
+                <HeroCard
+                  totalRemaining={totalRemaining}
+                  totalPaid={totalPaid}
+                />
+                {snowballTarget ? (
+                  <MilestoneCard debt={snowballTarget} />
+                ) : null}
+                <MonthlyComparisonCard
+                  thisMonth={thisMonthPayments}
+                  lastMonth={lastMonthPayments}
+                />
                 {activeDebts.length > 0 ? (
                   <YStack gap="$3">
-                    <Text letterSpacing={1}>
+                    <Text
+                      color="$color9"
+                      fontSize="$1"
+                      letterSpacing={1}
+                    >
                       {t('progress.debtsSection').toUpperCase()}
                     </Text>
                     {activeDebts.map((debt) => (
@@ -240,11 +310,14 @@ export default function ProgressScreen() {
                     ))}
                   </YStack>
                 ) : null}
-                {closedDebts.length > 0 ? <ClosedDebtsRow count={closedDebts.length} /> : null}
+                {closedDebts.length > 0 ? (
+                  <ClosedDebtsRow count={closedDebts.length} />
+                ) : null}
               </>
             )}
           </YStack>
         </ScrollView>
+        <IncomeFab />
       </SafeAreaView>
     </>
   );

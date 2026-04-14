@@ -1,46 +1,46 @@
-import { ChartBar, CreditCard, Home, Settings } from '@tamagui/lucide-icons-2';
-import { Tabs } from 'expo-router';
-import React from 'react';
+import { Icon, Label, NativeTabs } from 'expo-router/unstable-native-tabs';
 import { useTranslation } from 'react-i18next';
-
-import { HapticTab } from '@/components/haptic-tab';
-import { useNavOptions } from '@/hooks/use-nav-options';
-
-function tabIcon(Icon: typeof Home) {
-  return ({ color, size }: { color: string; size: number }) => (
-    <Icon size={size} color={color as never} />
-  );
-}
+import { useTheme } from 'tamagui';
 
 export default function TabLayout() {
   const { t } = useTranslation();
-  const navOptions = useNavOptions();
+  const theme = useTheme();
+
+  const bg = theme.background.val;
+  const accent = theme.accent9.val;
+  const muted = theme.color8.val;
 
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarButton: HapticTab,
-        tabBarStyle: { backgroundColor: navOptions.headerStyle.backgroundColor },
-        sceneStyle: navOptions.contentStyle,
+    <NativeTabs
+      minimizeBehavior="onScrollDown"
+      tintColor={accent}
+      iconColor={{
+        default: muted,
+        selected: accent,
       }}
+      labelStyle={{
+        default: { color: muted, fontSize: 10 },
+        selected: { color: accent, fontSize: 10, fontWeight: '600' },
+      }}
+      blurEffect="systemChromeMaterialDark"
+      shadowColor="transparent"
     >
-      <Tabs.Screen
-        name="index"
-        options={{ title: t('tabs.home'), tabBarIcon: tabIcon(Home) }}
-      />
-      <Tabs.Screen
-        name="debts"
-        options={{ title: t('tabs.debts'), tabBarIcon: tabIcon(CreditCard) }}
-      />
-      <Tabs.Screen
-        name="progress"
-        options={{ title: t('tabs.progress'), tabBarIcon: tabIcon(ChartBar) }}
-      />
-      <Tabs.Screen
-        name="settings"
-        options={{ title: t('tabs.settings'), tabBarIcon: tabIcon(Settings) }}
-      />
-    </Tabs>
+      <NativeTabs.Trigger name="index" options={{ backgroundColor: bg }}>
+        <Icon sf={{ default: 'house', selected: 'house.fill' }} />
+        <Label>{t('tabs.home')}</Label>
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="debts" options={{ backgroundColor: bg }}>
+        <Icon sf={{ default: 'creditcard', selected: 'creditcard.fill' }} />
+        <Label>{t('tabs.debts')}</Label>
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="progress" options={{ backgroundColor: bg }}>
+        <Icon sf={{ default: 'chart.bar', selected: 'chart.bar.fill' }} />
+        <Label>{t('tabs.progress')}</Label>
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="settings" options={{ backgroundColor: bg }}>
+        <Icon sf={{ default: 'gearshape', selected: 'gearshape.fill' }} />
+        <Label>{t('tabs.settings')}</Label>
+      </NativeTabs.Trigger>
+    </NativeTabs>
   );
 }

@@ -1,13 +1,13 @@
-import { useAppStore } from '@/store';
-import type { MonthlyNeeds } from '@/types/models';
 import { Stack, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Keyboard, ScrollView, TextInput } from 'react-native';
+import { Keyboard, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, H2, Paragraph, Text, XStack, YStack } from 'tamagui';
+import { Button, H2, H3, Input, Paragraph, Text, XStack, YStack } from 'tamagui';
 
-import { parseAmount, formatAmountForInput as formatForDisplay } from '@/lib/format';
+import { formatAmountForInput, parseAmount } from '@/lib/format';
+import { useAppStore } from '@/store';
+import type { MonthlyNeeds } from '@/types/models';
 
 interface NeedsField {
   key: keyof MonthlyNeeds;
@@ -45,10 +45,10 @@ export default function EditNeedsScreen() {
   const setMonthlyNeeds = useAppStore((s) => s.setMonthlyNeeds);
 
   const [values, setValues] = useState<Record<keyof MonthlyNeeds, string>>({
-    housing: formatForDisplay(monthlyNeeds.housing),
-    food: formatForDisplay(monthlyNeeds.food),
-    transport: formatForDisplay(monthlyNeeds.transport),
-    other: formatForDisplay(monthlyNeeds.other),
+    housing: formatAmountForInput(monthlyNeeds.housing),
+    food: formatAmountForInput(monthlyNeeds.food),
+    transport: formatAmountForInput(monthlyNeeds.transport),
+    other: formatAmountForInput(monthlyNeeds.other),
   });
   const [showError, setShowError] = useState(false);
 
@@ -91,12 +91,7 @@ export default function EditNeedsScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1 }} edges={['bottom']}>
-      <Stack.Screen
-        options={{
-          title: '',
-          headerStyle: {},
-        }}
-      />
+      <Stack.Screen options={{ title: t('onboarding.needs.title') }} />
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{ paddingBottom: 32 }}
@@ -106,33 +101,39 @@ export default function EditNeedsScreen() {
         automaticallyAdjustKeyboardInsets
       >
         <YStack px="$5" pt="$4" gap="$4">
-          <H2 letterSpacing={-0.5}>{t('onboarding.needs.title')}</H2>
-
           <YStack gap="$3">
             {FIELDS.map(({ key, labelKey, placeholder }) => (
               <YStack key={key} gap="$2">
-                <Text textTransform="uppercase" letterSpacing={0.5}>
+                <Text
+                  color="$color9"
+                  fontSize="$2"
+                  textTransform="uppercase"
+                  letterSpacing={0.5}
+                >
                   {t(labelKey)}
                 </Text>
                 <XStack
+                  bg="$color2"
                   borderWidth={1}
+                  borderColor="$color4"
                   rounded="$4"
                   items="center"
-                  px="$4"
+                  px="$3"
                   height={48}
                 >
-                  <TextInput
-                    style={{
-                      flex: 1,
-                      paddingVertical: 8,
-                    }}
-                    placeholder={t(placeholder)}
+                  <Input
+                    unstyled
+                    flex={1}
                     keyboardType="decimal-pad"
                     value={values[key]}
                     onChangeText={(raw) => handleChange(key, raw)}
-                    accessibilityLabel={t(labelKey)}
+                    placeholder={t(placeholder)}
+                    fontSize="$4"
+                    color="$color11"
                   />
-                  <Text ml="$2">{t('common.currency')}</Text>
+                  <Text color="$color9" fontSize="$3">
+                    {t('common.currency')}
+                  </Text>
                 </XStack>
               </YStack>
             ))}
@@ -142,26 +143,38 @@ export default function EditNeedsScreen() {
           <XStack
             justify="space-between"
             items="center"
+            bg="$color3"
+            borderWidth={1}
+            borderColor="$color5"
             rounded="$4"
             px="$4"
-            py="$3"
-            borderWidth={1}
+            py="$3.5"
           >
-            <Text>{t('onboarding.needs.total')}</Text>
-            <XStack items="baseline" gap="$1">
-              <Text>{formattedTotal}</Text>
-              <Text>{t('common.currency')}</Text>
+            <Text color="$color11" fontSize="$4">
+              {t('onboarding.needs.total')}
+            </Text>
+            <XStack items="baseline" gap="$1.5">
+              <H3 fontWeight="700">{formattedTotal}</H3>
+              <Text color="$color11" fontSize="$3">
+                {t('common.currency')}
+              </Text>
             </XStack>
           </XStack>
 
           {showError && (
-            <Paragraph style={{ textAlign: 'center' }}>
+            <Paragraph color="$color9" style={{ textAlign: 'center' }}>
               {t('onboarding.needs.validationError')}
             </Paragraph>
           )}
 
-          <Button size="$5" onPress={handleSave} accessibilityRole="button">
-            <Text>{t('common.save')}</Text>
+          {/* CTA */}
+          <Button
+            size="$5"
+            bg="$accent9"
+            pressStyle={{ bg: '$accent10' }}
+            onPress={handleSave}
+          >
+            <Button.Text color="$color12">{t('common.save')}</Button.Text>
           </Button>
         </YStack>
       </ScrollView>

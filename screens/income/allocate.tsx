@@ -6,26 +6,24 @@ import { Pressable } from 'react-native';
 import {
   YStack,
   XStack,
-  H3,
   Text,
   Button,
   Paragraph,
+  Progress,
   Separator,
   ScrollView,
-  Theme } from 'tamagui';
+} from 'tamagui';
+
 import { useAppStore } from '@/store';
+import { formatAmount } from '@/lib/format';
 import { distributeIncome } from '@/lib/distribution';
-import { getCurrentMonthlyCoverage, getOutstandingNeeds, getOutstandingMinimums, getActiveDebts } from '@/lib/distribution/helpers';
+import {
+  getCurrentMonthlyCoverage,
+  getOutstandingNeeds,
+  getOutstandingMinimums,
+  getActiveDebts,
+} from '@/lib/distribution/helpers';
 import type { Allocation, AppState } from '@/types/models';
-
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function formatPLN(amount: number): string {
-  return amount.toLocaleString('pl-PL', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2 });
-}
 
 // ── Row component ─────────────────────────────────────────────────────────────
 
@@ -38,31 +36,39 @@ interface AllocationRowProps {
   currency: string;
 }
 
-function AllocationRow({ label, amount, needed, sublabel, highlight, currency }: AllocationRowProps) {
+function AllocationRow({
+  label,
+  amount,
+  needed,
+  sublabel,
+  highlight,
+  currency,
+}: AllocationRowProps) {
   const { t } = useTranslation();
   const hasNeeded = needed !== undefined && needed > 0;
-  const pct = hasNeeded ? Math.min(100, Math.round((amount / needed) * 100)) : 100;
-  const isFull = hasNeeded && amount >= needed;
-
-
+  const pct = hasNeeded
+    ? Math.min(100, Math.round((amount / needed) * 100))
+    : 100;
 
   return (
     <YStack py="$3" gap="$2">
       {/* Header: label + percentage */}
       <XStack items="center" justify="space-between">
         <YStack flex={1} gap="$0.5" pr="$3">
-          <Text
-          >
+          <Text color="$color11" fontWeight={highlight ? '600' : '400'}>
             {label}
           </Text>
           {sublabel ? (
-            <Paragraph>
+            <Text color="$color8" fontSize="$2">
               {sublabel}
-            </Paragraph>
+            </Text>
           ) : null}
         </YStack>
         {hasNeeded && (
-          <Text>
+          <Text
+            color={pct >= 100 ? '$color11' : '$color9'}
+            fontWeight="600"
+          >
             {pct}%
           </Text>
         )}
@@ -70,32 +76,30 @@ function AllocationRow({ label, amount, needed, sublabel, highlight, currency }:
 
       {/* Progress bar */}
       {hasNeeded && (
-        <YStack height={6} rounded="$10" overflow="hidden">
-          <YStack
-            height={6}
-            width={`${pct}%` as any}
-            rounded="$10"
+        <Progress value={pct} size="$1">
+          <Progress.Indicator
+            bg={highlight ? '$accent9' : pct >= 100 ? '$accent9' : '$color8'}
           />
-        </YStack>
+        </Progress>
       )}
 
       {/* Amounts: allocated / needed */}
       <XStack justify="space-between" items="center">
         <XStack gap="$1" items="baseline">
-          <Text>
+          <Text color="$color9" fontSize="$2">
             {t('income.allocate.allocated')}
           </Text>
-          <Text>
-            {formatPLN(amount)} {currency}
+          <Text color="$color11" fontSize="$3">
+            {formatAmount(amount)} {currency}
           </Text>
         </XStack>
         {hasNeeded && (
           <XStack gap="$1" items="baseline">
-            <Text>
+            <Text color="$color9" fontSize="$2">
               {t('income.allocate.needed')}
             </Text>
-            <Text>
-              {formatPLN(needed)} {currency}
+            <Text color="$color11" fontSize="$3">
+              {formatAmount(needed)} {currency}
             </Text>
           </XStack>
         )}
@@ -112,7 +116,6 @@ export default function AllocateScreen() {
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{ amount: string; source?: string }>();
 
-  // Read state slices individually for performance
   const monthlyNeeds = useAppStore((s) => s.monthlyNeeds);
   const debts = useAppStore((s) => s.debts);
   const deferredPayments = useAppStore((s) => s.deferredPayments);
@@ -122,7 +125,6 @@ export default function AllocateScreen() {
   const incomeAmount = parseFloat(params.amount ?? '0');
   const currency = t('common.currency');
 
-  // Build a minimal AppState snapshot for the pure distributeIncome function
   const stateSnapshot: AppState = useMemo(
     () => ({
       schemaVersion: 1,
@@ -134,16 +136,16 @@ export default function AllocateScreen() {
       deferredPayments,
       monthlyCoverage,
       realityChecks: [],
-      settings }),
-    [monthlyNeeds, debts, deferredPayments, monthlyCoverage, settings],
+      settings,
+    }),
+    [monthlyNeeds, debts, deferredPayments, monthlyCoverage, settings]
   );
 
   const allocation: Allocation = useMemo(
     () => distributeIncome(incomeAmount, stateSnapshot),
-    [incomeAmount, stateSnapshot],
+    [incomeAmount, stateSnapshot]
   );
 
-  // Calculate what's needed per category (for "X out of Y" display)
   const outstanding = useMemo(() => {
     const coverage = getCurrentMonthlyCoverage(monthlyCoverage);
     const needs = getOutstandingNeeds(monthlyNeeds, coverage);
@@ -152,7 +154,6 @@ export default function AllocateScreen() {
     return { needs, mins };
   }, [monthlyNeeds, monthlyCoverage, debts]);
 
-  // Coverage stats for the supportive summary card
   const coverageStats = useMemo(() => {
     const covered =
       allocation.needs.housing +
@@ -164,10 +165,10 @@ export default function AllocateScreen() {
       monthlyNeeds.food +
       monthlyNeeds.transport +
       monthlyNeeds.other;
-    const pct = totalNeeds > 0 ? Math.round((covered / totalNeeds) * 100) : 100;
+    const pct =
+      totalNeeds > 0 ? Math.round((covered / totalNeeds) * 100) : 100;
     const hasShortfall = covered < totalNeeds;
 
-    // Build concrete tips based on what's not covered
     const tips: string[] = [];
     if (allocation.needs.food < monthlyNeeds.food && monthlyNeeds.food > 0) {
       tips.push('income.allocate.tips.food');
@@ -176,7 +177,7 @@ export default function AllocateScreen() {
       tips.push('income.allocate.tips.transport');
     }
     const unpaidDebts = Object.entries(outstanding.mins).filter(
-      ([id]) => (allocation.minimumPayments[id] ?? 0) === 0,
+      ([id]) => (allocation.minimumPayments[id] ?? 0) === 0
     );
     if (unpaidDebts.length > 0) {
       tips.push('income.allocate.tips.contactCreditor');
@@ -188,7 +189,6 @@ export default function AllocateScreen() {
     return { pct, hasShortfall, tips };
   }, [allocation, monthlyNeeds, outstanding]);
 
-  // Debt label lookup
   const debtById = useMemo(() => {
     return Object.fromEntries(debts.map((d) => [d.id, d]));
   }, [debts]);
@@ -199,7 +199,9 @@ export default function AllocateScreen() {
       params: {
         amount: params.amount,
         source: params.source ?? '',
-        allocation: JSON.stringify(allocation) } });
+        allocation: JSON.stringify(allocation),
+      },
+    });
   }
 
   const hasDeferred = allocation.deferredPayments > 0;
@@ -212,57 +214,78 @@ export default function AllocateScreen() {
         options={{
           title: t('income.allocate.title'),
           headerLeft: () => (
-            <Pressable onPress={() => router.back()} hitSlop={8} style={{ paddingHorizontal: 8, paddingVertical: 4 }}>
-              <Text>
-                {t('common.back')}
-              </Text>
+            <Pressable
+              onPress={() => router.back()}
+              hitSlop={8}
+              style={{ paddingHorizontal: 8, paddingVertical: 4 }}
+            >
+              <Text color="$color11">{t('common.back')}</Text>
             </Pressable>
-          ) }}
+          ),
+        }}
       />
 
       <YStack flex={1}>
         <ScrollView>
-          <YStack px="$5" pt="$4" pb="$6" gap="$4">
-
+          <YStack px="$4" pt="$4" pb="$6" gap="$4">
             {/* Received amount header */}
-            <XStack items="center" gap="$2">
-              <Text>
+            <YStack
+              bg="$color3"
+              borderWidth={1}
+              borderLeftWidth={3}
+              borderColor="$color4"
+              borderLeftColor="$accent9"
+              rounded="$6"
+              p="$4"
+            >
+              <Text color="$color9" fontSize="$2">
                 {t('income.allocate.receivedLabel')}
               </Text>
-              <Text>
-                {formatPLN(incomeAmount)} {currency}
+              <Text fontSize="$7" fontWeight="700" mt="$1">
+                {formatAmount(incomeAmount)} {currency}
               </Text>
-            </XStack>
+            </YStack>
 
-            {/* Supportive coverage summary */}
-            <YStack p="$4" rounded="$4" borderWidth={1} gap="$3">
-              {/* Coverage bar */}
+            {/* Coverage summary card */}
+            <YStack
+              bg="$color2"
+              borderWidth={1}
+              borderColor="$color4"
+              rounded="$6"
+              p="$4"
+              gap="$3"
+            >
               <XStack items="center" justify="space-between">
-                <Text>
-                  {t('income.allocate.summary.coverageLabel')}
+                <Text color="$color9" fontSize="$2" letterSpacing={0.5}>
+                  {t('income.allocate.summary.coverageLabel').toUpperCase()}
                 </Text>
-                <Text>
+                <Text
+                  color={coverageStats.pct >= 100 ? '$color11' : '$color9'}
+                  fontWeight="600"
+                >
                   {coverageStats.pct}%
                 </Text>
               </XStack>
-              <YStack height={8} rounded="$10" overflow="hidden">
-                <YStack
-                  height={8}
-                  width={`${Math.min(100, coverageStats.pct)}%` as any}
-                  rounded="$10"
-                />
-              </YStack>
 
-              {/* Concrete tips */}
+              <Progress
+                value={Math.min(100, coverageStats.pct)}
+                size="$2"
+              >
+                <Progress.Indicator
+                  bg={coverageStats.pct >= 100 ? '$accent9' : '$color8'}
+                />
+              </Progress>
+
+              {/* Tips */}
               {coverageStats.tips.length > 0 && (
                 <YStack gap="$2" pt="$1">
-                  <Text>
+                  <Text color="$color9" fontSize="$2">
                     {t('income.allocate.summary.tipsLabel')}
                   </Text>
                   {coverageStats.tips.map((tipKey) => (
                     <XStack key={tipKey} gap="$2" items="flex-start">
-                      <Text>→</Text>
-                      <Text flex={1}>
+                      <Text color="$accent9">→</Text>
+                      <Text color="$color11" flex={1} fontSize="$3">
                         {t(tipKey)}
                       </Text>
                     </XStack>
@@ -271,145 +294,155 @@ export default function AllocateScreen() {
               )}
             </YStack>
 
-            {/* Allocation breakdown card */}
-            <YStack p="$4" rounded="$5" borderWidth={1}>
-              <YStack gap="$0">
-
-                {/* Deferred payments */}
-                {hasDeferred && (
-                  <>
-                    <AllocationRow
-                      label={t('income.allocate.rows.deferred')}
-                      amount={allocation.deferredPayments}
-                      sublabel={t('income.allocate.rows.deferredSublabel')}
-                      highlight
-                      currency={currency}
-                    />
-                    <Separator />
-                  </>
-                )}
-
-                {/* Housing — always visible */}
-                {outstanding.needs.housing > 0 && (
-                  <>
-                    <AllocationRow
-                      label={t('income.allocate.rows.housing')}
-                      amount={allocation.needs.housing}
-                      needed={outstanding.needs.housing}
-                      currency={currency}
-                    />
-                    <Separator />
-                  </>
-                )}
-
-                {/* Food — always visible */}
-                {outstanding.needs.food > 0 && (
-                  <>
-                    <AllocationRow
-                      label={t('income.allocate.rows.food')}
-                      amount={allocation.needs.food}
-                      needed={outstanding.needs.food}
-                      currency={currency}
-                    />
-                    <Separator />
-                  </>
-                )}
-
-                {/* Minimum payments per debt — all active debts */}
-                {activeDebtsList.map((debt) => {
-                  const needed = outstanding.mins[debt.id] ?? 0;
-                  if (needed <= 0) return null;
-                  const amt = allocation.minimumPayments[debt.id] ?? 0;
-                  return (
-                    <YStack key={debt.id}>
-                      <AllocationRow
-                        label={t('income.allocate.rows.minimumPayment', {
-                          label: debt.label })}
-                        amount={amt}
-                        needed={needed}
-                        sublabel={t('income.allocate.rows.minimumPaymentSublabel')}
-                        currency={currency}
-                      />
-                      <Separator />
-                    </YStack>
-                  );
-                })}
-
-                {/* Transport — always visible */}
-                {outstanding.needs.transport > 0 && (
-                  <>
-                    <AllocationRow
-                      label={t('income.allocate.rows.transport')}
-                      amount={allocation.needs.transport}
-                      needed={outstanding.needs.transport}
-                      currency={currency}
-                    />
-                    <Separator />
-                  </>
-                )}
-
-                {/* Other needs — always visible */}
-                {outstanding.needs.other > 0 && (
-                  <>
-                    <AllocationRow
-                      label={t('income.allocate.rows.other')}
-                      amount={allocation.needs.other}
-                      needed={outstanding.needs.other}
-                      currency={currency}
-                    />
-                    <Separator />
-                  </>
-                )}
-
-                {/* Extra snowball payment — highlighted as a win */}
-                {hasExtra && allocation.extraDebtPayment && (
-                  <>
-                    <AllocationRow
-                      label={t('income.allocate.rows.extraPayment', {
-                        label:
-                          debtById[allocation.extraDebtPayment.debtId]?.label ??
-                          t('income.allocate.rows.extraPaymentFallback') })}
-                      amount={allocation.extraDebtPayment.amount}
-                      sublabel={t('income.allocate.rows.extraPaymentSublabel')}
-                      highlight
-                      currency={currency}
-                    />
-                    <Separator />
-                  </>
-                )}
-
-                {/* Unallocated surplus */}
-                {allocation.unallocated > 0 && (
+            {/* Allocation breakdown */}
+            <YStack
+              bg="$color2"
+              borderWidth={1}
+              borderColor="$color4"
+              rounded="$6"
+              px="$4"
+            >
+              {/* Deferred payments */}
+              {hasDeferred && (
+                <>
                   <AllocationRow
-                    label={t('income.allocate.rows.unallocated')}
-                    amount={allocation.unallocated}
-                    sublabel={t('income.allocate.rows.unallocatedSublabel')}
+                    label={t('income.allocate.rows.deferred')}
+                    amount={allocation.deferredPayments}
+                    sublabel={t('income.allocate.rows.deferredSublabel')}
+                    highlight
                     currency={currency}
                   />
-                )}
-              </YStack>
+                  <Separator borderColor="$color3" />
+                </>
+              )}
+
+              {/* Housing */}
+              {outstanding.needs.housing > 0 && (
+                <>
+                  <AllocationRow
+                    label={t('income.allocate.rows.housing')}
+                    amount={allocation.needs.housing}
+                    needed={outstanding.needs.housing}
+                    currency={currency}
+                  />
+                  <Separator borderColor="$color3" />
+                </>
+              )}
+
+              {/* Food */}
+              {outstanding.needs.food > 0 && (
+                <>
+                  <AllocationRow
+                    label={t('income.allocate.rows.food')}
+                    amount={allocation.needs.food}
+                    needed={outstanding.needs.food}
+                    currency={currency}
+                  />
+                  <Separator borderColor="$color3" />
+                </>
+              )}
+
+              {/* Minimum payments per debt */}
+              {activeDebtsList.map((debt) => {
+                const needed = outstanding.mins[debt.id] ?? 0;
+                if (needed <= 0) return null;
+                const amt = allocation.minimumPayments[debt.id] ?? 0;
+                return (
+                  <YStack key={debt.id}>
+                    <AllocationRow
+                      label={t('income.allocate.rows.minimumPayment', {
+                        label: debt.label,
+                      })}
+                      amount={amt}
+                      needed={needed}
+                      sublabel={t(
+                        'income.allocate.rows.minimumPaymentSublabel'
+                      )}
+                      currency={currency}
+                    />
+                    <Separator borderColor="$color3" />
+                  </YStack>
+                );
+              })}
+
+              {/* Transport */}
+              {outstanding.needs.transport > 0 && (
+                <>
+                  <AllocationRow
+                    label={t('income.allocate.rows.transport')}
+                    amount={allocation.needs.transport}
+                    needed={outstanding.needs.transport}
+                    currency={currency}
+                  />
+                  <Separator borderColor="$color3" />
+                </>
+              )}
+
+              {/* Other needs */}
+              {outstanding.needs.other > 0 && (
+                <>
+                  <AllocationRow
+                    label={t('income.allocate.rows.other')}
+                    amount={allocation.needs.other}
+                    needed={outstanding.needs.other}
+                    currency={currency}
+                  />
+                  <Separator borderColor="$color3" />
+                </>
+              )}
+
+              {/* Extra snowball payment */}
+              {hasExtra && allocation.extraDebtPayment && (
+                <>
+                  <AllocationRow
+                    label={t('income.allocate.rows.extraPayment', {
+                      label:
+                        debtById[allocation.extraDebtPayment.debtId]?.label ??
+                        t('income.allocate.rows.extraPaymentFallback'),
+                    })}
+                    amount={allocation.extraDebtPayment.amount}
+                    sublabel={t(
+                      'income.allocate.rows.extraPaymentSublabel'
+                    )}
+                    highlight
+                    currency={currency}
+                  />
+                  <Separator borderColor="$color3" />
+                </>
+              )}
+
+              {/* Unallocated surplus */}
+              {allocation.unallocated > 0 && (
+                <AllocationRow
+                  label={t('income.allocate.rows.unallocated')}
+                  amount={allocation.unallocated}
+                  sublabel={t(
+                    'income.allocate.rows.unallocatedSublabel'
+                  )}
+                  currency={currency}
+                />
+              )}
             </YStack>
 
             {/* Default bias note */}
-            <Paragraph style={{ textAlign: 'center' }}>
+            <Paragraph color="$color8" fontSize="$2" style={{ textAlign: 'center' }}>
               {t('income.allocate.defaultBiasNote')}
             </Paragraph>
           </YStack>
         </ScrollView>
 
-        {/* Sticky confirm button — default bias: prominent one-tap confirm */}
-        <YStack
-          px="$5"
-          pt="$3"
-          pb={insets.bottom + 12}
-          borderTopWidth={1}
-        >
+        {/* Sticky confirm button */}
+        <YStack px="$4" pt="$3" pb={insets.bottom + 12}>
           <Button
             size="$5"
+            bg="$accent9"
+            pressStyle={{ bg: '$accent10' }}
             onPress={handleConfirm}
             accessibilityRole="button"
           >
-            <Text>{t('income.allocate.confirm')}</Text>
+            <Button.Text color="$color12">
+              {t('income.allocate.confirm')}
+            </Button.Text>
           </Button>
         </YStack>
       </YStack>

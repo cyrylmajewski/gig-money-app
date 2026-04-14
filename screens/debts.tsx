@@ -1,4 +1,4 @@
-import { Plus } from '@tamagui/lucide-icons-2';
+import { Crosshair, Plus } from '@tamagui/lucide-icons-2';
 import { Stack, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView } from 'react-native';
@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Button,
   H2,
+  H3,
   Paragraph,
   Progress,
   Separator,
@@ -15,6 +16,7 @@ import {
 } from 'tamagui';
 
 import { Badge } from '@/components/badge';
+import { IncomeFab } from '@/components/income-fab';
 import { useAppStore } from '@/store';
 import { formatAmount } from '@/lib/format';
 import { getActiveDebts } from '@/lib/distribution/helpers';
@@ -27,7 +29,6 @@ function getClosedDebts(debts: Debt[]): Debt[] {
       return new Date(b.closedAt!).getTime() - new Date(a.closedAt!).getTime();
     });
 }
-
 
 interface DebtCardProps {
   debt: Debt;
@@ -54,19 +55,23 @@ function DebtCard({
   return (
     <Pressable onPress={onPress} accessibilityRole="button">
       <YStack
+        bg={isSnowballTarget ? '$color3' : '$color2'}
         borderWidth={1}
         borderLeftWidth={isSnowballTarget ? 3 : 1}
+        borderColor={isSnowballTarget ? '$color4' : '$color4'}
+        borderLeftColor={isSnowballTarget ? '$accent9' : '$color4'}
         rounded="$6"
         overflow="hidden"
         opacity={isClosed ? 0.5 : 1}
       >
         {/* Target label */}
         {isSnowballTarget ? (
-          <YStack px="$4" pt="$3" pb="$1">
-            <Text letterSpacing={0.8}>
+          <XStack px="$4" pt="$3" pb="$1" items="center" gap="$2">
+            <Crosshair size={12} color="$accent11" />
+            <Text color="$accent11" fontSize="$1" letterSpacing={0.8}>
               {t('debts.list.snowballTarget').toUpperCase()}
             </Text>
-          </YStack>
+          </XStack>
         ) : null}
 
         {/* Header row */}
@@ -77,42 +82,48 @@ function DebtCard({
           items="center"
           justify="space-between"
         >
-          <YStack flex={1} mr="$3" gap="$1">
-            <Text
-              numberOfLines={1}
-              textDecorationLine={isClosed ? 'line-through' : 'none'}
-            >
-              {debt.label}
-            </Text>
-          </YStack>
+          <H3
+            flex={1}
+            mr="$3"
+            numberOfLines={1}
+            textDecorationLine={isClosed ? 'line-through' : 'none'}
+          >
+            {debt.label}
+          </H3>
           <Badge label={t(`onboarding.debts.types.${debt.type}`)} />
         </XStack>
 
-        {/* Progress bar */}
-        <YStack px="$4" pb="$3" gap="$2">
-          <Progress value={progressValue} size="$1">
-            <Progress.Indicator />
+        <Separator borderColor={isSnowballTarget ? '$color4' : '$color3'} />
+
+        {/* Progress section */}
+        <YStack px="$4" py="$3" gap="$3">
+          <Progress value={progressValue} size="$2">
+            <Progress.Indicator bg={isSnowballTarget ? '$accent9' : undefined} />
           </Progress>
 
           {/* Amounts row */}
           <XStack justify="space-between" items="center">
             <YStack gap="$0.5">
-              <Text>{t('debts.form.remainingAmount')}</Text>
-              <Text>
+              <Text color="$color9" fontSize="$2">
+                {t('debts.form.remainingAmount')}
+              </Text>
+              <Text color="$color11" fontSize="$4" fontWeight="600">
                 {formatAmount(debt.remainingAmount)} {currency}
               </Text>
             </YStack>
 
             <YStack gap="$0.5" items="flex-end">
-              <Text>{t('debts.form.minimumPayment')}</Text>
-              <Text>
+              <Text color="$color9" fontSize="$2">
+                {t('debts.form.minimumPayment')}
+              </Text>
+              <Text color="$color11" fontSize="$4">
                 {formatAmount(debt.minimumPayment)} {currency}
               </Text>
             </YStack>
           </XStack>
 
-          {/* Original amount */}
-          <Text>
+          {/* Paid progress text */}
+          <Text color="$color8" fontSize="$2">
             {formatAmount(paid)} / {formatAmount(debt.originalAmount)}{' '}
             {currency} ({Math.round(progressValue)}%)
           </Text>
@@ -130,7 +141,9 @@ export default function DebtsScreen() {
 
   const debts = useAppStore((s) => s.debts);
 
-  const activeDebts = getActiveDebts(debts).sort((a, b) => a.remainingAmount - b.remainingAmount);
+  const activeDebts = getActiveDebts(debts).sort(
+    (a, b) => a.remainingAmount - b.remainingAmount
+  );
   const closedDebts = getClosedDebts(debts);
 
   return (
@@ -140,7 +153,7 @@ export default function DebtsScreen() {
       <SafeAreaView style={{ flex: 1 }} edges={['top']}>
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 24 }}
+          contentContainerStyle={{ paddingBottom: 100 }}
         >
           <YStack px="$4" pt="$4" gap="$5">
             {/* Title + Add button */}
@@ -148,33 +161,36 @@ export default function DebtsScreen() {
               <H2>{t('debts.list.title')}</H2>
               <Button
                 size="$3"
-                bg="transparent"
-                borderWidth={1}
-                icon={<Plus size={16} />}
+                variant="outlined"
+                icon={<Plus size={14} />}
                 onPress={() => router.push('/debt/new')}
               >
-                <Text>{t('debts.list.addDebt')}</Text>
+                <Button.Text>{t('debts.list.addDebt')}</Button.Text>
               </Button>
             </XStack>
 
             {/* Empty state */}
             {activeDebts.length === 0 && closedDebts.length === 0 ? (
               <YStack
-                borderWidth={1}
+                bg="$color2"
                 rounded="$6"
                 p="$5"
                 items="center"
                 gap="$3"
               >
-                <Paragraph style={{ textAlign: 'center' }}>
+                <Paragraph color="$color9" style={{ textAlign: 'center' }}>
                   {t('debts.list.empty')}
                 </Paragraph>
                 <Button
-                  size="$4"
+                  size="$5"
+                  bg="$accent9"
+                  pressStyle={{ bg: '$accent10' }}
                   icon={<Plus size={18} />}
                   onPress={() => router.push('/debt/new')}
                 >
-                  <Text>{t('debts.list.addDebt')}</Text>
+                  <Button.Text color="$color12">
+                    {t('debts.list.addDebt')}
+                  </Button.Text>
                 </Button>
               </YStack>
             ) : null}
@@ -198,7 +214,7 @@ export default function DebtsScreen() {
               <YStack gap="$3">
                 <XStack items="center" gap="$3">
                   <Separator flex={1} />
-                  <Text letterSpacing={0.8}>
+                  <Text color="$color8" fontSize="$2" letterSpacing={0.8}>
                     {t('debts.list.closedSection').toUpperCase()}
                   </Text>
                   <Separator flex={1} />
@@ -217,6 +233,7 @@ export default function DebtsScreen() {
             ) : null}
           </YStack>
         </ScrollView>
+        <IncomeFab />
       </SafeAreaView>
     </>
   );
