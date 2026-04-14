@@ -34,3 +34,30 @@ npx expo start
 # Lint
 npx expo lint
 ```
+
+## Running on a Physical Device
+
+### iOS (requires macOS + Xcode)
+
+```bash
+# Build and run on a connected iPhone
+npx expo run:ios --device
+```
+
+If this is your first time:
+1. Connect your iPhone via USB and trust the computer
+2. Open the generated `ios/` folder in Xcode
+3. Go to **Signing & Capabilities** and select your Apple Developer team
+4. Select your iPhone as the build target and run
+
+### Android
+
+```bash
+# Build and run on a connected Android device
+npx expo run:android --device
+```
+
+To set up your phone:
+1. Enable **Developer Options** (tap Build Number 7 times in Settings > About Phone)
+2. Enable **USB Debugging** in Developer Options
+3. Connect via USB and accept the debugging prompt on the phone
