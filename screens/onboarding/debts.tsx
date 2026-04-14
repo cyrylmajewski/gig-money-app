@@ -116,7 +116,7 @@ export default function OnboardingDebtsScreen() {
                 theme="accent"
                 size="$5"
                 rounded="$4"
-                onPress={() => router.push('/onboarding/ready')}
+                onPress={() => router.push('/onboarding/strict-mode')}
               >
                 {t('common.continue')}
               </Button>
@@ -126,7 +126,7 @@ export default function OnboardingDebtsScreen() {
                 bg="transparent"
                 rounded="$4"
                 pressStyle={{ opacity: 0.7 }}
-                onPress={() => router.push('/onboarding/ready')}
+                onPress={() => router.push('/onboarding/strict-mode')}
               >
                 <Text color="$color9">{t('onboarding.debts.skip')}</Text>
               </Button>

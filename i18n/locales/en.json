@@ -13,7 +13,7 @@
   "tabs": {
     "home": "Home",
     "debts": "Debts",
-    "progress": "Progress",
+    "history": "History",
     "settings": "Settings"
   },
   "onboarding": {
@@ -70,6 +70,21 @@
       "minimumPaymentPlaceholder": "e.g. 250",
       "interestRatePlaceholder": "e.g. 29.9",
       "overdueAmountPlaceholder": "e.g. 1186"
+    },
+    "strictMode": {
+      "title": "Strict Mode",
+      "subtitle": "Want the app to hold you more accountable?",
+      "description": "Strict mode adds extra verification layers to help you maintain financial discipline.",
+      "feature1Title": "Bank call verification",
+      "feature1Desc": "When funds are short — confirm you've contacted the bank",
+      "feature2Title": "Stricter allocation",
+      "feature2Desc": "Extra warnings when reducing payments or skipping categories",
+      "feature3Title": "Monthly check-in",
+      "feature3Desc": "A control quiz before adding new income",
+      "feature4Title": "Payment reminders",
+      "feature4Desc": "Notification when a payment date passes without coverage",
+      "enable": "Enable strict mode",
+      "skip": "No, thanks"
     },
     "ready": {
       "title": "Ready!",
@@ -151,6 +166,30 @@
         "nextIncome": "Your next income will cover the remaining needs"
       }
     },
+    "shortfall": {
+      "title": "Can't cover key payments",
+      "subtitle": "You don't have enough to cover all obligations. Don't worry — you can negotiate with your bank.",
+      "housingShort": "{{amount}} {{currency}} short on housing",
+      "foodShort": "{{amount}} {{currency}} short on food",
+      "debtShort": "{{amount}} {{currency}} short on payment — {{label}}",
+      "callBankTitle": "Call {{bank}}",
+      "callBankPhone": "Number: {{phone}}",
+      "callBankHours": "Hours: {{hours}}",
+      "callNow": "Call now",
+      "stepsTitle": "What to say:",
+      "step1": "Introduce yourself and provide your loan agreement number",
+      "step2": "Explain that you're having temporary financial difficulties",
+      "step3": "Ask to defer the payment or reduce the amount for this month",
+      "step4": "Ask about \"credit holidays\" — option to suspend payments",
+      "landlordTitle": "Contact your landlord",
+      "landlordTip": "Talk to your landlord about delaying payment. Most landlords prefer open communication over silence.",
+      "confirmCall": "I confirm I called",
+      "confirmLandlord": "I confirm I contacted the landlord",
+      "confirmed": "Confirmed",
+      "alreadyContacted": "Already contacted this month",
+      "timerWaiting": "Wait {{time}} to confirm",
+      "continue": "I understand, continue"
+    },
     "confirm": {
       "title": "Summary",
       "subtitle": "Review the allocation and save when everything looks right.",
@@ -194,6 +233,11 @@
       "minimumPaymentHint": "Loan: installment amount. Card: minimum payment due.",
       "interestRate": "Nominal interest rate (optional)",
       "interestRateHint": "Annual rate from your contract, not APR. For PayPo/BNPL enter 0.",
+      "creditor": "Bank / Creditor",
+      "creditorBank": "Bank",
+      "creditorBnpl": "Installment provider",
+      "creditorPayday": "Lending company",
+      "creditorHint": "Select so we can help you get in touch.",
       "overdueAmount": "Overdue amount (optional)",
       "overdueAmountHint": "Overdue payment amount from your bank, if any.",
       "paymentDay": "Payment day (optional)",
@@ -239,6 +283,10 @@
     "milestone25": "25%",
     "milestone50": "50%",
     "milestone75": "75%"
+  },
+  "history": {
+    "title": "History",
+    "empty": "No income entries yet. Add your first income to see history."
   },
   "settings": {
     "title": "Settings",

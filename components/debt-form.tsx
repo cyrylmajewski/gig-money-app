@@ -1,10 +1,11 @@
 import { parseAmount, sanitiseDecimal } from '@/lib/format';
-import type { DebtType } from '@/types/models';
+import { getCreditorsByDebtType, getCreditorLabelKey, type Creditor } from '@/lib/creditors';
+import type { CreditorKind, DebtType } from '@/types/models';
 import { useForm } from '@tanstack/react-form';
-import type { ReactNode } from 'react';
+import { type ReactNode, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, TextInput } from 'react-native';
-import { Button, Paragraph, Text, XStack, YStack, useTheme } from 'tamagui';
+import { Button, Paragraph, ScrollView, Text, XStack, YStack, useTheme } from 'tamagui';
 
 const DEBT_TYPES: DebtType[] = [
   'payday_loan',
@@ -17,6 +18,8 @@ const DEBT_TYPES: DebtType[] = [
 interface DebtFormValues {
   label: string;
   type: DebtType;
+  creditorKind: CreditorKind;
+  creditorId: string;
   remainingAmount: string;
   minimumPayment: string;
   interestRate: string;
@@ -31,6 +34,73 @@ interface DebtFormProps {
   submitLabel?: string;
   showOverdueField?: boolean;
   children?: ReactNode;
+}
+
+function CreditorPicker({
+  field,
+  creditors,
+  labelKey,
+  disabled,
+}: {
+  field: { state: { value: string }; handleChange: (v: string) => void };
+  creditors: Creditor[];
+  labelKey: string;
+  disabled: boolean;
+}) {
+  const { t } = useTranslation();
+
+  // Reset selection when the creditor list changes and current value is invalid
+  useEffect(() => {
+    if (field.state.value && !creditors.some((c) => c.id === field.state.value)) {
+      field.handleChange('');
+    }
+  }, [creditors]);
+
+  return (
+    <YStack gap="$2" mb="$5">
+      <Text color="$color11" fontSize="$2" textTransform="uppercase" letterSpacing={0.6}>
+        {t(labelKey)}
+      </Text>
+      <Paragraph color="$color9" fontSize="$2" mt={-4}>
+        {t('debts.form.creditorHint')}
+      </Paragraph>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        <XStack gap="$2" opacity={disabled ? 0.5 : 1}>
+          {creditors.map((creditor) => {
+            const selected = field.state.value === creditor.id;
+            return (
+              <Pressable
+                key={creditor.id}
+                onPress={() => {
+                  if (!disabled) {
+                    field.handleChange(selected ? '' : creditor.id);
+                  }
+                }}
+                disabled={disabled}
+              >
+                <YStack
+                  borderWidth={1}
+                  borderColor={selected ? '$accent9' : '$color5'}
+                  bg={selected ? '$accent3' : 'transparent'}
+                  rounded="$3"
+                  px="$3"
+                  py="$2"
+                >
+                  <Text
+                    color={selected ? '$accent11' : '$color11'}
+                    fontSize="$2"
+                    numberOfLines={1}
+                  >
+                    {creditor.name}
+                  </Text>
+                </YStack>
+              </Pressable>
+            );
+          })}
+        </XStack>
+      </ScrollView>
+    </YStack>
+  );
 }
 
 const DebtForm = ({
@@ -55,6 +125,8 @@ const DebtForm = ({
     defaultValues: {
       label: defaultValues?.label ?? '',
       type: (defaultValues?.type ?? 'credit') as DebtType,
+      creditorKind: (defaultValues?.creditorKind ?? 'bank') as CreditorKind,
+      creditorId: defaultValues?.creditorId ?? '',
       remainingAmount: defaultValues?.remainingAmount ?? '',
       minimumPayment: defaultValues?.minimumPayment ?? '',
       interestRate: defaultValues?.interestRate ?? '',
@@ -150,6 +222,28 @@ const DebtForm = ({
           </YStack>
         )}
       </form.Field>
+
+      {/* Creditor picker — filtered by debt type */}
+      <form.Subscribe selector={(s) => s.values.type}>
+        {(currentType) => {
+          const creditors = getCreditorsByDebtType(currentType);
+          const labelKey = getCreditorLabelKey(currentType);
+          if (creditors.length === 0 || !labelKey) return null;
+
+          return (
+            <form.Field name="creditorId">
+              {(field) => (
+                  <CreditorPicker
+                    field={field}
+                    creditors={creditors}
+                    labelKey={labelKey}
+                    disabled={disabled}
+                  />
+              )}
+            </form.Field>
+          );
+        }}
+      </form.Subscribe>
 
       {/* Remaining amount */}
       <form.Field

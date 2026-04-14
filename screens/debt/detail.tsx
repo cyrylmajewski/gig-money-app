@@ -71,6 +71,8 @@ export default function DebtDetailScreen() {
     updateDebt(debt.id, {
       label: value.label.trim(),
       type: value.type,
+      creditorKind: value.creditorId ? 'bank' : value.creditorKind,
+      creditorId: value.creditorId || null,
       remainingAmount: parseAmount(value.remainingAmount),
       minimumPayment: parseAmount(value.minimumPayment),
       interestRate: parseAmount(value.interestRate),
@@ -164,6 +166,8 @@ export default function DebtDetailScreen() {
           defaultValues={{
             label: debt.label,
             type: debt.type,
+            creditorKind: debt.creditorKind,
+            creditorId: debt.creditorId ?? '',
             remainingAmount: formatAmountForInput(debt.remainingAmount),
             minimumPayment: formatAmountForInput(debt.minimumPayment),
             interestRate:

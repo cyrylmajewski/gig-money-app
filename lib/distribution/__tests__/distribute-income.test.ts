@@ -35,6 +35,7 @@ function makeDebt(overrides: Partial<Debt> = {}): Debt {
     label: 'Test Debt',
     type: 'credit',
     creditorKind: 'bank',
+    creditorId: null,
     originalAmount: 1000,
     remainingAmount: 1000,
     minimumPayment: 200,

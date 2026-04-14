@@ -2,7 +2,10 @@ export function sanitiseDecimal(raw: string): string {
   const cleaned = raw.replace(/[^0-9.,]/g, '');
   const normalised = cleaned.replace(',', '.');
   const parts = normalised.split('.');
-  let final = (parts[0] ?? '').slice(0, 8);
+  let integer = (parts[0] ?? '').replace(/^0+/, '') || '0';
+  if (integer === '0' && parts.length === 1 && cleaned.length > 1) integer = '0';
+  integer = integer.slice(0, 8);
+  let final = integer;
   if (parts.length > 1) final += ',' + (parts[1] ?? '').slice(0, 2);
   return final;
 }

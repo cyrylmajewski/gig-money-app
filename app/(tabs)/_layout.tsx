@@ -33,9 +33,9 @@ export default function TabLayout() {
         <Icon sf={{ default: 'creditcard', selected: 'creditcard.fill' }} />
         <Label>{t('tabs.debts')}</Label>
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="progress" options={{ backgroundColor: bg }}>
-        <Icon sf={{ default: 'chart.bar', selected: 'chart.bar.fill' }} />
-        <Label>{t('tabs.progress')}</Label>
+      <NativeTabs.Trigger name="history" options={{ backgroundColor: bg }}>
+        <Icon sf={{ default: 'clock', selected: 'clock.fill' }} />
+        <Label>{t('tabs.history')}</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="settings" options={{ backgroundColor: bg }}>
         <Icon sf={{ default: 'gearshape', selected: 'gearshape.fill' }} />

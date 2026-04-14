@@ -21,6 +21,7 @@ interface AppActions {
   processIncome: (income: Income) => void;
   addDeferredPayment: (payment: DeferredPayment) => void;
   resolveDeferredPayment: (id: string) => void;
+  recordShortfallContact: (contactId: string) => void;
   updateSettings: (settings: Partial<Settings>) => void;
   resetState: () => void;
 }
@@ -37,7 +38,8 @@ const initialState: AppState = {
   deferredPayments: [],
   monthlyCoverage: [],
   realityChecks: [],
-  settings: { currency: 'PLN', locale: 'pl', lastRealityCheckAt: null, tier1PriorityOrder: 'food_first' },
+  shortfallContacts: [],
+  settings: { currency: 'PLN', locale: 'pl', strictMode: false, lastRealityCheckAt: null, tier1PriorityOrder: 'food_first' },
 };
 
 export const useAppStore = create<AppStore>()(
@@ -145,6 +147,21 @@ export const useAppStore = create<AppStore>()(
             p.id === id ? { ...p, resolved: true } : p
           ),
         })),
+
+      recordShortfallContact: (contactId) =>
+        set((state) => {
+          const month = getMonthKey(new Date());
+          const already = state.shortfallContacts.some(
+            (c) => c.contactId === contactId && c.month === month
+          );
+          if (already) return state;
+          return {
+            shortfallContacts: [
+              ...state.shortfallContacts,
+              { contactId, month, confirmedAt: new Date().toISOString() },
+            ],
+          };
+        }),
 
       updateSettings: (updates) =>
         set((state) => ({

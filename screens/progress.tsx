@@ -11,6 +11,7 @@ import {
   Paragraph,
   Progress,
   Separator,
+  useTheme,
 } from 'tamagui';
 import {
   TrendingDown,
@@ -19,6 +20,7 @@ import {
   CheckCircle2,
   CalendarRange,
 } from '@tamagui/lucide-icons-2';
+import { Pie, PolarChart, CartesianChart, Bar } from 'victory-native';
 
 import { Badge } from '@/components/badge';
 import { IncomeFab } from '@/components/income-fab';
@@ -46,38 +48,71 @@ function HeroCard({
   totalPaid: number;
 }) {
   const { t } = useTranslation();
+  const theme = useTheme();
   const currency = t('common.currency');
+  const total = totalRemaining + totalPaid;
+  const paidPct = total > 0 ? Math.round((totalPaid / total) * 100) : 0;
+
+  const chartData =
+    total > 0
+      ? [
+          { label: t('progress.totalPaid'), value: totalPaid, color: theme.accent9.val },
+          { label: t('progress.totalDebt'), value: totalRemaining, color: theme.color5.val },
+        ]
+      : [{ label: '-', value: 1, color: theme.color5.val }];
 
   return (
     <YStack
       bg="$color3"
       borderWidth={1}
-      borderLeftWidth={3}
       borderColor="$color4"
-      borderLeftColor="$accent9"
       rounded="$6"
       overflow="hidden"
+      p="$4"
+      gap="$3"
     >
-      <YStack p="$4" gap="$1">
-        <XStack items="center" gap="$2" mb="$1">
-          <TrendingDown size={14} color="$accent11" />
-          <Text color="$accent11" fontSize="$1" letterSpacing={1}>
-            {t('progress.totalDebt').toUpperCase()}
-          </Text>
-        </XStack>
-        <Text fontSize="$8" fontWeight="700">
-          {fmt(totalRemaining)} {currency}
+      <XStack items="center" gap="$2">
+        <TrendingDown size={14} color="$accent11" />
+        <Text color="$accent11" fontSize="$1" letterSpacing={1}>
+          {t('progress.totalDebt').toUpperCase()}
         </Text>
-      </YStack>
-      <Separator borderColor="$color4" />
-      <YStack p="$4" gap="$1">
-        <Text color="$color9" fontSize="$1" letterSpacing={1}>
-          {t('progress.totalPaid').toUpperCase()}
-        </Text>
-        <Text fontSize="$5" fontWeight="600" color="$color11">
-          {fmt(totalPaid)} {currency}
-        </Text>
-      </YStack>
+      </XStack>
+
+      <XStack items="center" gap="$4">
+        {/* Donut chart */}
+        <YStack width={120} height={120}>
+          <PolarChart
+            data={chartData}
+            labelKey="label"
+            valueKey="value"
+            colorKey="color"
+          >
+            <Pie.Chart innerRadius="60%">
+              {() => <Pie.Slice />}
+            </Pie.Chart>
+          </PolarChart>
+        </YStack>
+
+        {/* Stats */}
+        <YStack flex={1} gap="$3">
+          <YStack gap="$0.5">
+            <Text color="$color9" fontSize="$2">
+              {t('progress.totalDebt').toUpperCase()}
+            </Text>
+            <Text fontSize="$6" fontWeight="700">
+              {fmt(totalRemaining)} {currency}
+            </Text>
+          </YStack>
+          <YStack gap="$0.5">
+            <Text color="$color9" fontSize="$2">
+              {t('progress.totalPaid').toUpperCase()}
+            </Text>
+            <Text fontSize="$4" fontWeight="600" color="$accent9">
+              {fmt(totalPaid)} {currency} ({paidPct}%)
+            </Text>
+          </YStack>
+        </YStack>
+      </XStack>
     </YStack>
   );
 }
@@ -119,7 +154,15 @@ function MonthlyComparisonCard({
   lastMonth: number;
 }) {
   const { t } = useTranslation();
+  const theme = useTheme();
   const currency = t('common.currency');
+
+  const barData = [
+    { month: t('progress.lastMonth'), amount: lastMonth },
+    { month: t('progress.thisMonth'), amount: thisMonth },
+  ];
+
+  const hasData = thisMonth > 0 || lastMonth > 0;
 
   return (
     <YStack bg="$color2" borderWidth={1} borderColor="$color4" rounded="$6" overflow="hidden">
@@ -130,22 +173,60 @@ function MonthlyComparisonCard({
         </Text>
       </XStack>
       <Separator borderColor="$color3" />
-      <XStack>
-        <YStack flex={1} p="$4" gap="$1">
-          <Text color="$color9" fontSize="$2">
-            {t('progress.thisMonth')}
+
+      {hasData ? (
+        <YStack px="$4" pt="$3" pb="$2" height={160}>
+          <CartesianChart
+            data={barData}
+            xKey="month"
+            yKeys={['amount']}
+            domainPadding={{ left: 40, right: 40 }}
+            axisOptions={{
+              tickCount: { x: 2, y: 4 },
+              formatXLabel: (v) => String(v),
+              formatYLabel: (v) => `${v}`,
+              labelColor: theme.color8.val,
+              lineColor: theme.color4.val,
+            }}
+          >
+            {({ points, chartBounds }) => (
+              <Bar
+                points={points.amount}
+                chartBounds={chartBounds}
+                color={theme.accent9.val}
+                roundedCorners={{ topLeft: 6, topRight: 6 }}
+                innerPadding={0.4}
+                animate={{ type: 'spring' }}
+              />
+            )}
+          </CartesianChart>
+        </YStack>
+      ) : (
+        <XStack p="$4" justify="center">
+          <Text color="$color8" fontSize="$3">
+            {fmt(0)} {currency}
           </Text>
-          <Text color="$color11" fontSize="$5" fontWeight="600">
-            {fmt(thisMonth)} {currency}
+        </XStack>
+      )}
+
+      {/* Amount labels below chart */}
+      <Separator borderColor="$color3" />
+      <XStack>
+        <YStack flex={1} p="$3" gap="$0.5" items="center">
+          <Text color="$color9" fontSize="$1">
+            {t('progress.lastMonth')}
+          </Text>
+          <Text color="$color11" fontSize="$4" fontWeight="600">
+            {fmt(lastMonth)} {currency}
           </Text>
         </YStack>
         <Separator vertical borderColor="$color3" />
-        <YStack flex={1} p="$4" gap="$1">
-          <Text color="$color9" fontSize="$2">
-            {t('progress.lastMonth')}
+        <YStack flex={1} p="$3" gap="$0.5" items="center">
+          <Text color="$color9" fontSize="$1">
+            {t('progress.thisMonth')}
           </Text>
-          <Text color="$color11" fontSize="$5" fontWeight="600">
-            {fmt(lastMonth)} {currency}
+          <Text color="$color11" fontSize="$4" fontWeight="600">
+            {fmt(thisMonth)} {currency}
           </Text>
         </YStack>
       </XStack>

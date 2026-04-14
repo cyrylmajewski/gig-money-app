@@ -7,6 +7,7 @@ export interface Debt {
   label: string;
   type: DebtType;
   creditorKind: CreditorKind;
+  creditorId: string | null;   // references a known creditor (e.g. bank ID from POLISH_CREDITORS)
   originalAmount: number;      // initial debt amount in PLN
   remainingAmount: number;     // current outstanding balance in PLN
   minimumPayment: number;      // required monthly payment in PLN
@@ -95,9 +96,19 @@ export interface RealityCheckResponse {
 export interface Settings {
   currency: 'PLN';
   locale: 'pl' | 'en' | 'ru';
+  strictMode: boolean;
   lastRealityCheckAt: string | null;
   tier1PriorityOrder: 'food_first' | 'housing_first';
   floorOverrides?: Partial<Record<keyof MonthlyNeeds, number>>;
+}
+
+/** Tracks that a creditor/landlord was contacted about a shortfall this month. */
+export interface ShortfallContact {
+  /** 'landlord' or a creditor ID (e.g. 'pko_bp') */
+  contactId: string;
+  /** Month key "YYYY-MM" when contact was confirmed */
+  month: string;
+  confirmedAt: string; // ISO date
 }
 
 export interface AppState {
@@ -110,5 +121,6 @@ export interface AppState {
   deferredPayments: DeferredPayment[];
   monthlyCoverage: MonthlyCoverage[];
   realityChecks: RealityCheckResponse[];
+  shortfallContacts: ShortfallContact[];
   settings: Settings;
 }

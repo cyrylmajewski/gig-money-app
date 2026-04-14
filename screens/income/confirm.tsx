@@ -10,24 +10,24 @@ import {
   Button,
   Paragraph,
   Separator,
-  ScrollView } from 'tamagui';
-import { useAppStore } from '@/store';
-import type { Allocation, Income } from '@/types/models';
+  ScrollView,
+} from 'tamagui';
+import { Check } from '@tamagui/lucide-icons-2';
 
+import { useAppStore } from '@/store';
+import { formatAmount } from '@/lib/format';
+import type { Allocation, Income } from '@/types/models';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function generateId(): string {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+  if (
+    typeof crypto !== 'undefined' &&
+    typeof crypto.randomUUID === 'function'
+  ) {
     return crypto.randomUUID();
   }
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-}
-
-function formatPLN(amount: number): string {
-  return amount.toLocaleString('pl-PL', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2 });
 }
 
 // ── Summary row ───────────────────────────────────────────────────────────────
@@ -36,25 +36,31 @@ interface SummaryRowProps {
   label: string;
   amount: number;
   currency: string;
+  accent?: boolean;
+  warning?: boolean;
   muted?: boolean;
   bold?: boolean;
 }
 
-function SummaryRow({ label, amount, currency, muted, bold }: SummaryRowProps) {
+function SummaryRow({ label, amount, currency, accent, warning, muted, bold }: SummaryRowProps) {
+  const textColor = accent ? '$accent9' : warning ? '$yellow9' : muted ? '$color8' : '$color11';
   return (
-    <XStack py="$3" items="center" justify="space-between">
+    <XStack py="$2.5" items="center" justify="space-between">
       <Text
-
+        color={textColor}
+        fontWeight={bold ? '600' : '400'}
         flex={1}
         pr="$3"
+        fontSize="$3"
       >
         {label}
       </Text>
       <Text
-        style={{ textAlign: 'right' }}
-        minW={80}
+        color={textColor}
+        fontWeight={bold ? '600' : '400'}
+        fontSize="$3"
       >
-        {formatPLN(amount)} {currency}
+        {formatAmount(amount)} {currency}
       </Text>
     </XStack>
   );
@@ -89,28 +95,33 @@ export default function ConfirmScreen() {
         minimumPayments: {},
         extraDebtPayment: null,
         unallocated: 0,
-        wasAdjustedByUser: false };
+        wasAdjustedByUser: false,
+      };
     }
   }, [params.allocation]);
 
   const debtById = useMemo(
     () => Object.fromEntries(debts.map((d) => [d.id, d])),
-    [debts],
+    [debts]
   );
 
-  const totalAllocated = useMemo(() => {
-    const needsSum =
-      allocation.needs.housing +
-      allocation.needs.food +
-      allocation.needs.transport +
-      allocation.needs.other;
-    const minimumsSum = Object.values(allocation.minimumPayments).reduce(
-      (s, v) => s + v,
-      0,
-    );
-    const extra = allocation.extraDebtPayment?.amount ?? 0;
-    return needsSum + minimumsSum + extra + allocation.deferredPayments + allocation.unallocated;
-  }, [allocation]);
+  const totalNeeds =
+    allocation.needs.housing +
+    allocation.needs.food +
+    allocation.needs.transport +
+    allocation.needs.other;
+  const totalDebts = Object.values(allocation.minimumPayments).reduce(
+    (s, v) => s + v,
+    0
+  );
+  const extra = allocation.extraDebtPayment?.amount ?? 0;
+
+  const segments = [
+    { key: 'needs', label: t('home.lastDistribution.needs'), amount: totalNeeds, color: '$accent9' as const },
+    { key: 'debts', label: t('home.lastDistribution.minimums'), amount: totalDebts, color: '$yellow9' as const },
+    { key: 'extra', label: t('home.lastDistribution.extra'), amount: extra, color: '$green9' as const },
+    { key: 'unalloc', label: t('income.confirm.rows.unallocated'), amount: allocation.unallocated, color: '$color6' as const },
+  ].filter((s) => s.amount > 0);
 
   const handleSave = useCallback(() => {
     const income: Income = {
@@ -118,7 +129,8 @@ export default function ConfirmScreen() {
       amount: incomeAmount,
       source: source.length > 0 ? source : undefined,
       date: new Date().toISOString(),
-      allocation };
+      allocation,
+    };
     processIncome(income);
     router.dismissAll();
     router.replace('/(tabs)');
@@ -132,52 +144,96 @@ export default function ConfirmScreen() {
         options={{
           title: t('income.confirm.title'),
           headerLeft: () => (
-            <Pressable onPress={() => router.back()} hitSlop={8} style={{ paddingHorizontal: 8, paddingVertical: 4 }}>
-              <Text>
-                {t('common.back')}
-              </Text>
+            <Pressable
+              onPress={() => router.back()}
+              hitSlop={8}
+              style={{ paddingHorizontal: 8, paddingVertical: 4 }}
+            >
+              <Text color="$color11">{t('common.back')}</Text>
             </Pressable>
-          ) }}
+          ),
+        }}
       />
 
       <YStack flex={1}>
         <ScrollView>
-          <YStack px="$5" pt="$4" pb="$6" gap="$4">
-            <Paragraph>
+          <YStack px="$4" pt="$4" pb="$6" gap="$4">
+            <Paragraph color="$color9">
               {t('income.confirm.subtitle')}
             </Paragraph>
 
-            {/* Income summary card */}
-            <YStack p="$4" rounded="$5" borderWidth={1}>
-              <YStack gap="$2">
-                <Text>
-                  {t('income.confirm.incomeSection').toUpperCase()}
+            {/* Income hero card */}
+            <YStack
+              bg="$color3"
+              borderWidth={1}
+              borderLeftWidth={3}
+              borderColor="$color4"
+              borderLeftColor="$accent9"
+              rounded="$6"
+              p="$4"
+              gap="$2"
+            >
+              <Text
+                color="$color9"
+                fontSize="$1"
+                letterSpacing={1}
+              >
+                {t('income.confirm.incomeSection').toUpperCase()}
+              </Text>
+              <Text fontSize="$7" fontWeight="700">
+                {formatAmount(incomeAmount)} {currency}
+              </Text>
+              {source.length > 0 && (
+                <Text color="$color9" fontSize="$3">
+                  {source}
                 </Text>
-                <XStack items="center" justify="space-between">
-                  <Text>
-                    {t('income.confirm.amountLabel')}
-                  </Text>
-                  <Text>
-                    {formatPLN(incomeAmount)} {currency}
-                  </Text>
-                </XStack>
-                {source.length > 0 && (
-                  <XStack items="center" justify="space-between">
-                    <Text>
-                      {t('income.confirm.sourceLabel')}
-                    </Text>
-                    <Text>
-                      {source}
+              )}
+
+              {/* Stacked bar */}
+              <XStack height={10} rounded="$10" overflow="hidden" mt="$1">
+                {segments.map((seg) => (
+                  <YStack
+                    key={seg.key}
+                    flex={seg.amount}
+                    bg={seg.color}
+                    height={10}
+                  />
+                ))}
+              </XStack>
+
+              {/* Legend */}
+              <XStack flexWrap="wrap" gap="$2" mt="$1">
+                {segments.map((seg) => (
+                  <XStack key={seg.key} items="center" gap="$1.5">
+                    <YStack
+                      width={8}
+                      height={8}
+                      rounded="$10"
+                      bg={seg.color}
+                    />
+                    <Text color="$color9" fontSize="$1">
+                      {seg.label}
                     </Text>
                   </XStack>
-                )}
-              </YStack>
+                ))}
+              </XStack>
             </YStack>
 
             {/* Allocation breakdown card */}
-            <YStack p="$4" rounded="$5" borderWidth={1}>
-              <YStack gap="$0">
-                <Text mb="$2">
+            <YStack
+              bg="$color2"
+              borderWidth={1}
+              borderColor="$color4"
+              rounded="$6"
+              px="$4"
+            >
+              <YStack py="$2">
+                <Text
+                  color="$color9"
+                  fontSize="$1"
+                  letterSpacing={1}
+                  py="$2"
+                >
                   {t('income.confirm.allocationSection').toUpperCase()}
                 </Text>
 
@@ -187,9 +243,10 @@ export default function ConfirmScreen() {
                       label={t('income.confirm.rows.deferred')}
                       amount={allocation.deferredPayments}
                       currency={currency}
+                      accent
                       bold
                     />
-                    <Separator />
+                    <Separator borderColor="$color3" />
                   </>
                 )}
 
@@ -200,7 +257,7 @@ export default function ConfirmScreen() {
                       amount={allocation.needs.housing}
                       currency={currency}
                     />
-                    <Separator />
+                    <Separator borderColor="$color3" />
                   </>
                 )}
 
@@ -211,7 +268,7 @@ export default function ConfirmScreen() {
                       amount={allocation.needs.food}
                       currency={currency}
                     />
-                    <Separator />
+                    <Separator borderColor="$color3" />
                   </>
                 )}
 
@@ -222,7 +279,7 @@ export default function ConfirmScreen() {
                       amount={allocation.needs.transport}
                       currency={currency}
                     />
-                    <Separator />
+                    <Separator borderColor="$color3" />
                   </>
                 )}
 
@@ -233,38 +290,45 @@ export default function ConfirmScreen() {
                       amount={allocation.needs.other}
                       currency={currency}
                     />
-                    <Separator />
+                    <Separator borderColor="$color3" />
                   </>
                 )}
 
                 {hasMinimums &&
-                  Object.entries(allocation.minimumPayments).map(([debtId, amt]) => {
-                    const debt = debtById[debtId];
-                    return (
-                      <YStack key={debtId}>
-                        <SummaryRow
-                          label={t('income.confirm.rows.minimumPayment', {
-                            label: debt?.label ?? debtId })}
-                          amount={amt}
-                          currency={currency}
-                        />
-                        <Separator />
-                      </YStack>
-                    );
-                  })}
+                  Object.entries(allocation.minimumPayments).map(
+                    ([debtId, amt]) => {
+                      const debt = debtById[debtId];
+                      return (
+                        <YStack key={debtId}>
+                          <SummaryRow
+                            label={t('income.confirm.rows.minimumPayment', {
+                              label: debt?.label ?? debtId,
+                            })}
+                            amount={amt}
+                            currency={currency}
+                            warning
+                          />
+                          <Separator borderColor="$color3" />
+                        </YStack>
+                      );
+                    }
+                  )}
 
                 {allocation.extraDebtPayment && (
                   <>
                     <SummaryRow
                       label={t('income.confirm.rows.extraPayment', {
                         label:
-                          debtById[allocation.extraDebtPayment.debtId]?.label ??
-                          t('income.confirm.rows.extraPaymentFallback') })}
+                          debtById[allocation.extraDebtPayment.debtId]
+                            ?.label ??
+                          t('income.confirm.rows.extraPaymentFallback'),
+                      })}
                       amount={allocation.extraDebtPayment.amount}
                       currency={currency}
+                      accent
                       bold
                     />
-                    <Separator />
+                    <Separator borderColor="$color3" />
                   </>
                 )}
 
@@ -278,37 +342,37 @@ export default function ConfirmScreen() {
                 )}
 
                 {/* Total row */}
-                <Separator mb="$2" />
-                <XStack items="center" justify="space-between" pt="$1">
-                  <Text>
+                <Separator borderColor="$color5" />
+                <XStack items="center" justify="space-between" py="$3">
+                  <Text fontWeight="700" fontSize="$4">
                     {t('income.confirm.total')}
                   </Text>
-                  <Text>
-                    {formatPLN(totalAllocated)} {currency}
+                  <Text fontWeight="700" fontSize="$4">
+                    {formatAmount(incomeAmount)} {currency}
                   </Text>
                 </XStack>
               </YStack>
             </YStack>
 
-            <Paragraph style={{ textAlign: 'center' }}>
+            <Paragraph color="$color8" fontSize="$2" style={{ textAlign: 'center' }}>
               {t('income.confirm.saveNote')}
             </Paragraph>
           </YStack>
         </ScrollView>
 
         {/* Sticky save button */}
-        <YStack
-          px="$5"
-          pt="$3"
-          pb={insets.bottom + 12}
-          borderTopWidth={1}
-        >
+        <YStack px="$4" pt="$3" pb={insets.bottom + 12}>
           <Button
             size="$5"
+            bg="$accent9"
+            pressStyle={{ bg: '$accent10' }}
             onPress={handleSave}
+            iconAfter={<Check size={18} color="$color12" />}
             accessibilityRole="button"
           >
-            <Text>{t('income.confirm.save')}</Text>
+            <Button.Text color="$color12">
+              {t('income.confirm.save')}
+            </Button.Text>
           </Button>
         </YStack>
       </YStack>

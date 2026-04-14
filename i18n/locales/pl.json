@@ -13,7 +13,7 @@
   "tabs": {
     "home": "Start",
     "debts": "Długi",
-    "progress": "Postępy",
+    "history": "Historia",
     "settings": "Ustawienia"
   },
   "onboarding": {
@@ -70,6 +70,21 @@
       "minimumPaymentPlaceholder": "np. 250",
       "interestRatePlaceholder": "np. 29,9",
       "overdueAmountPlaceholder": "np. 1186"
+    },
+    "strictMode": {
+      "title": "Tryb ścisły",
+      "subtitle": "Chcesz, żeby aplikacja pilnowała Cię bardziej?",
+      "description": "Tryb ścisły dodaje dodatkowe warstwy weryfikacji, które pomagają w utrzymaniu dyscypliny finansowej.",
+      "feature1Title": "Weryfikacja kontaktu z bankiem",
+      "feature1Desc": "Po wykryciu braku środków — potwierdzisz, że skontaktowałeś się z bankiem",
+      "feature2Title": "Ostrożniejszy podział",
+      "feature2Desc": "Dodatkowe ostrzeżenia przy próbie zmniejszenia rat lub pominięcia kategorii",
+      "feature3Title": "Comiesięczny sprawdzian",
+      "feature3Desc": "Quiz kontrolny przed dodaniem nowego przychodu",
+      "feature4Title": "Przypomnienia o ratach",
+      "feature4Desc": "Powiadomienie gdy minie termin raty bez pokrycia",
+      "enable": "Włącz tryb ścisły",
+      "skip": "Nie, dziękuję"
     },
     "ready": {
       "title": "Gotowe!",
@@ -151,6 +166,30 @@
         "nextIncome": "Następny dochód pokryje pozostałe potrzeby"
       }
     },
+    "shortfall": {
+      "title": "Brakuje na ważne płatności",
+      "subtitle": "Nie masz wystarczających środków na pokrycie wszystkich zobowiązań. Nie martw się — możesz negocjować z bankiem.",
+      "housingShort": "Brakuje {{amount}} {{currency}} na mieszkanie",
+      "foodShort": "Brakuje {{amount}} {{currency}} na jedzenie",
+      "debtShort": "Brakuje {{amount}} {{currency}} na ratę — {{label}}",
+      "callBankTitle": "Zadzwoń do {{bank}}",
+      "callBankPhone": "Numer: {{phone}}",
+      "callBankHours": "Godziny: {{hours}}",
+      "callNow": "Zadzwoń teraz",
+      "stepsTitle": "Co powiedzieć:",
+      "step1": "Przedstaw się i podaj numer umowy kredytowej",
+      "step2": "Powiedz, że masz chwilowe trudności finansowe",
+      "step3": "Poproś o odroczenie raty lub zmniejszenie kwoty na ten miesiąc",
+      "step4": "Zapytaj o \"wakacje kredytowe\" — możliwość zawieszenia rat",
+      "landlordTitle": "Skontaktuj się z wynajmującym",
+      "landlordTip": "Porozmawiaj z wynajmującym o opóźnieniu płatności. Większość wynajmujących preferuje otwartą komunikację niż milczenie.",
+      "confirmCall": "Potwierdzam, że zadzwoniłem",
+      "confirmLandlord": "Potwierdzam kontakt z wynajmującym",
+      "confirmed": "Potwierdzone",
+      "alreadyContacted": "Kontakt potwierdzony w tym miesiącu",
+      "timerWaiting": "Poczekaj {{time}} na potwierdzenie",
+      "continue": "Rozumiem, przejdź dalej"
+    },
     "confirm": {
       "title": "Podsumowanie",
       "subtitle": "Sprawdź podział i zapisz, gdy wszystko się zgadza.",
@@ -194,6 +233,11 @@
       "minimumPaymentHint": "Kredyt: kwota raty. Karta: minimalna kwota spłaty.",
       "interestRate": "Oprocentowanie nominalne (opcjonalne)",
       "interestRateHint": "Roczna stopa z umowy, nie RRSO. Dla PayPo/BNPL wpisz 0.",
+      "creditor": "Bank / Wierzyciel",
+      "creditorBank": "Bank",
+      "creditorBnpl": "Usługa ratalna",
+      "creditorPayday": "Firma pożyczkowa",
+      "creditorHint": "Wybierz, żebyśmy mogli pomóc w kontakcie.",
       "overdueAmount": "Zaległa spłata (opcjonalne)",
       "overdueAmountHint": "Kwota zaległej spłaty z banku, jeśli jest.",
       "paymentDay": "Dzień płatności (opcjonalne)",
@@ -241,6 +285,10 @@
     "milestone25": "25%",
     "milestone50": "50%",
     "milestone75": "75%"
+  },
+  "history": {
+    "title": "Historia",
+    "empty": "Brak przychodów. Dodaj pierwszy przychód, żeby zobaczyć historię."
   },
   "settings": {
     "title": "Ustawienia",

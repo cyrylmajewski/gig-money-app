@@ -13,7 +13,6 @@ import {
   Separator,
   ScrollView,
 } from 'tamagui';
-
 import { useAppStore } from '@/store';
 import { formatAmount } from '@/lib/format';
 import { distributeIncome } from '@/lib/distribution';
@@ -24,6 +23,83 @@ import {
   getActiveDebts,
 } from '@/lib/distribution/helpers';
 import type { Allocation, AppState } from '@/types/models';
+
+// ── Row component ─────────────────────────────────────────────────────────────
+
+// ── Allocation header with stacked bar ────────────────────────────────────────
+
+function AllocationHeader({
+  incomeAmount,
+  allocation,
+  currency,
+}: {
+  incomeAmount: number;
+  allocation: Allocation;
+  currency: string;
+}) {
+  const { t } = useTranslation();
+
+  const totalNeeds =
+    allocation.needs.housing +
+    allocation.needs.food +
+    allocation.needs.transport +
+    allocation.needs.other;
+  const totalDebts = Object.values(allocation.minimumPayments).reduce(
+    (s, v) => s + v,
+    0
+  );
+  const extra = allocation.extraDebtPayment?.amount ?? 0;
+  const unalloc = allocation.unallocated;
+
+  const segments = [
+    { key: 'needs', label: t('home.lastDistribution.needs'), amount: totalNeeds, color: '$accent9' as const },
+    { key: 'debts', label: t('home.lastDistribution.minimums'), amount: totalDebts, color: '$yellow9' as const },
+    { key: 'extra', label: t('home.lastDistribution.extra'), amount: extra, color: '$green9' as const },
+    { key: 'unalloc', label: t('income.allocate.rows.unallocated'), amount: unalloc, color: '$color6' as const },
+  ].filter((s) => s.amount > 0);
+
+  return (
+    <YStack
+      bg="$color3"
+      borderWidth={1}
+      borderColor="$color4"
+      rounded="$6"
+      p="$4"
+      gap="$3"
+    >
+      <Text color="$color9" fontSize="$2">
+        {t('income.allocate.receivedLabel')}
+      </Text>
+      <Text fontSize="$7" fontWeight="700">
+        {formatAmount(incomeAmount)} {currency}
+      </Text>
+
+      {/* Stacked horizontal bar */}
+      <XStack height={12} rounded="$10" overflow="hidden">
+        {segments.map((seg) => (
+          <YStack
+            key={seg.key}
+            flex={seg.amount}
+            bg={seg.color}
+            height={12}
+          />
+        ))}
+      </XStack>
+
+      {/* Legend */}
+      <XStack flexWrap="wrap" gap="$2">
+        {segments.map((seg) => (
+          <XStack key={seg.key} items="center" gap="$1.5">
+            <YStack width={8} height={8} rounded="$10" bg={seg.color} />
+            <Text color="$color9" fontSize="$1">
+              {seg.label}: {formatAmount(seg.amount)} {currency}
+            </Text>
+          </XStack>
+        ))}
+      </XStack>
+    </YStack>
+  );
+}
 
 // ── Row component ─────────────────────────────────────────────────────────────
 
@@ -66,6 +142,7 @@ function AllocationRow({
         </YStack>
         {hasNeeded && (
           <Text
+            theme={pct === 0 ? 'error' : pct < 100 ? 'warning' : undefined}
             color={pct >= 100 ? '$color11' : '$color9'}
             fontWeight="600"
           >
@@ -78,7 +155,15 @@ function AllocationRow({
       {hasNeeded && (
         <Progress value={pct} size="$1">
           <Progress.Indicator
-            bg={highlight ? '$accent9' : pct >= 100 ? '$accent9' : '$color8'}
+            bg={
+              highlight
+                ? '$accent9'
+                : pct >= 100
+                  ? '$accent9'
+                  : pct === 0
+                    ? '$red9'
+                    : '$yellow9'
+            }
           />
         </Progress>
       )}
@@ -136,6 +221,7 @@ export default function AllocateScreen() {
       deferredPayments,
       monthlyCoverage,
       realityChecks: [],
+      shortfallContacts: [],
       settings,
     }),
     [monthlyNeeds, debts, deferredPayments, monthlyCoverage, settings]
@@ -194,14 +280,69 @@ export default function AllocateScreen() {
   }, [debts]);
 
   function handleConfirm() {
-    router.push({
-      pathname: '/income/confirm',
-      params: {
-        amount: params.amount,
-        source: params.source ?? '',
-        allocation: JSON.stringify(allocation),
-      },
-    });
+    // Detect shortfalls on critical payments
+    const shortfalls: Array<{
+      kind: 'housing' | 'food' | 'debt';
+      label: string;
+      shortAmount: number;
+      debtId?: string;
+    }> = [];
+
+    if (
+      outstanding.needs.housing > 0 &&
+      allocation.needs.housing < outstanding.needs.housing
+    ) {
+      shortfalls.push({
+        kind: 'housing',
+        label: t('income.allocate.rows.housing'),
+        shortAmount: outstanding.needs.housing - allocation.needs.housing,
+      });
+    }
+    if (
+      outstanding.needs.food > 0 &&
+      allocation.needs.food < outstanding.needs.food
+    ) {
+      shortfalls.push({
+        kind: 'food',
+        label: t('income.allocate.rows.food'),
+        shortAmount: outstanding.needs.food - allocation.needs.food,
+      });
+    }
+    for (const debt of activeDebtsList) {
+      const needed = outstanding.mins[debt.id] ?? 0;
+      const paid = allocation.minimumPayments[debt.id] ?? 0;
+      if (needed > 0 && paid < needed) {
+        shortfalls.push({
+          kind: 'debt',
+          label: debt.label,
+          shortAmount: needed - paid,
+          debtId: debt.id,
+        });
+      }
+    }
+
+    const allocationJson = JSON.stringify(allocation);
+
+    if (shortfalls.length > 0) {
+      router.push({
+        pathname: '/income/shortfall',
+        params: {
+          amount: params.amount,
+          source: params.source ?? '',
+          allocation: allocationJson,
+          shortfalls: JSON.stringify(shortfalls),
+        },
+      });
+    } else {
+      router.push({
+        pathname: '/income/confirm',
+        params: {
+          amount: params.amount,
+          source: params.source ?? '',
+          allocation: allocationJson,
+        },
+      });
+    }
   }
 
   const hasDeferred = allocation.deferredPayments > 0;
@@ -228,23 +369,12 @@ export default function AllocateScreen() {
       <YStack flex={1}>
         <ScrollView>
           <YStack px="$4" pt="$4" pb="$6" gap="$4">
-            {/* Received amount header */}
-            <YStack
-              bg="$color3"
-              borderWidth={1}
-              borderLeftWidth={3}
-              borderColor="$color4"
-              borderLeftColor="$accent9"
-              rounded="$6"
-              p="$4"
-            >
-              <Text color="$color9" fontSize="$2">
-                {t('income.allocate.receivedLabel')}
-              </Text>
-              <Text fontSize="$7" fontWeight="700" mt="$1">
-                {formatAmount(incomeAmount)} {currency}
-              </Text>
-            </YStack>
+            {/* Received amount header with allocation bar */}
+            <AllocationHeader
+              incomeAmount={incomeAmount}
+              allocation={allocation}
+              currency={currency}
+            />
 
             {/* Coverage summary card */}
             <YStack
@@ -260,7 +390,13 @@ export default function AllocateScreen() {
                   {t('income.allocate.summary.coverageLabel').toUpperCase()}
                 </Text>
                 <Text
-                  color={coverageStats.pct >= 100 ? '$color11' : '$color9'}
+                  color={
+                    coverageStats.pct >= 100
+                      ? '$color11'
+                      : coverageStats.pct < 50
+                        ? '$red9'
+                        : '$yellow9'
+                  }
                   fontWeight="600"
                 >
                   {coverageStats.pct}%
@@ -272,7 +408,13 @@ export default function AllocateScreen() {
                 size="$2"
               >
                 <Progress.Indicator
-                  bg={coverageStats.pct >= 100 ? '$accent9' : '$color8'}
+                  bg={
+                    coverageStats.pct >= 100
+                      ? '$accent9'
+                      : coverageStats.pct < 50
+                        ? '$red9'
+                        : '$yellow9'
+                  }
                 />
               </Progress>
 
@@ -284,7 +426,7 @@ export default function AllocateScreen() {
                   </Text>
                   {coverageStats.tips.map((tipKey) => (
                     <XStack key={tipKey} gap="$2" items="flex-start">
-                      <Text color="$accent9">→</Text>
+                      <Text color="$yellow9">→</Text>
                       <Text color="$color11" flex={1} fontSize="$3">
                         {t(tipKey)}
                       </Text>
