@@ -103,7 +103,11 @@
       "of": "z {{amount}}",
       "forecast": "Prognoza zamknięcia: {{date}}",
       "forecastApprox": "Szacunkowo ok. {{date}} (mało danych)",
-      "noDebts": "Nie masz aktywnych długów. Świetna robota!"
+      "noDebts": "Nie masz aktywnych długów. Świetna robota!",
+      "targetSourceManual": "Wybrane przez Ciebie",
+      "targetSourceAutoSmallest": "Najmniejsza kwota — szybkie zwycięstwo",
+      "targetSourceAutoNoCc": "Najmniejszy dług bez karty — najpierw spłać pożyczki",
+      "targetSourceAutoFallbackCc": "Pozostały tylko karty kredytowe"
     },
     "lastDistribution": {
       "title": "Ostatni podział",
@@ -132,10 +136,38 @@
       "receivedLabel": "Otrzymałeś:",
       "confirm": "Zatwierdź podział",
       "defaultBiasNote": "Podział jest obliczony optymalnie. Możesz go zatwierdzić jednym kliknięciem.",
+      "edit": {
+        "remainingLabel": "Pozostało do podziału",
+        "overspentLabel": "Przekroczono o {{amount}} {{currency}}",
+        "blockedHint": "Zmniejsz inne pozycje, aby kontynuować",
+        "incrementHint": "Krok ±50 zł"
+      },
       "shortfall": {
         "title": "Niewystarczające środki",
         "lossWarning": "Stracisz {{amount}} {{currency}} na brakujących podstawowych wydatkach. Rozważ odroczenie płatności.",
         "advice": "Możesz zatwierdzić podział i zdecydować, które płatności odroczyć."
+      },
+      "guardrail": {
+        "l2": {
+          "foodBelowAvg": "W {{month}} odkładałeś na jedzenie {{avg}} {{currency}}, teraz {{now}} {{currency}}. Może nie wystarczyć.",
+          "housingBelowAvg": "W {{month}} odkładałeś na mieszkanie {{avg}} {{currency}}, teraz {{now}} {{currency}}."
+        },
+        "l3": {
+          "title": "Wybierz powód",
+          "subtitle": "Pomijasz płatność: {{label}}",
+          "reasonAgreedDelay": "Uzgodniłem odroczenie",
+          "reasonPostponing": "Odkładam tę płatność",
+          "reasonOther": "Po prostu chcę to zmienić",
+          "save": "Zapisz",
+          "back": "Wróć"
+        },
+        "l4": {
+          "title": "Nie spłacasz żadnego długu",
+          "subtitle": "Zerujesz wszystkie raty minimalne. To poważna decyzja.",
+          "noteLabel": "Wyjaśnij sytuację (zostanie zapisane)",
+          "confirmHold": "Przytrzymaj, aby potwierdzić",
+          "back": "Wróć i edytuj"
+        }
       },
       "rows": {
         "deferred": "Odroczone płatności",
@@ -263,6 +295,15 @@
       "closed": "Zamknięty",
       "notFound": "Nie znaleziono długu.",
       "closedBadgeLabel": "Ten dług jest już zamknięty i nie można go edytować."
+    },
+    "targetPicker": {
+      "pickAnother": "Wybierz inny cel",
+      "title": "Wybierz cel snowball",
+      "subtitle": "Wybierz dług, który chcesz spłacić w pierwszej kolejności.",
+      "useAuto": "Wróć do automatycznego wyboru",
+      "currentLabel": "Aktualny cel",
+      "cancel": "Anuluj",
+      "save": "Zapisz"
     }
   },
   "progress": {
@@ -302,7 +343,11 @@
     "resetData": "Resetuj wszystkie dane",
     "resetConfirmTitle": "Zresetować dane?",
     "resetConfirmMessage": "Spowoduje to usunięcie wszystkich twoich danych. Tej operacji nie można cofnąć.",
-    "resetConfirmButton": "Resetuj"
+    "resetConfirmButton": "Resetuj",
+    "deprioritizeCreditCards": {
+      "label": "Nie spłacaj kart w pierwszej kolejności",
+      "description": "Dodatkowa wpłata pójdzie najpierw na pożyczki i raty, kartę kredytową spłacisz na końcu. Pomaga uniknąć pokusy ponownego zadłużania."
+    }
   },
   "triggers": {
     "realityCheck": {
@@ -329,7 +374,15 @@
     "celebration": {
       "title": "Dług spłacony!",
       "message": "Całkowicie spłaciłeś {{label}}! Jeden ciężar mniej.",
-      "dismiss": "Świętuj!"
+      "creditCardClosed": "Spłaciłeś {{label}} 🎉 Rozważ zamknięcie umowy w banku, żeby usunąć pokusę.",
+      "dismiss": "Świętuj!",
+      "screen": {
+        "title": "Spłaciłeś!",
+        "subtitle": "Spłaciłeś {{label}}!",
+        "body": "Jeden ciężar mniej. Każdy zamknięty dług to krok ku wolności finansowej.",
+        "creditCardExtra": "💳 To była karta kredytowa — rozważ zamknięcie umowy w banku, żeby usunąć pokusę ponownego zadłużenia.",
+        "cta": "Świętuj dalej!"
+      }
     }
   },
   "creditorTemplates": {

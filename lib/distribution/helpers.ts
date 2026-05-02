@@ -92,20 +92,95 @@ export function getOutstandingMinimums(
  * Determine the snowball target: the active debt with the smallest remainingAmount.
  * Ties are broken alphabetically by label (stable sort).
  * Debts with remainingAmount <= 0 or closedAt !== null are excluded.
+ *
+ * When `deprioritizeCreditCards` is true, credit cards (debt.type === 'credit_card')
+ * are pushed to the back of the snowball queue: non-credit-card debts are considered
+ * first, and only when none remain do we fall back to credit cards. This is opt-in
+ * behavior to prevent re-spending freed-up credit limits.
  */
-export function getSnowballTarget(debts: Debt[]): Debt | null {
+export function getSnowballTarget(
+  debts: Debt[],
+  deprioritizeCreditCards?: boolean,
+): Debt | null {
   const active = debts.filter((d) => d.closedAt === null && d.remainingAmount > 0);
 
   if (active.length === 0) return null;
 
-  active.sort((a, b) => {
-    if (a.remainingAmount !== b.remainingAmount) {
-      return a.remainingAmount - b.remainingAmount;
-    }
-    return a.label.localeCompare(b.label);
-  });
+  const pickSmallest = (pool: Debt[]): Debt => {
+    const sorted = [...pool].sort((a, b) => {
+      if (a.remainingAmount !== b.remainingAmount) {
+        return a.remainingAmount - b.remainingAmount;
+      }
+      return a.label.localeCompare(b.label);
+    });
+    return sorted[0];
+  };
 
-  return active[0];
+  if (deprioritizeCreditCards) {
+    const nonCC = active.filter((d) => d.type !== 'credit_card');
+    if (nonCC.length > 0) return pickSmallest(nonCC);
+    return pickSmallest(active);
+  }
+
+  return pickSmallest(active);
+}
+
+export type SnowballTargetSource =
+  | 'manual'              // user-picked override
+  | 'auto-smallest'       // flag off — smallest active debt
+  | 'auto-no-cc'          // flag on, picked smallest non-credit-card
+  | 'auto-fallback-cc';   // flag on but only CCs left
+
+export interface EffectiveSnowballTarget {
+  debt: Debt | null;
+  source: SnowballTargetSource;
+}
+
+/**
+ * Resolve the effective snowball target considering user override + CC deprioritization.
+ *
+ * If `settings.snowballTargetOverride` references an active debt (not closed and
+ * remainingAmount > 0), that debt wins regardless of size or type and the source
+ * is tagged `'manual'`. Otherwise this delegates to {@link getSnowballTarget} and
+ * tags the result based on whether CC deprioritization was on, off, or fell back.
+ *
+ * @param debts    - All debts (closed/zero-balance ones are filtered internally)
+ * @param settings - Subset of Settings carrying override + CC deprioritization flag
+ * @returns The chosen debt and a `source` tag explaining the decision
+ */
+export function getEffectiveSnowballTarget(
+  debts: Debt[],
+  settings: { snowballTargetOverride?: string | null; deprioritizeCreditCards?: boolean },
+): EffectiveSnowballTarget {
+  // 1. Try manual override first
+  if (settings.snowballTargetOverride) {
+    const overridden = debts.find(
+      (d) =>
+        d.id === settings.snowballTargetOverride &&
+        d.closedAt === null &&
+        d.remainingAmount > 0,
+    );
+    if (overridden) {
+      return { debt: overridden, source: 'manual' };
+    }
+    // Falls through to auto-pick when override is invalid
+  }
+
+  // 2. Auto-pick via existing logic
+  const picked = getSnowballTarget(debts, settings.deprioritizeCreditCards);
+
+  if (!picked) {
+    return { debt: null, source: 'auto-smallest' };
+  }
+
+  // 3. Determine the auto-* tag
+  if (!settings.deprioritizeCreditCards) {
+    return { debt: picked, source: 'auto-smallest' };
+  }
+  if (picked.type !== 'credit_card') {
+    return { debt: picked, source: 'auto-no-cc' };
+  }
+  return { debt: picked, source: 'auto-fallback-cc' };
 }
 
 /**
@@ -144,6 +219,45 @@ const DEFAULT_FLOOR_RATIOS: Record<string, number> = {
 export function getDefaultFloor(category: string, outstanding: number): number {
   const ratio = DEFAULT_FLOOR_RATIOS[category] ?? 0;
   return roundPLN(ratio * outstanding);
+}
+
+/**
+ * Resolve the floor for a given need category, respecting user overrides.
+ * If an override exists, it is clamped to the outstanding amount.
+ * Otherwise, the default ratio-based floor is used.
+ */
+export function getFloorForCategory(
+  category: keyof MonthlyNeeds,
+  outstanding: number,
+  overrides?: Partial<Record<keyof MonthlyNeeds, number>>,
+): number {
+  if (overrides?.[category] !== undefined) {
+    return roundPLN(Math.min(overrides[category]!, outstanding));
+  }
+  return getDefaultFloor(category, outstanding);
+}
+
+/**
+ * Compute the arithmetic mean of a need category over the most recent
+ * `monthsBack` months (excluding the current month).
+ *
+ * Returns `null` if no eligible coverage entries exist.
+ */
+export function getPreviousMonthsAverage(
+  category: 'food' | 'housing',
+  coverage: MonthlyCoverage[],
+  monthsBack: number = 3,
+): number | null {
+  const currentMonth = getMonthKey();
+  const prior = coverage
+    .filter((c) => c.month !== currentMonth)
+    .sort((a, b) => b.month.localeCompare(a.month))
+    .slice(0, monthsBack);
+
+  if (prior.length === 0) return null;
+
+  const sum = prior.reduce((acc, entry) => acc + (entry.needs[category] ?? 0), 0);
+  return roundPLN(sum / prior.length);
 }
 
 /**

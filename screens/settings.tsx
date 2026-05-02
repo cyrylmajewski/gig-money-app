@@ -1,5 +1,6 @@
 import {
   ChevronRight,
+  CreditCard,
   Download,
   Globe,
   Receipt,
@@ -10,9 +11,9 @@ import { File, Paths } from 'expo-file-system';
 import { GlassView } from 'expo-glass-effect';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Alert, Pressable, ScrollView, Share, StyleSheet } from 'react-native';
+import { Alert, Pressable, ScrollView, Share, StyleSheet, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { H2, Separator, Text, XStack, YStack } from 'tamagui';
+import { H2, Paragraph, Separator, Text, XStack, YStack } from 'tamagui';
 
 import i18n from '@/i18n';
 import { useAppStore } from '@/store';
@@ -31,6 +32,9 @@ export default function SettingsScreen() {
   const resetState = useAppStore((s) => s.resetState);
   const updateSettings = useAppStore((s) => s.updateSettings);
   const currentLocale = useAppStore((s) => s.settings.locale);
+  const deprioritizeCreditCards = useAppStore(
+    (s) => s.settings.deprioritizeCreditCards,
+  );
 
   const appVersion = Constants.expoConfig?.version ?? '—';
 
@@ -107,6 +111,29 @@ export default function SettingsScreen() {
                   <ChevronRight size={16} color="$color8" />
                 </XStack>
               </Pressable>
+            </YStack>
+          </GlassView>
+
+          {/* Strategy section */}
+          <GlassView glassEffectStyle="regular" style={styles.card}>
+            <YStack bg="$color2" rounded="$6" overflow="hidden" px="$4" py="$3.5" gap="$3">
+              <XStack items="center" gap="$3">
+                <CreditCard size={18} color="$accent9" />
+                <Text flex={1} fontWeight="600">
+                  {t('settings.deprioritizeCreditCards.label')}
+                </Text>
+                <Switch
+                  value={deprioritizeCreditCards}
+                  onValueChange={(value) =>
+                    updateSettings({ deprioritizeCreditCards: value })
+                  }
+                  trackColor={{ false: '#3a3a3c', true: 'hsl(250, 50%, 62%)' }}
+                  ios_backgroundColor="#3a3a3c"
+                />
+              </XStack>
+              <Paragraph color="$color9" fontSize="$2" lineHeight={18}>
+                {t('settings.deprioritizeCreditCards.description')}
+              </Paragraph>
             </YStack>
           </GlassView>
 

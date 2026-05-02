@@ -43,6 +43,7 @@ export interface DeferredPayment {
   amount: number;            // PLN
   deferredAt: string;        // ISO date
   reason: 'agreed_delay' | 'postponing' | 'other';
+  note?: string;
   resolved: boolean;
 }
 
@@ -97,6 +98,9 @@ export interface Settings {
   currency: 'PLN';
   locale: 'pl' | 'en' | 'ru';
   strictMode: boolean;
+  deprioritizeCreditCards: boolean;
+  snowballTargetOverride: string | null;  // debtId, or null = auto-pick
+  lastCelebrationDebtId: string | null;   // debt label of last celebrated closure
   lastRealityCheckAt: string | null;
   tier1PriorityOrder: 'food_first' | 'housing_first';
   floorOverrides?: Partial<Record<keyof MonthlyNeeds, number>>;

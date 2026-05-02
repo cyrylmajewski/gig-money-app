@@ -16,7 +16,8 @@ import { Check } from '@tamagui/lucide-icons-2';
 
 import { useAppStore } from '@/store';
 import { formatAmount } from '@/lib/format';
-import type { Allocation, Income } from '@/types/models';
+import { computeDeferredWithReasons } from '@/lib/distribution';
+import type { Allocation, Income, AppState } from '@/types/models';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -76,18 +77,36 @@ export default function ConfirmScreen() {
     amount: string;
     source?: string;
     allocation: string;
+    wasAdjustedByUser?: string;
+    reasons?: string;
+    note?: string;
   }>();
 
   const processIncome = useAppStore((s) => s.processIncome);
   const debts = useAppStore((s) => s.debts);
+  const monthlyNeeds = useAppStore((s) => s.monthlyNeeds);
+  const deferredPayments = useAppStore((s) => s.deferredPayments);
+  const monthlyCoverage = useAppStore((s) => s.monthlyCoverage);
+  const settings = useAppStore((s) => s.settings);
 
   const incomeAmount = parseFloat(params.amount ?? '0');
   const source = params.source ?? '';
   const currency = t('common.currency');
+  const wasAdjustedByUser = params.wasAdjustedByUser === 'true';
+  const note = params.note ?? undefined;
+
+  const reasons = useMemo(() => {
+    try {
+      return JSON.parse(params.reasons ?? '{}') as Record<string, 'agreed_delay' | 'postponing' | 'other'>;
+    } catch {
+      return {} as Record<string, 'agreed_delay' | 'postponing' | 'other'>;
+    }
+  }, [params.reasons]);
 
   const allocation: Allocation = useMemo(() => {
     try {
-      return JSON.parse(params.allocation ?? '{}') as Allocation;
+      const parsed = JSON.parse(params.allocation ?? '{}') as Allocation;
+      return { ...parsed, wasAdjustedByUser };
     } catch {
       return {
         deferredPayments: 0,
@@ -95,10 +114,27 @@ export default function ConfirmScreen() {
         minimumPayments: {},
         extraDebtPayment: null,
         unallocated: 0,
-        wasAdjustedByUser: false,
+        wasAdjustedByUser,
       };
     }
-  }, [params.allocation]);
+  }, [params.allocation, wasAdjustedByUser]);
+
+  const stateSnapshot: AppState = useMemo(
+    () => ({
+      schemaVersion: 1,
+      installationDate: '',
+      onboardingCompleted: true,
+      monthlyNeeds,
+      debts,
+      incomes: [],
+      deferredPayments,
+      monthlyCoverage,
+      realityChecks: [],
+      shortfallContacts: [],
+      settings,
+    }),
+    [monthlyNeeds, debts, deferredPayments, monthlyCoverage, settings]
+  );
 
   const debtById = useMemo(
     () => Object.fromEntries(debts.map((d) => [d.id, d])),
@@ -124,6 +160,7 @@ export default function ConfirmScreen() {
   ].filter((s) => s.amount > 0);
 
   const handleSave = useCallback(() => {
+    const newDeferred = computeDeferredWithReasons(allocation, stateSnapshot, reasons, note);
     const income: Income = {
       id: generateId(),
       amount: incomeAmount,
@@ -131,10 +168,10 @@ export default function ConfirmScreen() {
       date: new Date().toISOString(),
       allocation,
     };
-    processIncome(income);
+    processIncome(income, newDeferred);
     router.dismissAll();
     router.replace('/(tabs)');
-  }, [incomeAmount, source, allocation, processIncome, router]);
+  }, [incomeAmount, source, allocation, stateSnapshot, reasons, note, processIncome, router]);
 
   const hasMinimums = Object.keys(allocation.minimumPayments).length > 0;
 

@@ -103,7 +103,11 @@
       "of": "of {{amount}}",
       "forecast": "Estimated payoff: {{date}}",
       "forecastApprox": "Roughly {{date}} (limited data)",
-      "noDebts": "You have no active debts. Great work!"
+      "noDebts": "You have no active debts. Great work!",
+      "targetSourceManual": "You chose this",
+      "targetSourceAutoSmallest": "Smallest balance — quick win",
+      "targetSourceAutoNoCc": "Smallest non-card debt — pay loans first",
+      "targetSourceAutoFallbackCc": "Only credit cards remain"
     },
     "lastDistribution": {
       "title": "Last distribution",
@@ -132,10 +136,38 @@
       "receivedLabel": "You received:",
       "confirm": "Confirm allocation",
       "defaultBiasNote": "The split is calculated optimally. You can confirm it with one tap.",
+      "edit": {
+        "remainingLabel": "Remaining to allocate",
+        "overspentLabel": "Exceeded by {{amount}} {{currency}}",
+        "blockedHint": "Reduce other items to continue",
+        "incrementHint": "Step ±50 PLN"
+      },
       "shortfall": {
         "title": "Insufficient funds",
         "lossWarning": "You will lose {{amount}} {{currency}} on uncovered essential expenses. Consider deferring a payment.",
         "advice": "You can confirm the allocation and decide which payments to defer."
+      },
+      "guardrail": {
+        "l2": {
+          "foodBelowAvg": "In {{month}} you set aside {{avg}} {{currency}} for food, now {{now}} {{currency}}. May not be enough.",
+          "housingBelowAvg": "In {{month}} you set aside {{avg}} {{currency}} for housing, now {{now}} {{currency}}."
+        },
+        "l3": {
+          "title": "Select a reason",
+          "subtitle": "Skipping payment: {{label}}",
+          "reasonAgreedDelay": "Agreed on a delay",
+          "reasonPostponing": "Postponing this payment",
+          "reasonOther": "Just want to change it",
+          "save": "Save",
+          "back": "Back"
+        },
+        "l4": {
+          "title": "You're not paying any debt",
+          "subtitle": "Zeroing all minimum payments. This is a serious decision.",
+          "noteLabel": "Explain the situation (will be saved)",
+          "confirmHold": "Hold to confirm",
+          "back": "Back to edit"
+        }
       },
       "rows": {
         "deferred": "Deferred payments",
@@ -263,6 +295,15 @@
       "closed": "Closed",
       "notFound": "Debt not found.",
       "closedBadgeLabel": "This debt is already closed and cannot be edited."
+    },
+    "targetPicker": {
+      "pickAnother": "Pick another target",
+      "title": "Choose snowball target",
+      "subtitle": "Pick the debt you want to focus on next.",
+      "useAuto": "Use automatic selection",
+      "currentLabel": "Current target",
+      "cancel": "Cancel",
+      "save": "Save"
     }
   },
   "progress": {
@@ -300,7 +341,11 @@
     "resetData": "Reset all data",
     "resetConfirmTitle": "Reset data?",
     "resetConfirmMessage": "This will delete all your data. This action cannot be undone.",
-    "resetConfirmButton": "Reset"
+    "resetConfirmButton": "Reset",
+    "deprioritizeCreditCards": {
+      "label": "Deprioritize credit cards in snowball",
+      "description": "Extra payments go to loans first; credit cards are paid last. Helps avoid the temptation to re-borrow."
+    }
   },
   "triggers": {
     "realityCheck": {
@@ -327,7 +372,15 @@
     "celebration": {
       "title": "Debt Paid Off!",
       "message": "You've completely paid off {{label}}! One less burden.",
-      "dismiss": "Celebrate!"
+      "creditCardClosed": "You paid off {{label}} 🎉 Consider closing the contract at the bank to remove temptation.",
+      "dismiss": "Celebrate!",
+      "screen": {
+        "title": "You did it!",
+        "subtitle": "You paid off {{label}}!",
+        "body": "One less burden. Every closed debt is a step toward financial freedom.",
+        "creditCardExtra": "💳 This was a credit card — consider closing the contract at the bank to remove the temptation to re-borrow.",
+        "cta": "Keep celebrating!"
+      }
     }
   },
   "creditorTemplates": {

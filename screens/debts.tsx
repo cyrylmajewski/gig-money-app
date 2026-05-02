@@ -1,5 +1,6 @@
 import { Crosshair, Plus } from '@tamagui/lucide-icons-2';
 import { Stack, useRouter } from 'expo-router';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -17,10 +18,19 @@ import {
 
 import { Badge } from '@/components/badge';
 import { IncomeFab } from '@/components/income-fab';
+import { SnowballTargetPicker } from '@/components/snowball-target-picker';
 import { useAppStore } from '@/store';
 import { formatAmount } from '@/lib/format';
-import { getActiveDebts } from '@/lib/distribution/helpers';
+import { getActiveDebts, getEffectiveSnowballTarget } from '@/lib/distribution';
 import type { Debt } from '@/types/models';
+import type { SnowballTargetSource } from '@/lib/distribution';
+
+const SOURCE_KEY: Record<SnowballTargetSource, string> = {
+  manual: 'home.snowball.targetSourceManual',
+  'auto-smallest': 'home.snowball.targetSourceAutoSmallest',
+  'auto-no-cc': 'home.snowball.targetSourceAutoNoCc',
+  'auto-fallback-cc': 'home.snowball.targetSourceAutoFallbackCc',
+};
 
 function getClosedDebts(debts: Debt[]): Debt[] {
   return debts
@@ -140,10 +150,20 @@ export default function DebtsScreen() {
   const router = useRouter();
 
   const debts = useAppStore((s) => s.debts);
+  const settings = useAppStore((s) => s.settings);
+  const updateSettings = useAppStore((s) => s.updateSettings);
 
-  const activeDebts = getActiveDebts(debts).sort(
-    (a, b) => a.remainingAmount - b.remainingAmount
-  );
+  const [pickerOpen, setPickerOpen] = useState(false);
+
+  const rawActive = getActiveDebts(debts);
+  const { debt: targetDebt, source: targetSource } = getEffectiveSnowballTarget(rawActive, settings);
+
+  const activeDebts = [...rawActive].sort((a, b) => {
+    if (targetDebt && a.id === targetDebt.id) return -1;
+    if (targetDebt && b.id === targetDebt.id) return 1;
+    return a.remainingAmount - b.remainingAmount;
+  });
+
   const closedDebts = getClosedDebts(debts);
 
   return (
@@ -198,16 +218,45 @@ export default function DebtsScreen() {
             {/* Active debts — snowball order */}
             {activeDebts.length > 0 ? (
               <YStack gap="$3">
-                {activeDebts.map((debt, index) => (
+                {activeDebts.map((debt) => (
                   <DebtCard
                     key={debt.id}
                     debt={debt}
-                    isSnowballTarget={index === 0}
+                    isSnowballTarget={debt.id === targetDebt?.id}
                     onPress={() => router.push(`/debt/${debt.id}`)}
                   />
                 ))}
+
+                {/* Target source explanation */}
+                {targetDebt ? (
+                  <YStack px="$1" gap="$1">
+                    <Text color="$color9" fontSize="$2" lineHeight={18}>
+                      {t(SOURCE_KEY[targetSource])}
+                    </Text>
+                    <Pressable
+                      onPress={() => setPickerOpen(true)}
+                      hitSlop={8}
+                    >
+                      <Text color="$accent11" fontSize="$2" fontWeight="600">
+                        {t('debts.targetPicker.pickAnother')}
+                      </Text>
+                    </Pressable>
+                  </YStack>
+                ) : null}
               </YStack>
             ) : null}
+
+            <SnowballTargetPicker
+              open={pickerOpen}
+              onOpenChange={setPickerOpen}
+              debts={activeDebts}
+              currentOverride={settings.snowballTargetOverride}
+              effectiveTargetId={targetDebt?.id ?? null}
+              onSelect={(debtId) => {
+                updateSettings({ snowballTargetOverride: debtId });
+                setPickerOpen(false);
+              }}
+            />
 
             {/* Closed debts section */}
             {closedDebts.length > 0 ? (

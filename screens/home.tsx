@@ -8,10 +8,10 @@ import {
   Trophy,
   Wallet,
 } from '@tamagui/lucide-icons-2';
-import { Stack } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { Stack, useRouter } from 'expo-router';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView } from 'react-native';
+import { Pressable, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Button,
@@ -29,7 +29,9 @@ import { Pie, PolarChart, CartesianChart, Bar } from 'victory-native';
 
 import { Badge } from '@/components/badge';
 import { IncomeFab } from '@/components/income-fab';
-import { getActiveDebts, getMonthKey } from '@/lib/distribution/helpers';
+import { SnowballTargetPicker } from '@/components/snowball-target-picker';
+import { getActiveDebts, getEffectiveSnowballTarget, getMonthKey } from '@/lib/distribution';
+import type { SnowballTargetSource } from '@/lib/distribution';
 import { formatAmount } from '@/lib/format';
 import {
   getDebtCelebration,
@@ -38,6 +40,13 @@ import {
 } from '@/lib/triggers';
 import { useAppStore } from '@/store';
 import type { Debt, Income, RealityCheckResponse } from '@/types/models';
+
+const SOURCE_KEY: Record<SnowballTargetSource, string> = {
+  manual: 'home.snowball.targetSourceManual',
+  'auto-smallest': 'home.snowball.targetSourceAutoSmallest',
+  'auto-no-cc': 'home.snowball.targetSourceAutoNoCc',
+  'auto-fallback-cc': 'home.snowball.targetSourceAutoFallbackCc',
+};
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -131,12 +140,24 @@ function FreshStartCard({ messageKey, onDismiss }: { messageKey: string; onDismi
   );
 }
 
-function DebtCelebrationCard({ debtLabel, onDismiss }: { debtLabel: string; onDismiss: () => void }) {
+function DebtCelebrationCard({
+  debtLabel,
+  debtType,
+  onDismiss,
+}: {
+  debtLabel: string;
+  debtType: string;
+  onDismiss: () => void;
+}) {
   const { t } = useTranslation();
+  const messageKey =
+    debtType === 'credit_card'
+      ? 'triggers.celebration.creditCardClosed'
+      : 'triggers.celebration.message';
   return (
     <YStack theme="success" bg="$color2" borderWidth={1} borderLeftWidth={3} borderColor="$color5" borderLeftColor="$color9" rounded="$6" p="$4" gap="$3">
       <Text color="$color9" fontSize="$1" letterSpacing={1}>{t('triggers.celebration.title').toUpperCase()}</Text>
-      <Paragraph>{t('triggers.celebration.message', { label: debtLabel })}</Paragraph>
+      <Paragraph>{t(messageKey, { label: debtLabel })}</Paragraph>
       <Button chromeless size="$3" self="flex-start" onPress={onDismiss}>{t('triggers.celebration.dismiss')}</Button>
     </YStack>
   );
@@ -386,19 +407,23 @@ function LastDistributionCard({ income }: { income: Income }) {
 export default function HomeScreen() {
   const { t } = useTranslation();
 
+  const router = useRouter();
   const debts = useAppStore((s) => s.debts);
   const incomes = useAppStore((s) => s.incomes);
   const deferredPayments = useAppStore((s) => s.deferredPayments);
   const installationDate = useAppStore((s) => s.installationDate);
-  const lastRealityCheckAt = useAppStore((s) => s.settings.lastRealityCheckAt);
+  const settings = useAppStore((s) => s.settings);
+  const updateSettings = useAppStore((s) => s.updateSettings);
+  const lastRealityCheckAt = settings.lastRealityCheckAt;
+  const lastCelebrationDebtId = useAppStore((s) => s.settings.lastCelebrationDebtId);
 
   const [dismissedRC, setDismissedRC] = useState(false);
   const [dismissedFS, setDismissedFS] = useState(false);
-  const [dismissedCelebration, setDismissedCelebration] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   const activeDebts = getActiveDebts(debts).sort((a, b) => a.remainingAmount - b.remainingAmount);
   const closedDebts = debts.filter((d) => d.closedAt !== null);
-  const snowballTarget = activeDebts[0] ?? null;
+  const { debt: snowballTarget, source: targetSource } = getEffectiveSnowballTarget(activeDebts, settings);
   const recentIncome = getRecentIncome(incomes);
   const pendingDeferred = deferredPayments.filter((p) => !p.resolved);
 
@@ -421,9 +446,20 @@ export default function HomeScreen() {
     [installationDate]
   );
   const debtCelebration = useMemo(
-    () => getDebtCelebration(debts.map((d) => ({ label: d.label, closedAt: d.closedAt })), null),
-    [debts]
+    () => getDebtCelebration(debts.map((d) => ({ label: d.label, type: d.type, closedAt: d.closedAt })), lastCelebrationDebtId),
+    [debts, lastCelebrationDebtId],
   );
+
+  useEffect(() => {
+    if (!debtCelebration?.shouldShow) return;
+    useAppStore.getState().updateSettings({
+      lastCelebrationDebtId: debtCelebration.debtLabel,
+    });
+    router.push({
+      pathname: '/celebration',
+      params: { debtLabel: debtCelebration.debtLabel, debtType: debtCelebration.debtType },
+    });
+  }, [debtCelebration?.shouldShow, debtCelebration?.debtLabel, debtCelebration?.debtType, router]);
 
   function handleRealityCheckAnswer(answer: 'yes' | 'barely' | 'no') {
     if (!realityCheckTrigger.shouldShow) return;
@@ -443,7 +479,6 @@ export default function HomeScreen() {
 
   const showRealityCheck = realityCheckTrigger.shouldShow && !dismissedRC;
   const showFreshStart = freshStartTrigger.shouldShow && !dismissedFS;
-  const showCelebration = debtCelebration !== null && debtCelebration.shouldShow && !dismissedCelebration;
   const hasDebts = debts.length > 0;
 
   return (
@@ -459,9 +494,6 @@ export default function HomeScreen() {
             {pendingDeferred.length > 0 && <DeferredBanner count={pendingDeferred.length} />}
 
             {/* Trigger cards */}
-            {showCelebration && debtCelebration && (
-              <DebtCelebrationCard debtLabel={debtCelebration.debtLabel} onDismiss={() => setDismissedCelebration(true)} />
-            )}
             {showFreshStart && <FreshStartCard messageKey={freshStartTrigger.messageKey} onDismiss={() => setDismissedFS(true)} />}
             {showRealityCheck && <RealityCheckCard questionKey={realityCheckTrigger.questionKey} onAnswer={handleRealityCheckAnswer} />}
 
@@ -470,13 +502,37 @@ export default function HomeScreen() {
 
             {/* Snowball target */}
             {snowballTarget ? (
-              <SnowballCard debt={snowballTarget} incomes={incomes} />
+              <YStack gap="$2">
+                <SnowballCard debt={snowballTarget} incomes={incomes} />
+                <YStack px="$1" gap="$1">
+                  <Text color="$color9" fontSize="$2" lineHeight={18}>
+                    {t(SOURCE_KEY[targetSource])}
+                  </Text>
+                  <Pressable onPress={() => setPickerOpen(true)} hitSlop={8}>
+                    <Text color="$accent11" fontSize="$2" fontWeight="600">
+                      {t('debts.targetPicker.pickAnother')}
+                    </Text>
+                  </Pressable>
+                </YStack>
+              </YStack>
             ) : (
               <YStack bg="$color2" rounded="$6" p="$5" items="center" gap="$3">
                 <CheckCircle2 size={40} color="$accent9" />
                 <Text color="$color9">{t('home.snowball.noDebts')}</Text>
               </YStack>
             )}
+
+            <SnowballTargetPicker
+              open={pickerOpen}
+              onOpenChange={setPickerOpen}
+              debts={activeDebts}
+              currentOverride={settings.snowballTargetOverride}
+              effectiveTargetId={snowballTarget?.id ?? null}
+              onSelect={(debtId) => {
+                updateSettings({ snowballTargetOverride: debtId });
+                setPickerOpen(false);
+              }}
+            />
 
             {/* Monthly comparison */}
             {hasDebts && (

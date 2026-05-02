@@ -33,6 +33,9 @@ npx expo start
 
 # Lint
 npx expo lint
+
+# Run tests
+npm test
 ```
 
 ## Running on a Physical Device

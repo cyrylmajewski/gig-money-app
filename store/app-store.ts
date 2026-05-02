@@ -18,7 +18,7 @@ interface AppActions {
   updateDebt: (id: string, updates: Partial<Debt>) => void;
   removeDebt: (id: string) => void;
   addIncome: (income: Income) => void;
-  processIncome: (income: Income) => void;
+  processIncome: (income: Income, newDeferredPayments?: DeferredPayment[]) => void;
   addDeferredPayment: (payment: DeferredPayment) => void;
   resolveDeferredPayment: (id: string) => void;
   recordShortfallContact: (contactId: string) => void;
@@ -39,7 +39,7 @@ const initialState: AppState = {
   monthlyCoverage: [],
   realityChecks: [],
   shortfallContacts: [],
-  settings: { currency: 'PLN', locale: 'pl', strictMode: false, lastRealityCheckAt: null, tier1PriorityOrder: 'food_first' },
+  settings: { currency: 'PLN', locale: 'pl', strictMode: false, deprioritizeCreditCards: false, snowballTargetOverride: null, lastCelebrationDebtId: null, lastRealityCheckAt: null, tier1PriorityOrder: 'food_first' },
 };
 
 export const useAppStore = create<AppStore>()(
@@ -71,7 +71,7 @@ export const useAppStore = create<AppStore>()(
       addIncome: (income) =>
         set((state) => ({ incomes: [...state.incomes, income] })),
 
-      processIncome: (income) =>
+      processIncome: (income, newDeferredPayments) =>
         set((state) => {
           const allocation = income.allocation;
           const date = new Date(income.date);
@@ -129,9 +129,12 @@ export const useAppStore = create<AppStore>()(
           });
 
           // 4. Resolve all unresolved deferred payments (cleanup)
-          const deferredPayments = state.deferredPayments.map((p) =>
+          const resolvedExisting = state.deferredPayments.map((p) =>
             p.resolved ? p : { ...p, resolved: true },
           );
+          const deferredPayments = newDeferredPayments
+            ? [...resolvedExisting, ...newDeferredPayments]
+            : resolvedExisting;
 
           return { incomes, monthlyCoverage, debts, deferredPayments };
         }),

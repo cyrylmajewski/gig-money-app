@@ -2,35 +2,18 @@ import type {
   Allocation,
   AppState,
   DeferredPayment,
-  MonthlyNeeds,
 } from '@/types/models';
 import {
   allocateTier,
   getActiveDebts,
   getCurrentMonthlyCoverage,
-  getDefaultFloor,
+  getEffectiveSnowballTarget,
+  getFloorForCategory,
   getOutstandingMinimums,
   getOutstandingNeeds,
-  getSnowballTarget,
   getUnresolvedDeferred,
   roundPLN,
 } from './helpers';
-
-/**
- * Resolve the floor for a given need category, respecting user overrides.
- * If an override exists, it is clamped to the outstanding amount.
- * Otherwise, the default ratio-based floor is used.
- */
-function getFloorForCategory(
-  category: keyof MonthlyNeeds,
-  outstanding: number,
-  overrides?: Partial<Record<keyof MonthlyNeeds, number>>,
-): number {
-  if (overrides?.[category] !== undefined) {
-    return roundPLN(Math.min(overrides[category]!, outstanding));
-  }
-  return getDefaultFloor(category, outstanding);
-}
 
 /**
  * Distribute an income amount across the 5-step priority order.
@@ -135,7 +118,7 @@ export function distributeIncome(
   let extraDebtPayment: Allocation['extraDebtPayment'] = null;
 
   if (remaining > 0) {
-    const snowballTarget = getSnowballTarget(activeDebts);
+    const { debt: snowballTarget } = getEffectiveSnowballTarget(activeDebts, state.settings);
     if (snowballTarget) {
       // Don't pay more than the remaining balance (minus what was already
       // allocated as a minimum in this same distribution)
@@ -276,6 +259,38 @@ export function computeNewDeferredPayments(
   }
 
   return result;
+}
+
+/**
+ * Companion to {@link computeNewDeferredPayments} that applies a per-category
+ * reason map (and optional free-text note) supplied by the L4 confirmation flow.
+ *
+ * Reason keys use the format `'need:<category>'` for needs and
+ * `'debt:<debtId>'` for missed minimum payments. Missing entries default to
+ * `'postponing'`. The `note` is attached only to records whose final reason is
+ * `'other'`.
+ */
+export function computeDeferredWithReasons(
+  allocation: Allocation,
+  state: AppState,
+  reasons: Record<string, 'agreed_delay' | 'postponing' | 'other'>,
+  note?: string,
+  date?: Date,
+): DeferredPayment[] {
+  const base = computeNewDeferredPayments(allocation, state, date);
+
+  return base.map((dp) => {
+    const key =
+      dp.kind === 'need'
+        ? `need:${dp.needCategory}`
+        : `debt:${dp.debtId}`;
+    const reason = reasons[key] ?? 'postponing';
+    const next: DeferredPayment = { ...dp, reason };
+    if (reason === 'other' && note !== undefined) {
+      next.note = note;
+    }
+    return next;
+  });
 }
 
 /**

@@ -23,6 +23,7 @@ export interface FreshStartTrigger {
 export interface DebtCelebration {
   shouldShow: boolean;
   debtLabel: string;
+  debtType: string;
   closedAt: string;
 }
 
@@ -192,12 +193,14 @@ export function getFreshStartTrigger(
  * debt label, or null if nothing to celebrate.
  */
 export function getDebtCelebration(
-  debts: Array<{ label: string; closedAt: string | null }>,
+  debts: Array<{ label: string; type: string; closedAt: string | null }>,
   lastCelebrationDebtId: string | null,
 ): DebtCelebration | null {
-  // Collect closed debts, sort by closedAt descending (newest first)
   const closed = debts
-    .filter((d): d is { label: string; closedAt: string } => d.closedAt !== null)
+    .filter(
+      (d): d is { label: string; type: string; closedAt: string } =>
+        d.closedAt !== null,
+    )
     .sort(
       (a, b) => new Date(b.closedAt).getTime() - new Date(a.closedAt).getTime(),
     );
@@ -208,7 +211,6 @@ export function getDebtCelebration(
 
   const newest = closed[0];
 
-  // If we already celebrated this one, skip
   if (lastCelebrationDebtId !== null && newest.label === lastCelebrationDebtId) {
     return null;
   }
@@ -216,6 +218,7 @@ export function getDebtCelebration(
   return {
     shouldShow: true,
     debtLabel: newest.label,
+    debtType: newest.type,
     closedAt: newest.closedAt,
   };
 }

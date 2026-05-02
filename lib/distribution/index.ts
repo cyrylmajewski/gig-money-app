@@ -1,9 +1,10 @@
-export { distributeIncome, computeNewDeferredPayments } from './distribute-income';
+export { distributeIncome, computeNewDeferredPayments, computeDeferredWithReasons } from './distribute-income';
 export {
   allocateTier,
   getActiveDebts,
   getCurrentMonthlyCoverage,
   getDefaultFloor,
+  getEffectiveSnowballTarget,
   getMonthKey,
   getOutstandingMinimums,
   getOutstandingNeeds,
@@ -11,3 +12,4 @@ export {
   getUnresolvedDeferred,
   roundPLN,
 } from './helpers';
+export type { EffectiveSnowballTarget, SnowballTargetSource } from './helpers';

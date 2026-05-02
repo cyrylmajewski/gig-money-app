@@ -1,3 +1,4 @@
+/// <reference types="vitest" />
 import { allocateTier } from '@/lib/distribution/helpers';
 import type { TierCategory } from '@/types/models';
 
