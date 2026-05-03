@@ -11,6 +11,7 @@ import {
   SpaceGrotesk_600SemiBold,
   SpaceGrotesk_700Bold,
 } from '@expo-google-fonts/space-grotesk';
+import { PortalProvider } from '@gorhom/portal';
 import { useFonts } from 'expo-font';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -64,29 +65,31 @@ export default function RootLayout() {
     } else if (onboardingCompleted && segments[0] === 'onboarding') {
       router.replace('/(tabs)');
     }
-  }, [onboardingCompleted, fontsLoaded, fontError, segments]);
+  }, [onboardingCompleted, fontsLoaded, fontError, segments, router]);
 
   if (!fontsLoaded && !fontError) {
     return null;
   }
 
   return (
-    <TamaguiProvider config={tamaguiConfig} defaultTheme={colorScheme ?? 'dark'}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="onboarding" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="income"
-          options={{ headerShown: false, presentation: 'modal' }}
-        />
-        <Stack.Screen name="debt" options={{ headerShown: false }} />
-        <Stack.Screen name="settings" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="celebration"
-          options={{ headerShown: false }}
-        />
-      </Stack>
-      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-    </TamaguiProvider>
+    <PortalProvider>
+      <TamaguiProvider
+        config={tamaguiConfig}
+        defaultTheme={colorScheme ?? 'dark'}
+      >
+        <Stack>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="income"
+            options={{ headerShown: false, presentation: 'modal' }}
+          />
+          <Stack.Screen name="debt" options={{ headerShown: false }} />
+          <Stack.Screen name="settings" options={{ headerShown: false }} />
+          <Stack.Screen name="celebration" options={{ headerShown: false }} />
+        </Stack>
+        <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+      </TamaguiProvider>
+    </PortalProvider>
   );
 }

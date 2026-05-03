@@ -1,4 +1,4 @@
-import { parseAmount, sanitiseDecimal, formatAmount } from '@/lib/format';
+import { formatAmount, parseAmount, sanitiseDecimal } from '@/lib/format';
 import type { MonthlyNeeds } from '@/types/models';
 import { useForm } from '@tanstack/react-form';
 import { useTranslation } from 'react-i18next';
@@ -12,10 +12,26 @@ interface NeedsField {
 }
 
 const FIELDS: NeedsField[] = [
-  { key: 'housing', labelKey: 'onboarding.needs.housing', placeholder: 'onboarding.needs.housingPlaceholder' },
-  { key: 'food', labelKey: 'onboarding.needs.food', placeholder: 'onboarding.needs.foodPlaceholder' },
-  { key: 'transport', labelKey: 'onboarding.needs.transport', placeholder: 'onboarding.needs.transportPlaceholder' },
-  { key: 'other', labelKey: 'onboarding.needs.other', placeholder: 'onboarding.needs.otherPlaceholder' },
+  {
+    key: 'housing',
+    labelKey: 'onboarding.needs.housing',
+    placeholder: 'onboarding.needs.housingPlaceholder',
+  },
+  {
+    key: 'food',
+    labelKey: 'onboarding.needs.food',
+    placeholder: 'onboarding.needs.foodPlaceholder',
+  },
+  {
+    key: 'transport',
+    labelKey: 'onboarding.needs.transport',
+    placeholder: 'onboarding.needs.transportPlaceholder',
+  },
+  {
+    key: 'other',
+    labelKey: 'onboarding.needs.other',
+    placeholder: 'onboarding.needs.otherPlaceholder',
+  },
 ];
 
 export interface NeedsFormValues {
@@ -31,7 +47,11 @@ interface NeedsFormProps {
   submitLabel: string;
 }
 
-export function NeedsForm({ defaultValues, onSubmit, submitLabel }: NeedsFormProps) {
+export function NeedsForm({
+  defaultValues,
+  onSubmit,
+  submitLabel,
+}: NeedsFormProps) {
   const { t } = useTranslation();
   const form = useForm({
     defaultValues,

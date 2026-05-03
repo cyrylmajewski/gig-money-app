@@ -1,6 +1,14 @@
 import { useTranslation } from 'react-i18next';
 import { Pressable } from 'react-native';
-import { Button, ScrollView, Separator, Sheet, Text, XStack, YStack } from 'tamagui';
+import {
+  Button,
+  ScrollView,
+  Separator,
+  Sheet,
+  Text,
+  XStack,
+  YStack,
+} from 'tamagui';
 
 import { Badge } from '@/components/badge';
 import { formatAmount } from '@/lib/format';
@@ -79,7 +87,8 @@ export function SnowballTargetPicker({
                   </Text>
                   {effectiveTargetId !== null && autoSelected ? (
                     <Text color="$accent9" fontSize="$2">
-                      {debts.find((d) => d.id === effectiveTargetId)?.label ?? ''}
+                      {debts.find((d) => d.id === effectiveTargetId)?.label ??
+                        ''}
                     </Text>
                   ) : null}
                 </YStack>
@@ -121,13 +130,19 @@ export function SnowballTargetPicker({
                       >
                         {debt.label}
                       </Text>
-                      <Text color={selected ? '$accent9' : '$color9'} fontSize="$2">
+                      <Text
+                        color={selected ? '$accent9' : '$color9'}
+                        fontSize="$2"
+                      >
                         {formatAmount(debt.remainingAmount)} {currency}
                       </Text>
                     </YStack>
                     <XStack items="center" gap="$2">
                       {isCurrent ? (
-                        <Badge label={t('debts.targetPicker.currentLabel')} variant="accent" />
+                        <Badge
+                          label={t('debts.targetPicker.currentLabel')}
+                          variant="accent"
+                        />
                       ) : null}
                       <Badge label={t(`onboarding.debts.types.${debt.type}`)} />
                     </XStack>

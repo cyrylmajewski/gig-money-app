@@ -7,6 +7,11 @@ Built with React Native, Expo, TypeScript, and Tamagui.
 ## Prerequisites (macOS)
 
 - **Node.js** >= 22 — install via [nvm](https://github.com/nvm-sh/nvm) or [Homebrew](https://brew.sh) (`brew install node`)
+- **pnpm** >= 10 — install via Corepack:
+  ```bash
+  corepack enable
+  corepack prepare pnpm@10.33.2 --activate
+  ```
 - **Xcode** — install from the Mac App Store, then run:
   ```bash
   sudo xcode-select --switch /Applications/Xcode.app
@@ -20,22 +25,25 @@ For Android: install [Android Studio](https://developer.android.com/studio) and 
 
 ```bash
 # Install dependencies
-npm install
+pnpm install
 
 # Build and run on iOS simulator (recommended)
-npx expo run:ios
+pnpm ios
 
 # Build and run on Android emulator
-npx expo run:android
+pnpm android
 
 # Or start dev server only (limited — native modules won't work in Expo Go)
-npx expo start
+pnpm start
 
 # Lint
-npx expo lint
+pnpm lint
+
+# Type-check
+pnpm typecheck
 
 # Run tests
-npm test
+pnpm test
 ```
 
 ## Running on a Physical Device
@@ -44,7 +52,7 @@ npm test
 
 ```bash
 # Build and run on a connected iPhone
-npx expo run:ios --device
+pnpm exec expo run:ios --device
 ```
 
 If this is your first time:
@@ -57,7 +65,7 @@ If this is your first time:
 
 ```bash
 # Build and run on a connected Android device
-npx expo run:android --device
+pnpm exec expo run:android --device
 ```
 
 To set up your phone:

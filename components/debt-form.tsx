@@ -1,11 +1,23 @@
+import {
+  getCreditorLabelKey,
+  getCreditorsByDebtType,
+  type Creditor,
+} from '@/lib/creditors';
 import { parseAmount, sanitiseDecimal } from '@/lib/format';
-import { getCreditorsByDebtType, getCreditorLabelKey, type Creditor } from '@/lib/creditors';
 import type { CreditorKind, DebtType } from '@/types/models';
 import { useForm } from '@tanstack/react-form';
-import { type ReactNode, useEffect } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, TextInput } from 'react-native';
-import { Button, Paragraph, ScrollView, Text, XStack, YStack, useTheme } from 'tamagui';
+import {
+  Button,
+  Paragraph,
+  ScrollView,
+  Text,
+  XStack,
+  YStack,
+  useTheme,
+} from 'tamagui';
 
 const DEBT_TYPES: DebtType[] = [
   'payday_loan',
@@ -48,17 +60,27 @@ function CreditorPicker({
   disabled: boolean;
 }) {
   const { t } = useTranslation();
+  const selectedCreditorId = field.state.value;
+  const handleCreditorChange = field.handleChange;
 
   // Reset selection when the creditor list changes and current value is invalid
   useEffect(() => {
-    if (field.state.value && !creditors.some((c) => c.id === field.state.value)) {
-      field.handleChange('');
+    if (
+      selectedCreditorId &&
+      !creditors.some((c) => c.id === selectedCreditorId)
+    ) {
+      handleCreditorChange('');
     }
-  }, [creditors]);
+  }, [creditors, selectedCreditorId, handleCreditorChange]);
 
   return (
     <YStack gap="$2" mb="$5">
-      <Text color="$color11" fontSize="$2" textTransform="uppercase" letterSpacing={0.6}>
+      <Text
+        color="$color11"
+        fontSize="$2"
+        textTransform="uppercase"
+        letterSpacing={0.6}
+      >
         {t(labelKey)}
       </Text>
       <Paragraph color="$color9" fontSize="$2" mt={-4}>
@@ -148,7 +170,12 @@ const DebtForm = ({
       >
         {(field) => (
           <YStack gap="$2" mb="$5">
-            <Text color="$color11" fontSize="$2" textTransform="uppercase" letterSpacing={0.6}>
+            <Text
+              color="$color11"
+              fontSize="$2"
+              textTransform="uppercase"
+              letterSpacing={0.6}
+            >
               {t('debts.form.label')}
             </Text>
             <XStack
@@ -183,7 +210,12 @@ const DebtForm = ({
       <form.Field name="type">
         {(field) => (
           <YStack gap="$2" mb="$5">
-            <Text color="$color11" fontSize="$2" textTransform="uppercase" letterSpacing={0.6}>
+            <Text
+              color="$color11"
+              fontSize="$2"
+              textTransform="uppercase"
+              letterSpacing={0.6}
+            >
               {t('debts.form.type')}
             </Text>
             <XStack flexWrap="wrap" gap="$2" opacity={disabled ? 0.5 : 1}>
@@ -233,12 +265,12 @@ const DebtForm = ({
           return (
             <form.Field name="creditorId">
               {(field) => (
-                  <CreditorPicker
-                    field={field}
-                    creditors={creditors}
-                    labelKey={labelKey}
-                    disabled={disabled}
-                  />
+                <CreditorPicker
+                  field={field}
+                  creditors={creditors}
+                  labelKey={labelKey}
+                  disabled={disabled}
+                />
               )}
             </form.Field>
           );
@@ -257,7 +289,12 @@ const DebtForm = ({
       >
         {(field) => (
           <YStack gap="$2" mb="$5">
-            <Text color="$color11" fontSize="$2" textTransform="uppercase" letterSpacing={0.6}>
+            <Text
+              color="$color11"
+              fontSize="$2"
+              textTransform="uppercase"
+              letterSpacing={0.6}
+            >
               {t('debts.form.remainingAmount')}
             </Text>
             <Paragraph color="$color9" fontSize="$2" mt={-4}>
@@ -281,7 +318,9 @@ const DebtForm = ({
                 onChangeText={(v) => field.handleChange(sanitiseDecimal(v))}
                 editable={!disabled}
               />
-              <Text color="$color9" fontSize="$3">{t('common.currency')}</Text>
+              <Text color="$color9" fontSize="$3">
+                {t('common.currency')}
+              </Text>
             </XStack>
             {field.state.meta.errors.length > 0 && (
               <Paragraph color="$red10" fontSize="$2">
@@ -296,7 +335,12 @@ const DebtForm = ({
       <form.Field name="minimumPayment">
         {(field) => (
           <YStack gap="$2" mb="$5">
-            <Text color="$color11" fontSize="$2" textTransform="uppercase" letterSpacing={0.6}>
+            <Text
+              color="$color11"
+              fontSize="$2"
+              textTransform="uppercase"
+              letterSpacing={0.6}
+            >
               {t('debts.form.minimumPayment')}
             </Text>
             <Paragraph color="$color9" fontSize="$2" mt={-4}>
@@ -320,7 +364,9 @@ const DebtForm = ({
                 onChangeText={(v) => field.handleChange(sanitiseDecimal(v))}
                 editable={!disabled}
               />
-              <Text color="$color9" fontSize="$3">{t('common.currency')}</Text>
+              <Text color="$color9" fontSize="$3">
+                {t('common.currency')}
+              </Text>
             </XStack>
           </YStack>
         )}
@@ -330,7 +376,12 @@ const DebtForm = ({
       <form.Field name="interestRate">
         {(field) => (
           <YStack gap="$2" mb="$5">
-            <Text color="$color11" fontSize="$2" textTransform="uppercase" letterSpacing={0.6}>
+            <Text
+              color="$color11"
+              fontSize="$2"
+              textTransform="uppercase"
+              letterSpacing={0.6}
+            >
               {t('debts.form.interestRate')}
             </Text>
             <Paragraph color="$color9" fontSize="$2" mt={-4}>
@@ -354,7 +405,9 @@ const DebtForm = ({
                 onChangeText={(v) => field.handleChange(sanitiseDecimal(v))}
                 editable={!disabled}
               />
-              <Text color="$color9" fontSize="$3">%</Text>
+              <Text color="$color9" fontSize="$3">
+                %
+              </Text>
             </XStack>
           </YStack>
         )}
@@ -364,7 +417,12 @@ const DebtForm = ({
       <form.Field name="paymentDay">
         {(field) => (
           <YStack gap="$2" mb="$5">
-            <Text color="$color11" fontSize="$2" textTransform="uppercase" letterSpacing={0.6}>
+            <Text
+              color="$color11"
+              fontSize="$2"
+              textTransform="uppercase"
+              letterSpacing={0.6}
+            >
               {t('debts.form.paymentDay')}
             </Text>
             <Paragraph color="$color9" fontSize="$2" mt={-4}>
@@ -395,7 +453,9 @@ const DebtForm = ({
                 }}
                 editable={!disabled}
               />
-              <Text color="$color9" fontSize="$3">{t('debts.form.paymentDaySuffix')}</Text>
+              <Text color="$color9" fontSize="$3">
+                {t('debts.form.paymentDaySuffix')}
+              </Text>
             </XStack>
           </YStack>
         )}
@@ -406,7 +466,12 @@ const DebtForm = ({
         <form.Field name="overdueAmount">
           {(field) => (
             <YStack gap="$2" mb="$6">
-              <Text color="$color11" fontSize="$2" textTransform="uppercase" letterSpacing={0.6}>
+              <Text
+                color="$color11"
+                fontSize="$2"
+                textTransform="uppercase"
+                letterSpacing={0.6}
+              >
                 {t('debts.form.overdueAmount')}
               </Text>
               <Paragraph color="$color9" fontSize="$2" mt={-4}>
@@ -428,7 +493,9 @@ const DebtForm = ({
                   value={field.state.value}
                   onChangeText={(v) => field.handleChange(sanitiseDecimal(v))}
                 />
-                <Text color="$color9" fontSize="$3">{t('common.currency')}</Text>
+                <Text color="$color9" fontSize="$3">
+                  {t('common.currency')}
+                </Text>
               </XStack>
             </YStack>
           )}
@@ -440,7 +507,12 @@ const DebtForm = ({
 
       {/* Submit */}
       {!disabled && (
-        <Button theme="accent" size="$5" rounded="$4" onPress={() => form.handleSubmit()}>
+        <Button
+          theme="accent"
+          size="$5"
+          rounded="$4"
+          onPress={() => form.handleSubmit()}
+        >
           {submitLabel ?? t('common.save')}
         </Button>
       )}
