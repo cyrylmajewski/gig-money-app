@@ -17,6 +17,7 @@ import {
 import { getCreditorById } from '@/lib/creditors';
 import { getMonthKey } from '@/lib/distribution/helpers';
 import { formatAmount } from '@/lib/format';
+import { parseJsonParam } from '@/lib/route-params';
 import { useAppStore } from '@/store';
 
 interface ShortfallItem {
@@ -43,6 +44,8 @@ export default function ShortfallScreen() {
     source?: string;
     allocation: string;
     shortfalls: string;
+    reasons?: string;
+    wasAdjustedByUser?: string;
   }>();
 
   const debts = useAppStore((s) => s.debts);
@@ -58,7 +61,7 @@ export default function ShortfallScreen() {
     );
   }
 
-  const shortfalls: ShortfallItem[] = JSON.parse(params.shortfalls ?? '[]');
+  const shortfalls = parseJsonParam<ShortfallItem[]>(params.shortfalls, []);
 
   const debtShortfalls = shortfalls.filter((s) => s.kind === 'debt');
   const needShortfalls = shortfalls.filter((s) => s.kind !== 'debt');
@@ -150,6 +153,8 @@ export default function ShortfallScreen() {
         amount: params.amount,
         source: params.source ?? '',
         allocation: params.allocation,
+        reasons: params.reasons ?? '{}',
+        wasAdjustedByUser: params.wasAdjustedByUser ?? 'false',
       },
     });
   }

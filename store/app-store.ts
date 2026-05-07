@@ -128,13 +128,9 @@ export const useAppStore = create<AppStore>()(
             };
           });
 
-          // 4. Resolve all unresolved deferred payments (cleanup)
-          const resolvedExisting = state.deferredPayments.map((p) =>
-            p.resolved ? p : { ...p, resolved: true },
-          );
           const deferredPayments = newDeferredPayments
-            ? [...resolvedExisting, ...newDeferredPayments]
-            : resolvedExisting;
+            ? [...state.deferredPayments, ...newDeferredPayments]
+            : state.deferredPayments;
 
           return { incomes, monthlyCoverage, debts, deferredPayments };
         }),

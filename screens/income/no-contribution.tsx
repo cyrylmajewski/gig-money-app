@@ -26,7 +26,9 @@ import {
 
 import { getCreditorById } from '@/lib/creditors';
 import { formatAmount } from '@/lib/format';
+import { parseJsonParam } from '@/lib/route-params';
 import { useAppStore } from '@/store';
+import type { DeferredPaymentReasons } from '@/types/models';
 
 const HOLD_DURATION = 3000;
 
@@ -58,13 +60,17 @@ export default function NoContributionScreen() {
   function handleConfirm() {
     if (completedRef.current) return;
     completedRef.current = true;
+    const reasons = parseJsonParam<DeferredPaymentReasons>(params.reasons, {});
+    for (const debt of activeDebts) {
+      reasons[`debt:${debt.id}`] = 'other';
+    }
     router.push({
       pathname: '/income/confirm',
       params: {
         amount: params.amount ?? '0',
         source: params.source ?? '',
         allocation: params.allocation,
-        reasons: params.reasons ?? '{}',
+        reasons: JSON.stringify(reasons),
         wasAdjustedByUser: params.wasAdjustedByUser ?? 'true',
         note,
       },

@@ -12,7 +12,7 @@ export default function TabLayout() {
 
   return (
     <NativeTabs
-      minimizeBehavior="onScrollDown"
+      minimizeBehavior="never"
       tintColor={accent}
       iconColor={{
         default: muted,

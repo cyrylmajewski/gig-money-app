@@ -35,6 +35,10 @@ export interface MonthlyCoverage {
   minimumPayments: Record<string, number>; // debtId -> amount paid this month
 }
 
+export type DeferredPaymentReason = 'agreed_delay' | 'postponing' | 'other';
+
+export type DeferredPaymentReasons = Record<string, DeferredPaymentReason>;
+
 export interface DeferredPayment {
   id: string;
   kind: 'need' | 'minimum_payment';
@@ -42,7 +46,7 @@ export interface DeferredPayment {
   debtId?: string;
   amount: number;            // PLN
   deferredAt: string;        // ISO date
-  reason: 'agreed_delay' | 'postponing' | 'other';
+  reason: DeferredPaymentReason;
   note?: string;
   resolved: boolean;
 }

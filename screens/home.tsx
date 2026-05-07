@@ -4,6 +4,7 @@ import {
   CalendarRange,
   CheckCircle2,
   Crosshair,
+  Plus,
   TrendingDown,
   Trophy,
   Wallet,
@@ -23,13 +24,11 @@ import {
   Text,
   XStack,
   YStack,
-  useTheme,
 } from 'tamagui';
-import { Pie, PolarChart, CartesianChart, Bar } from 'victory-native';
 
 import { Badge } from '@/components/badge';
-import { IncomeFab } from '@/components/income-fab';
 import { SnowballTargetPicker } from '@/components/snowball-target-picker';
+import { forecastDebtClosureDate } from '@/lib/debt-forecast';
 import { getActiveDebts, getEffectiveSnowballTarget, getMonthKey } from '@/lib/distribution';
 import type { SnowballTargetSource } from '@/lib/distribution';
 import { formatAmount } from '@/lib/format';
@@ -39,7 +38,7 @@ import {
   getRealityCheckTrigger,
 } from '@/lib/triggers';
 import { useAppStore } from '@/store';
-import type { Debt, Income, RealityCheckResponse } from '@/types/models';
+import type { Debt, Income, MonthlyNeeds, RealityCheckResponse } from '@/types/models';
 
 const SOURCE_KEY: Record<SnowballTargetSource, string> = {
   manual: 'home.snowball.targetSourceManual',
@@ -49,39 +48,6 @@ const SOURCE_KEY: Record<SnowballTargetSource, string> = {
 };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
-
-function forecastClosureDate(
-  debt: Debt,
-  incomes: Income[]
-): { date: Date; approximate: boolean } | null {
-  if (debt.remainingAmount <= 0) return null;
-  const extraPayments = incomes
-    .filter(
-      (i) =>
-        i.allocation.extraDebtPayment?.debtId === debt.id &&
-        (i.allocation.extraDebtPayment?.amount ?? 0) > 0
-    )
-    .map((i) => i.allocation.extraDebtPayment!.amount);
-  const minPayments = incomes
-    .filter((i) => (i.allocation.minimumPayments[debt.id] ?? 0) > 0)
-    .map((i) => i.allocation.minimumPayments[debt.id]!);
-  const allPayments = [...extraPayments, ...minPayments];
-  let monthlyPayment: number;
-  const approximate = allPayments.length < 4;
-  if (allPayments.length > 0) {
-    monthlyPayment =
-      allPayments.reduce((s, v) => s + v, 0) / allPayments.length;
-  } else if (debt.minimumPayment > 0) {
-    monthlyPayment = debt.minimumPayment;
-  } else {
-    return null;
-  }
-  if (monthlyPayment <= 0) return null;
-  const monthsLeft = Math.ceil(debt.remainingAmount / monthlyPayment);
-  const target = new Date();
-  target.setMonth(target.getMonth() + monthsLeft);
-  return { date: target, approximate };
-}
 
 function formatMonthYear(date: Date): string {
   return date.toLocaleDateString('pl-PL', { month: 'short', year: 'numeric' });
@@ -104,6 +70,12 @@ function sumIncomeForMonth(incomes: Income[], monthKey: string): number {
     total += income.amount;
   }
   return total;
+}
+
+const NEED_CATEGORIES: Array<keyof MonthlyNeeds> = ['housing', 'food', 'transport', 'other'];
+
+function sumNeeds(needs: MonthlyNeeds): number {
+  return NEED_CATEGORIES.reduce((sum, category) => sum + needs[category], 0);
 }
 
 // ── Trigger cards ────────────────────────────────────────────────────────────
@@ -168,10 +140,10 @@ function DebtCelebrationCard({
 function DeferredBanner({ count }: { count: number }) {
   const { t } = useTranslation();
   return (
-    <YStack theme="warning" bg="$color3" borderWidth={1} borderLeftWidth={3} borderColor="$color7" borderLeftColor="$color9" rounded="$6" p="$3">
+    <YStack theme="warning" bg="$color1" borderWidth={1} borderColor="$color5" rounded="$10" px="$3" py="$2">
       <XStack items="center" gap="$2">
-        <AlertTriangle size={16} color="$color9" />
-        <Paragraph color="$color11" flex={1} fontSize="$3">{t('home.deferred.pending', { count })}</Paragraph>
+        <AlertTriangle size={14} color="$color9" />
+        <Paragraph color="$color10" flex={1} fontSize="$2" lineHeight={18}>{t('home.deferred.pending', { count })}</Paragraph>
       </XStack>
     </YStack>
   );
@@ -179,42 +151,32 @@ function DeferredBanner({ count }: { count: number }) {
 
 function HeroCard({ totalRemaining, totalPaid }: { totalRemaining: number; totalPaid: number }) {
   const { t } = useTranslation();
-  const theme = useTheme();
   const currency = t('common.currency');
   const total = totalRemaining + totalPaid;
   const paidPct = total > 0 ? Math.round((totalPaid / total) * 100) : 0;
 
-  const chartData =
-    total > 0
-      ? [
-          { label: t('progress.totalPaid'), value: totalPaid, color: theme.accent9.val },
-          { label: t('progress.totalDebt'), value: totalRemaining, color: theme.color5.val },
-        ]
-      : [{ label: '-', value: 1, color: theme.color5.val }];
-
   return (
-    <YStack bg="$color3" borderWidth={1} borderColor="$color4" rounded="$6" p="$4" gap="$3">
-      <XStack items="center" gap="$2">
-        <TrendingDown size={14} color="$accent11" />
-        <Text color="$accent11" fontSize="$1" letterSpacing={1}>{t('progress.totalDebt').toUpperCase()}</Text>
+    <YStack bg="$color2" borderWidth={1} borderColor="$color4" rounded="$6" p="$4" gap="$3">
+      <XStack items="center" justify="space-between" gap="$3">
+        <XStack items="center" gap="$2">
+          <TrendingDown size={14} color="$color9" />
+          <Text color="$color9" fontSize="$1" letterSpacing={1}>{t('progress.totalDebt').toUpperCase()}</Text>
+        </XStack>
+        <Badge label={`${paidPct}%`} variant={paidPct > 0 ? 'accent' : 'muted'} />
       </XStack>
-      <XStack items="center" gap="$4">
-        <YStack width={120} height={120}>
-          <PolarChart data={chartData} labelKey="label" valueKey="value" colorKey="color">
-            <Pie.Chart innerRadius="60%">{() => <Pie.Slice />}</Pie.Chart>
-          </PolarChart>
-        </YStack>
-        <YStack flex={1} gap="$3">
-          <YStack gap="$0.5">
-            <Text color="$color9" fontSize="$2">{t('progress.totalDebt').toUpperCase()}</Text>
-            <Text fontSize="$6" fontWeight="700">{formatAmount(totalRemaining)} {currency}</Text>
-          </YStack>
-          <YStack gap="$0.5">
-            <Text color="$color9" fontSize="$2">{t('progress.totalPaid').toUpperCase()}</Text>
-            <Text fontSize="$4" fontWeight="600" color="$accent9">{formatAmount(totalPaid)} {currency} ({paidPct}%)</Text>
-          </YStack>
-        </YStack>
-      </XStack>
+
+      <YStack gap="$1">
+        <Text fontSize="$7" fontWeight="700">{formatAmount(totalRemaining)} {currency}</Text>
+        <Text color="$color9" fontSize="$3">
+          {t('home.debtSummary.paid', {
+            amount: `${formatAmount(totalPaid)} ${currency}`,
+          })}
+        </Text>
+      </YStack>
+
+      <Progress value={paidPct} size="$2">
+        <Progress.Indicator bg={paidPct > 0 ? '$accent9' : '$color7'} />
+      </Progress>
     </YStack>
   );
 }
@@ -224,7 +186,7 @@ function SnowballCard({ debt, incomes }: { debt: Debt; incomes: Income[] }) {
   const currency = t('common.currency');
   const paid = debt.originalAmount - debt.remainingAmount;
   const progressValue = debt.originalAmount > 0 ? Math.min(100, Math.max(0, (paid / debt.originalAmount) * 100)) : 0;
-  const forecast = forecastClosureDate(debt, incomes);
+  const forecast = forecastDebtClosureDate(debt, incomes);
   let forecastText: string | null = null;
   if (forecast) {
     const dateStr = formatMonthYear(forecast.date);
@@ -272,46 +234,112 @@ function SnowballCard({ debt, incomes }: { debt: Debt; incomes: Income[] }) {
 
 function MonthlyComparisonCard({ thisMonth, lastMonth }: { thisMonth: number; lastMonth: number }) {
   const { t } = useTranslation();
-  const theme = useTheme();
   const currency = t('common.currency');
-  const barData = [
-    { month: t('progress.lastMonth'), amount: lastMonth },
-    { month: t('progress.thisMonth'), amount: thisMonth },
-  ];
-  const hasData = thisMonth > 0 || lastMonth > 0;
+  const maxAmount = Math.max(thisMonth, lastMonth, 1);
+  const lastMonthPct = (lastMonth / maxAmount) * 100;
+  const thisMonthPct = (thisMonth / maxAmount) * 100;
 
   return (
-    <YStack bg="$color2" borderWidth={1} borderColor="$color4" rounded="$6" overflow="hidden">
-      <XStack px="$4" pt="$4" pb="$3" items="center" gap="$2">
+    <YStack bg="$color2" borderWidth={1} borderColor="$color4" rounded="$6" p="$4" gap="$3">
+      <XStack items="center" gap="$2">
         <CalendarRange size={14} color="$color9" />
         <Text color="$color9" fontSize="$1" letterSpacing={1}>{t('progress.monthlyComparison').toUpperCase()}</Text>
       </XStack>
-      <Separator borderColor="$color3" />
-      {hasData ? (
-        <YStack px="$4" pt="$3" pb="$2" height={160}>
-          <CartesianChart data={barData} xKey="month" yKeys={['amount']} domainPadding={{ left: 40, right: 40 }} axisOptions={{ tickCount: { x: 2, y: 4 }, formatXLabel: (v) => String(v), formatYLabel: (v) => `${v}`, labelColor: theme.color8.val, lineColor: theme.color4.val }}>
-            {({ points, chartBounds }) => (
-              <Bar points={points.amount} chartBounds={chartBounds} color={theme.accent9.val} roundedCorners={{ topLeft: 6, topRight: 6 }} innerPadding={0.4} animate={{ type: 'spring' }} />
-            )}
-          </CartesianChart>
+
+      <YStack gap="$3">
+        <YStack gap="$1.5">
+          <XStack justify="space-between" items="center">
+            <Text color="$color9" fontSize="$3">{t('progress.lastMonth')}</Text>
+            <Text color="$color11" fontSize="$3" fontWeight="600">{formatAmount(lastMonth)} {currency}</Text>
+          </XStack>
+          <Progress value={lastMonthPct} size="$1.5">
+            <Progress.Indicator bg="$color6" />
+          </Progress>
         </YStack>
-      ) : (
-        <XStack p="$4" justify="center">
-          <Text color="$color8" fontSize="$3">{formatAmount(0)} {currency}</Text>
+
+        <YStack gap="$1.5">
+          <XStack justify="space-between" items="center">
+            <Text color="$color9" fontSize="$3">{t('progress.thisMonth')}</Text>
+            <Text color="$color11" fontSize="$4" fontWeight="700">{formatAmount(thisMonth)} {currency}</Text>
+          </XStack>
+          <Progress value={thisMonthPct} size="$1.5">
+            <Progress.Indicator bg="$accent9" />
+          </Progress>
+        </YStack>
+      </YStack>
+    </YStack>
+  );
+}
+
+function NeedsCoverageCard({
+  monthlyNeeds,
+  coveredNeeds,
+}: {
+  monthlyNeeds: MonthlyNeeds;
+  coveredNeeds: MonthlyNeeds;
+}) {
+  const { t } = useTranslation();
+  const currency = t('common.currency');
+  const totalNeeded = sumNeeds(monthlyNeeds);
+  const totalCovered = Math.min(sumNeeds(coveredNeeds), totalNeeded);
+  const remaining = Math.max(0, totalNeeded - totalCovered);
+  const progressValue = totalNeeded > 0 ? Math.min(100, (totalCovered / totalNeeded) * 100) : 0;
+
+  if (totalNeeded <= 0) return null;
+
+  return (
+    <YStack bg="$color2" borderWidth={1} borderColor="$color4" rounded="$6" overflow="hidden">
+      <YStack p="$4" gap="$3">
+        <XStack items="center" justify="space-between" gap="$3">
+          <YStack flex={1} gap="$1">
+            <Text color="$color9" fontSize="$1" letterSpacing={1}>
+              {t('home.needsCoverage.title').toUpperCase()}
+            </Text>
+            <Text color="$color11" fontSize="$6" fontWeight="700">
+              {formatAmount(totalCovered)} {currency}
+            </Text>
+            <Text color="$color9" fontSize="$3">
+              {t('home.needsCoverage.coveredOf', {
+                total: `${formatAmount(totalNeeded)} ${currency}`,
+              })}
+            </Text>
+          </YStack>
+          <Badge label={`${Math.round(progressValue)}%`} variant={progressValue >= 100 ? 'accent' : 'muted'} />
         </XStack>
-      )}
+
+        <Progress value={progressValue} size="$2">
+          <Progress.Indicator bg={progressValue >= 100 ? '$accent9' : '$color9'} />
+        </Progress>
+
+        <XStack justify="space-between" items="center">
+          <Text color="$color9" fontSize="$3">{t('home.needsCoverage.remaining')}</Text>
+          <Text color={remaining > 0 ? '$color11' : '$accent11'} fontSize="$3" fontWeight="600">
+            {formatAmount(remaining)} {currency}
+          </Text>
+        </XStack>
+      </YStack>
+
       <Separator borderColor="$color3" />
-      <XStack>
-        <YStack flex={1} p="$3" gap="$0.5" items="center">
-          <Text color="$color9" fontSize="$1">{t('progress.lastMonth')}</Text>
-          <Text color="$color11" fontSize="$4" fontWeight="600">{formatAmount(lastMonth)} {currency}</Text>
-        </YStack>
-        <Separator vertical borderColor="$color3" />
-        <YStack flex={1} p="$3" gap="$0.5" items="center">
-          <Text color="$color9" fontSize="$1">{t('progress.thisMonth')}</Text>
-          <Text color="$color11" fontSize="$4" fontWeight="600">{formatAmount(thisMonth)} {currency}</Text>
-        </YStack>
-      </XStack>
+
+      <YStack px="$4" py="$3" gap="$2.5">
+        {NEED_CATEGORIES.map((category) => {
+          const needed = monthlyNeeds[category];
+          const covered = Math.min(coveredNeeds[category], needed);
+
+          if (needed <= 0) return null;
+
+          return (
+            <XStack key={category} justify="space-between" items="center" gap="$3">
+              <Text color="$color11" fontSize="$3">
+                {t(`income.allocate.rows.${category}`)}
+              </Text>
+              <Text color="$color9" fontSize="$3">
+                {formatAmount(covered)} / {formatAmount(needed)} {currency}
+              </Text>
+            </XStack>
+          );
+        })}
+      </YStack>
     </YStack>
   );
 }
@@ -396,7 +424,7 @@ function LastDistributionCard({ income }: { income: Income }) {
         {totalNeeds > 0 && <XStack justify="space-between"><Text color="$color9">{t('home.lastDistribution.needs')}</Text><Text color="$color11">{formatAmount(totalNeeds)} {currency}</Text></XStack>}
         {totalMinimums > 0 && <XStack justify="space-between"><Text color="$color9">{t('home.lastDistribution.minimums')}</Text><Text color="$color11">{formatAmount(totalMinimums)} {currency}</Text></XStack>}
         {extra > 0 && <XStack justify="space-between"><Text color="$color9">{t('home.lastDistribution.extra')}</Text><Text color="$accent9">+{formatAmount(extra)} {currency}</Text></XStack>}
-        {alloc.unallocated > 0 && <XStack justify="space-between"><Text color="$color9">{t('home.lastDistribution.shortfall')}</Text><Text theme="error" color="$color9">-{formatAmount(alloc.unallocated)} {currency}</Text></XStack>}
+        {alloc.unallocated > 0 && <XStack justify="space-between"><Text color="$color9">{t('home.lastDistribution.unallocated')}</Text><Text color="$color11">{formatAmount(alloc.unallocated)} {currency}</Text></XStack>}
       </YStack>
     </YStack>
   );
@@ -410,6 +438,8 @@ export default function HomeScreen() {
   const router = useRouter();
   const debts = useAppStore((s) => s.debts);
   const incomes = useAppStore((s) => s.incomes);
+  const monthlyNeeds = useAppStore((s) => s.monthlyNeeds);
+  const monthlyCoverage = useAppStore((s) => s.monthlyCoverage);
   const deferredPayments = useAppStore((s) => s.deferredPayments);
   const installationDate = useAppStore((s) => s.installationDate);
   const settings = useAppStore((s) => s.settings);
@@ -434,6 +464,8 @@ export default function HomeScreen() {
   const thisMonthKey = getMonthKey(now);
   const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
   const lastMonthKey = getMonthKey(lastMonthDate);
+  const thisMonthCoverage = monthlyCoverage.find((coverage) => coverage.month === thisMonthKey);
+  const coveredNeeds = thisMonthCoverage?.needs ?? { housing: 0, food: 0, transport: 0, other: 0 };
   const thisMonthPayments = sumIncomeForMonth(incomes, thisMonthKey);
   const lastMonthPayments = sumIncomeForMonth(incomes, lastMonthKey);
 
@@ -477,6 +509,10 @@ export default function HomeScreen() {
     setDismissedRC(true);
   }
 
+  function handleNewIncome() {
+    router.push('/income/new');
+  }
+
   const showRealityCheck = realityCheckTrigger.shouldShow && !dismissedRC;
   const showFreshStart = freshStartTrigger.shouldShow && !dismissedFS;
   const hasDebts = debts.length > 0;
@@ -485,10 +521,20 @@ export default function HomeScreen() {
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <SafeAreaView style={{ flex: 1 }} edges={['top']}>
-        <ScrollView contentContainerStyle={{ paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={{ paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
           <YStack px="$4" pt="$4" gap="$4">
             {/* Greeting */}
-            <H2>{t('home.greeting')}</H2>
+            <XStack items="center" justify="space-between" gap="$3">
+              <H2 flex={1} fontSize="$8" lineHeight={40}>{t('home.greeting')}</H2>
+              <Button
+                circular
+                size="$4"
+                theme="accent"
+                icon={<Plus size={20} />}
+                accessibilityLabel={t('home.cta.receivedMoney')}
+                onPress={handleNewIncome}
+              />
+            </XStack>
 
             {/* Deferred warning */}
             {pendingDeferred.length > 0 && <DeferredBanner count={pendingDeferred.length} />}
@@ -496,6 +542,9 @@ export default function HomeScreen() {
             {/* Trigger cards */}
             {showFreshStart && <FreshStartCard messageKey={freshStartTrigger.messageKey} onDismiss={() => setDismissedFS(true)} />}
             {showRealityCheck && <RealityCheckCard questionKey={realityCheckTrigger.questionKey} onAnswer={handleRealityCheckAnswer} />}
+
+            {/* Needs coverage */}
+            <NeedsCoverageCard monthlyNeeds={monthlyNeeds} coveredNeeds={coveredNeeds} />
 
             {/* Hero donut — total debt overview */}
             {hasDebts && <HeroCard totalRemaining={totalRemaining} totalPaid={totalPaid} />}
@@ -558,7 +607,6 @@ export default function HomeScreen() {
             {recentIncome && <LastDistributionCard income={recentIncome} />}
           </YStack>
         </ScrollView>
-        <IncomeFab />
       </SafeAreaView>
     </>
   );

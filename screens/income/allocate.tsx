@@ -27,11 +27,15 @@ import {
   getPreviousMonthsAverage,
   roundPLN,
 } from '@/lib/distribution/helpers';
-import type { Allocation, AppState, MonthlyNeeds } from '@/types/models';
+import type {
+  Allocation,
+  AppState,
+  DeferredPaymentReason,
+  DeferredPaymentReasons,
+  MonthlyNeeds,
+} from '@/types/models';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
-
-type L3Reason = 'agreed_delay' | 'postponing' | 'other';
 
 interface L3QueueItem {
   key: string;
@@ -320,8 +324,8 @@ function ReadOnlyRow({
 interface L3SheetProps {
   open: boolean;
   currentItem: L3QueueItem | null;
-  selectedReason: L3Reason;
-  onSelectReason: (r: L3Reason) => void;
+  selectedReason: DeferredPaymentReason;
+  onSelectReason: (r: DeferredPaymentReason) => void;
   onSave: () => void;
   onBack: () => void;
   queueIndex: number;
@@ -340,7 +344,7 @@ function L3Sheet({
 }: L3SheetProps) {
   const { t } = useTranslation();
 
-  const reasons: { value: L3Reason; labelKey: string }[] = [
+  const reasons: { value: DeferredPaymentReason; labelKey: string }[] = [
     { value: 'agreed_delay', labelKey: 'income.allocate.guardrail.l3.reasonAgreedDelay' },
     { value: 'postponing', labelKey: 'income.allocate.guardrail.l3.reasonPostponing' },
     { value: 'other', labelKey: 'income.allocate.guardrail.l3.reasonOther' },
@@ -474,9 +478,12 @@ export default function AllocateScreen() {
   const [l3SheetOpen, setL3SheetOpen] = useState(false);
   const [l3Queue, setL3Queue] = useState<L3QueueItem[]>([]);
   const [l3QueueIndex, setL3QueueIndex] = useState(0);
-  const [l3CurrentReason, setL3CurrentReason] = useState<L3Reason>('postponing');
-  const [l3CollectedReasons, setL3CollectedReasons] = useState<Record<string, L3Reason>>({});
-  const [pendingConfirmReasons, setPendingConfirmReasons] = useState<Record<string, L3Reason>>({});
+  const [l3CurrentReason, setL3CurrentReason] =
+    useState<DeferredPaymentReason>('postponing');
+  const [l3CollectedReasons, setL3CollectedReasons] =
+    useState<DeferredPaymentReasons>({});
+  const [pendingConfirmReasons, setPendingConfirmReasons] =
+    useState<DeferredPaymentReasons>({});
 
   const outstanding = useMemo(() => {
     const coverage = getCurrentMonthlyCoverage(monthlyCoverage);
@@ -654,7 +661,7 @@ export default function AllocateScreen() {
     return queue;
   }
 
-  function finalizeWithReasons(reasons: Record<string, L3Reason>) {
+  function finalizeWithReasons(reasons: DeferredPaymentReasons) {
     const finalAllocation: Allocation = {
       ...editedAllocation,
       extraDebtPayment: computedSnowball,

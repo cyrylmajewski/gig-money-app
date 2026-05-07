@@ -114,7 +114,16 @@
       "needs": "Needs",
       "minimums": "Minimum payments",
       "extra": "Extra payment",
-      "shortfall": "Shortfall"
+      "shortfall": "Shortfall",
+      "unallocated": "Remaining funds"
+    },
+    "needsCoverage": {
+      "title": "Needs this month",
+      "coveredOf": "covered out of {{total}}",
+      "remaining": "Still needed"
+    },
+    "debtSummary": {
+      "paid": "{{amount}} paid so far"
     },
     "deferred": {
       "pending_one": "You have {{count}} deferred payment to catch up on",
@@ -171,7 +180,7 @@
       },
       "rows": {
         "deferred": "Deferred payments",
-        "deferredSublabel": "Priority — arrears from previous income",
+        "deferredSublabel": "Close manually in debt details",
         "housing": "Housing",
         "food": "Food",
         "transport": "Transport",

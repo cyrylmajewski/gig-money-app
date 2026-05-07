@@ -17,7 +17,13 @@ import { Check } from '@tamagui/lucide-icons-2';
 import { useAppStore } from '@/store';
 import { formatAmount } from '@/lib/format';
 import { computeDeferredWithReasons } from '@/lib/distribution';
-import type { Allocation, Income, AppState } from '@/types/models';
+import { parseJsonParam } from '@/lib/route-params';
+import type {
+  Allocation,
+  AppState,
+  DeferredPaymentReasons,
+  Income,
+} from '@/types/models';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -96,27 +102,22 @@ export default function ConfirmScreen() {
   const note = params.note ?? undefined;
 
   const reasons = useMemo(() => {
-    try {
-      return JSON.parse(params.reasons ?? '{}') as Record<string, 'agreed_delay' | 'postponing' | 'other'>;
-    } catch {
-      return {} as Record<string, 'agreed_delay' | 'postponing' | 'other'>;
-    }
+    return parseJsonParam<DeferredPaymentReasons>(params.reasons, {});
   }, [params.reasons]);
 
   const allocation: Allocation = useMemo(() => {
-    try {
-      const parsed = JSON.parse(params.allocation ?? '{}') as Allocation;
-      return { ...parsed, wasAdjustedByUser };
-    } catch {
-      return {
-        deferredPayments: 0,
-        needs: { housing: 0, food: 0, transport: 0, other: 0 },
-        minimumPayments: {},
-        extraDebtPayment: null,
-        unallocated: 0,
-        wasAdjustedByUser,
-      };
-    }
+    const parsed = parseJsonParam<Allocation | null>(params.allocation, null);
+
+    if (parsed) return { ...parsed, wasAdjustedByUser };
+
+    return {
+      deferredPayments: 0,
+      needs: { housing: 0, food: 0, transport: 0, other: 0 },
+      minimumPayments: {},
+      extraDebtPayment: null,
+      unallocated: 0,
+      wasAdjustedByUser,
+    };
   }, [params.allocation, wasAdjustedByUser]);
 
   const stateSnapshot: AppState = useMemo(

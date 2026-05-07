@@ -114,7 +114,16 @@
       "needs": "Potrzeby",
       "minimums": "Minimalne raty",
       "extra": "Dodatkowa spłata",
-      "shortfall": "Niedobór"
+      "shortfall": "Niedobór",
+      "unallocated": "Pozostałe środki"
+    },
+    "needsCoverage": {
+      "title": "Potrzeby w tym miesiącu",
+      "coveredOf": "pokryte z {{total}}",
+      "remaining": "Jeszcze potrzeba"
+    },
+    "debtSummary": {
+      "paid": "spłacono dotąd {{amount}}"
     },
     "deferred": {
       "pending_one": "Masz {{count}} odroczoną płatność do nadrobienia",
@@ -171,7 +180,7 @@
       },
       "rows": {
         "deferred": "Odroczone płatności",
-        "deferredSublabel": "Priorytet — zaległości z poprzednich dochodów",
+        "deferredSublabel": "Zamknij ręcznie w szczegółach długu",
         "housing": "Mieszkanie",
         "food": "Jedzenie",
         "transport": "Transport",

@@ -31,7 +31,7 @@ function IncomeRow({ income }: { income: Income }) {
     { key: 'needs', label: t('home.lastDistribution.needs'), amount: totalNeeds, color: '$accent9' as const },
     { key: 'debts', label: t('home.lastDistribution.minimums'), amount: totalDebts, color: '$yellow9' as const },
     { key: 'extra', label: t('home.lastDistribution.extra'), amount: extra, color: '$green9' as const },
-    { key: 'unalloc', label: t('home.lastDistribution.shortfall'), amount: unalloc, color: '$color6' as const },
+    { key: 'unalloc', label: t('home.lastDistribution.unallocated'), amount: unalloc, color: '$color6' as const },
   ].filter((s) => s.amount > 0);
 
   const dateStr = new Date(income.date).toLocaleDateString('pl-PL', {

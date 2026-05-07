@@ -1,5 +1,5 @@
 import { Stack as ExpoStack, useRouter } from 'expo-router';
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Keyboard,
@@ -9,12 +9,13 @@ import {
   TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, Input, Paragraph, Text, XStack, YStack } from 'tamagui';
+import { Button, Input, Paragraph, Text, XStack, YStack, useTheme } from 'tamagui';
 import { useForm } from '@tanstack/react-form';
 
 export default function NewIncomeScreen() {
   const { t } = useTranslation();
   const router = useRouter();
+  const theme = useTheme();
   const inputRef = useRef<TextInput>(null);
 
   const form = useForm({
@@ -47,6 +48,14 @@ export default function NewIncomeScreen() {
     form.setFieldValue('amount', value);
   }
 
+  useEffect(() => {
+    const focusTimer = setTimeout(() => {
+      inputRef.current?.focus();
+    }, 150);
+
+    return () => clearTimeout(focusTimer);
+  }, []);
+
   return (
     <>
       <ExpoStack.Screen
@@ -76,7 +85,6 @@ export default function NewIncomeScreen() {
               {t('income.new.subtitle')}
             </Paragraph>
 
-            {/* Hero amount */}
             <form.Field
               name="amount"
               validators={{
@@ -92,7 +100,7 @@ export default function NewIncomeScreen() {
               {(field) => {
                 const displayAmount = field.state.value
                   ? field.state.value.replace('.', ',')
-                  : '0';
+                  : '';
                 const hasError = field.state.meta.errors.length > 0;
 
                 return (
@@ -110,15 +118,33 @@ export default function NewIncomeScreen() {
                       }
                     }}
                   >
-                    <XStack items="baseline" justify="center" gap="$2">
-                      <Text
-                        fontSize={56}
-                        fontWeight="700"
-                        letterSpacing={-2}
-                        color={field.state.value ? '$color12' : '$color6'}
-                      >
-                        {displayAmount}
-                      </Text>
+                    <XStack
+                      items="baseline"
+                      justify="center"
+                      gap="$2"
+                      width="100%"
+                    >
+                      <TextInput
+                        ref={inputRef}
+                        style={{
+                          color: theme.color12.val,
+                          fontSize: 56,
+                          fontWeight: '700',
+                          minWidth: 96,
+                          maxWidth: 260,
+                          padding: 0,
+                          textAlign: 'center',
+                        }}
+                        placeholder="0"
+                        placeholderTextColor={theme.color6.val}
+                        keyboardType="decimal-pad"
+                        inputMode="decimal"
+                        value={displayAmount}
+                        onChangeText={handleAmountChange}
+                        autoFocus
+                        selectionColor={theme.accent9.val}
+                        accessibilityLabel={t('income.new.amount')}
+                      />
                       <Text fontSize="$6" color="$color9">
                         {t('common.currency')}
                       </Text>
@@ -138,21 +164,6 @@ export default function NewIncomeScreen() {
                 );
               }}
             </form.Field>
-
-            {/* Hidden native input */}
-            <form.Subscribe selector={(s) => s.values.amount}>
-              {(amount) => (
-                <TextInput
-                  ref={inputRef}
-                  style={{ position: 'absolute', opacity: 0, height: 0 }}
-                  keyboardType="decimal-pad"
-                  value={amount}
-                  onChangeText={handleAmountChange}
-                  autoFocus
-                  accessibilityLabel={t('income.new.amount')}
-                />
-              )}
-            </form.Subscribe>
 
             {/* Source field */}
             <form.Field name="source">

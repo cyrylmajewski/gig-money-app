@@ -1,5 +1,5 @@
-import { distributeIncome } from '@/lib/distribution';
-import type { AppState, Debt, MonthlyCoverage } from '@/types/models';
+import { computeNewDeferredPayments, distributeIncome } from '@/lib/distribution';
+import type { AppState, Debt, DeferredPayment, MonthlyCoverage } from '@/types/models';
 import { roundPLN } from '@/lib/distribution/helpers';
 
 /**
@@ -537,5 +537,92 @@ describe('distributeIncome', () => {
     const r2 = distributeIncome(3333.33, state, testDate);
 
     expect(r1).toEqual(r2);
+  });
+
+  it('should not automatically allocate income to unresolved deferred payments', () => {
+    const existingDeferred: DeferredPayment = {
+      id: 'existing',
+      kind: 'minimum_payment',
+      debtId: 'debt-1',
+      amount: 500,
+      deferredAt: '2024-06-01T00:00:00.000Z',
+      reason: 'postponing',
+      resolved: false,
+    };
+    const state = makeState({
+      deferredPayments: [existingDeferred],
+      debts: [makeDebt({ id: 'debt-1', minimumPayment: 100 })],
+    });
+
+    const result = distributeIncome(100, state, testDate);
+
+    expect(result.deferredPayments).toBe(0);
+    expect(result.minimumPayments['debt-1']).toBe(100);
+  });
+});
+
+describe('computeNewDeferredPayments', () => {
+  it('does not create a duplicate unresolved deferred payment for the same debt', () => {
+    const existingDeferred: DeferredPayment = {
+      id: 'existing',
+      kind: 'minimum_payment',
+      debtId: 'debt-1',
+      amount: 500,
+      deferredAt: '2024-06-01T00:00:00.000Z',
+      reason: 'postponing',
+      resolved: false,
+    };
+    const state = makeState({
+      debts: [makeDebt({ minimumPayment: 500 })],
+      deferredPayments: [existingDeferred],
+    });
+    const allocation = {
+      deferredPayments: 0,
+      needs: { housing: 0, food: 0, transport: 0, other: 0 },
+      minimumPayments: {},
+      extraDebtPayment: null,
+      unallocated: 0,
+      wasAdjustedByUser: true,
+    };
+
+    const result = computeNewDeferredPayments(
+      allocation,
+      state,
+      new Date('2024-06-15'),
+    );
+
+    expect(result).toEqual([]);
+  });
+
+  it('does not create a duplicate unresolved deferred payment for the same need category', () => {
+    const existingDeferred: DeferredPayment = {
+      id: 'existing',
+      kind: 'need',
+      needCategory: 'housing',
+      amount: 500,
+      deferredAt: '2024-06-01T00:00:00.000Z',
+      reason: 'postponing',
+      resolved: false,
+    };
+    const state = makeState({
+      monthlyNeeds: { housing: 1000, food: 0, transport: 0, other: 0 },
+      deferredPayments: [existingDeferred],
+    });
+    const allocation = {
+      deferredPayments: 0,
+      needs: { housing: 0, food: 0, transport: 0, other: 0 },
+      minimumPayments: {},
+      extraDebtPayment: null,
+      unallocated: 0,
+      wasAdjustedByUser: true,
+    };
+
+    const result = computeNewDeferredPayments(
+      allocation,
+      state,
+      new Date('2024-06-15'),
+    );
+
+    expect(result).toEqual([]);
   });
 });
