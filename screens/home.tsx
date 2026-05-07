@@ -26,9 +26,11 @@ import {
   YStack,
 } from 'tamagui';
 
+import { AmountRow } from '@/components/amount-row';
 import { Badge } from '@/components/badge';
 import { SnowballTargetPicker } from '@/components/snowball-target-picker';
 import { forecastDebtClosureDate } from '@/lib/debt-forecast';
+import { summarizeAllocation } from '@/lib/allocation-summary';
 import { getActiveDebts, getEffectiveSnowballTarget, getMonthKey } from '@/lib/distribution';
 import type { SnowballTargetSource } from '@/lib/distribution';
 import { formatAmount } from '@/lib/format';
@@ -143,7 +145,7 @@ function DeferredBanner({ count }: { count: number }) {
     <YStack theme="warning" bg="$color1" borderWidth={1} borderColor="$color5" rounded="$10" px="$3" py="$2">
       <XStack items="center" gap="$2">
         <AlertTriangle size={14} color="$color9" />
-        <Paragraph color="$color10" flex={1} fontSize="$2" lineHeight={18}>{t('home.deferred.pending', { count })}</Paragraph>
+        <Paragraph color="$color11" flex={1} fontSize="$2" lineHeight={18} fontWeight="500">{t('home.deferred.pending', { count })}</Paragraph>
       </XStack>
     </YStack>
   );
@@ -159,15 +161,15 @@ function HeroCard({ totalRemaining, totalPaid }: { totalRemaining: number; total
     <YStack bg="$color2" borderWidth={1} borderColor="$color4" rounded="$6" p="$4" gap="$3">
       <XStack items="center" justify="space-between" gap="$3">
         <XStack items="center" gap="$2">
-          <TrendingDown size={14} color="$color9" />
-          <Text color="$color9" fontSize="$1" letterSpacing={1}>{t('progress.totalDebt').toUpperCase()}</Text>
+          <TrendingDown size={14} color="$color11" />
+          <Text color="$color11" fontSize="$1" fontWeight="600" letterSpacing={1}>{t('progress.totalDebt').toUpperCase()}</Text>
         </XStack>
         <Badge label={`${paidPct}%`} variant={paidPct > 0 ? 'accent' : 'muted'} />
       </XStack>
 
       <YStack gap="$1">
-        <Text fontSize="$7" fontWeight="700">{formatAmount(totalRemaining)} {currency}</Text>
-        <Text color="$color9" fontSize="$3">
+        <Text color="$color12" fontSize="$7" fontWeight="700">{formatAmount(totalRemaining)} {currency}</Text>
+        <Text color="$color11" fontSize="$3">
           {t('home.debtSummary.paid', {
             amount: `${formatAmount(totalPaid)} ${currency}`,
           })}
@@ -200,8 +202,8 @@ function SnowballCard({ debt, incomes }: { debt: Debt; incomes: Income[] }) {
       <YStack p="$4" gap="$2">
         <XStack items="center" justify="space-between">
           <XStack items="center" gap="$2">
-            <Crosshair size={14} color="$accent11" />
-            <Text color="$accent11" fontSize="$1" letterSpacing={1}>{t('home.snowball.target').toUpperCase()}</Text>
+            <Crosshair size={14} color="$accent10" />
+            <Text color="$accent10" fontSize="$1" fontWeight="600" letterSpacing={1}>{t('home.snowball.target').toUpperCase()}</Text>
           </XStack>
           <Badge label={`${Math.round(progressValue)}%`} variant={progressValue > 0 ? 'accent' : 'muted'} />
         </XStack>
@@ -214,7 +216,7 @@ function SnowballCard({ debt, incomes }: { debt: Debt; incomes: Income[] }) {
           <Text color="$color11" fontSize="$5" fontWeight="600">
             {t('home.snowball.remaining', { amount: `${formatAmount(debt.remainingAmount)} ${currency}` })}
           </Text>
-          <Text color="$color9" fontSize="$3">
+          <Text color="$color11" fontSize="$3">
             {t('home.snowball.of', { amount: `${formatAmount(debt.originalAmount)} ${currency}` })}
           </Text>
         </XStack>
@@ -223,8 +225,8 @@ function SnowballCard({ debt, incomes }: { debt: Debt; incomes: Income[] }) {
         <>
           <Separator borderColor="$color4" />
           <XStack p="$4" items="center" gap="$2">
-            <Calendar size={14} color="$accent11" />
-            <Text color="$accent11" fontSize="$3">{forecastText}</Text>
+            <Calendar size={14} color="$color11" />
+            <Text color="$color11" fontSize="$3" fontWeight="500">{forecastText}</Text>
           </XStack>
         </>
       ) : null}
@@ -242,14 +244,14 @@ function MonthlyComparisonCard({ thisMonth, lastMonth }: { thisMonth: number; la
   return (
     <YStack bg="$color2" borderWidth={1} borderColor="$color4" rounded="$6" p="$4" gap="$3">
       <XStack items="center" gap="$2">
-        <CalendarRange size={14} color="$color9" />
-        <Text color="$color9" fontSize="$1" letterSpacing={1}>{t('progress.monthlyComparison').toUpperCase()}</Text>
+        <CalendarRange size={14} color="$color11" />
+        <Text color="$color11" fontSize="$1" fontWeight="600" letterSpacing={1}>{t('progress.monthlyComparison').toUpperCase()}</Text>
       </XStack>
 
       <YStack gap="$3">
         <YStack gap="$1.5">
           <XStack justify="space-between" items="center">
-            <Text color="$color9" fontSize="$3">{t('progress.lastMonth')}</Text>
+            <Text color="$color11" fontSize="$3">{t('progress.lastMonth')}</Text>
             <Text color="$color11" fontSize="$3" fontWeight="600">{formatAmount(lastMonth)} {currency}</Text>
           </XStack>
           <Progress value={lastMonthPct} size="$1.5">
@@ -259,7 +261,7 @@ function MonthlyComparisonCard({ thisMonth, lastMonth }: { thisMonth: number; la
 
         <YStack gap="$1.5">
           <XStack justify="space-between" items="center">
-            <Text color="$color9" fontSize="$3">{t('progress.thisMonth')}</Text>
+            <Text color="$color11" fontSize="$3">{t('progress.thisMonth')}</Text>
             <Text color="$color11" fontSize="$4" fontWeight="700">{formatAmount(thisMonth)} {currency}</Text>
           </XStack>
           <Progress value={thisMonthPct} size="$1.5">
@@ -292,13 +294,13 @@ function NeedsCoverageCard({
       <YStack p="$4" gap="$3">
         <XStack items="center" justify="space-between" gap="$3">
           <YStack flex={1} gap="$1">
-            <Text color="$color9" fontSize="$1" letterSpacing={1}>
+            <Text color="$color11" fontSize="$1" fontWeight="600" letterSpacing={1}>
               {t('home.needsCoverage.title').toUpperCase()}
             </Text>
             <Text color="$color11" fontSize="$6" fontWeight="700">
               {formatAmount(totalCovered)} {currency}
             </Text>
-            <Text color="$color9" fontSize="$3">
+            <Text color="$color11" fontSize="$3">
               {t('home.needsCoverage.coveredOf', {
                 total: `${formatAmount(totalNeeded)} ${currency}`,
               })}
@@ -312,7 +314,7 @@ function NeedsCoverageCard({
         </Progress>
 
         <XStack justify="space-between" items="center">
-          <Text color="$color9" fontSize="$3">{t('home.needsCoverage.remaining')}</Text>
+          <Text color="$color11" fontSize="$3">{t('home.needsCoverage.remaining')}</Text>
           <Text color={remaining > 0 ? '$color11' : '$accent11'} fontSize="$3" fontWeight="600">
             {formatAmount(remaining)} {currency}
           </Text>
@@ -333,7 +335,7 @@ function NeedsCoverageCard({
               <Text color="$color11" fontSize="$3">
                 {t(`income.allocate.rows.${category}`)}
               </Text>
-              <Text color="$color9" fontSize="$3">
+              <Text color="$color11" fontSize="$3" fontWeight="500">
                 {formatAmount(covered)} / {formatAmount(needed)} {currency}
               </Text>
             </XStack>
@@ -374,11 +376,11 @@ function DebtProgressCard({ debt }: { debt: Debt }) {
       <Separator borderColor="$color3" />
       <XStack px="$4" py="$3" justify="space-between" items="center">
         <YStack gap="$0.5">
-          <Text color="$color9" fontSize="$2">{t('progress.paidSoFar')}</Text>
+          <Text color="$color11" fontSize="$2">{t('progress.paidSoFar')}</Text>
           <Text color="$color11" fontSize="$4" fontWeight="600">{formatAmount(paid)} {currency}</Text>
         </YStack>
         <YStack gap="$0.5" items="flex-end">
-          <Text color="$color9" fontSize="$2">{t('progress.remaining')}</Text>
+          <Text color="$color11" fontSize="$2">{t('progress.remaining')}</Text>
           <Text color="$color11" fontSize="$4">{formatAmount(debt.remainingAmount)} {currency}</Text>
         </YStack>
       </XStack>
@@ -401,10 +403,7 @@ function ClosedDebtsRow({ count }: { count: number }) {
 function LastDistributionCard({ income }: { income: Income }) {
   const { t } = useTranslation();
   const currency = t('common.currency');
-  const alloc = income.allocation;
-  const totalNeeds = Object.values(alloc.needs).reduce((s, v) => s + v, 0);
-  const totalMinimums = Object.values(alloc.minimumPayments).reduce((s, v) => s + v, 0);
-  const extra = alloc.extraDebtPayment?.amount ?? 0;
+  const summary = summarizeAllocation(income.allocation);
   const dateStr = new Date(income.date).toLocaleDateString('pl-PL', { day: 'numeric', month: 'long' });
 
   return (
@@ -412,19 +411,53 @@ function LastDistributionCard({ income }: { income: Income }) {
       <YStack p="$4" pb="$3">
         <XStack items="center" justify="space-between">
           <XStack items="center" gap="$2">
-            <Wallet size={14} color="$color9" />
-            <Text color="$color9" fontSize="$1" letterSpacing={1}>{t('home.lastDistribution.title').toUpperCase()}</Text>
+            <Wallet size={14} color="$color11" />
+            <Text color="$color11" fontSize="$1" fontWeight="600" letterSpacing={1}>{t('home.lastDistribution.title').toUpperCase()}</Text>
           </XStack>
-          <Text color="$color9" fontSize="$2">{dateStr}</Text>
+          <Text color="$color11" fontSize="$2" fontWeight="500">{dateStr}</Text>
         </XStack>
-        <Text fontSize="$6" fontWeight="600" mt="$1">{formatAmount(income.amount)} {currency}</Text>
+        <Text color="$color12" fontSize="$6" fontWeight="700" mt="$1">{formatAmount(income.amount)} {currency}</Text>
       </YStack>
       <Separator borderColor="$color3" />
       <YStack px="$4" py="$3" gap="$2">
-        {totalNeeds > 0 && <XStack justify="space-between"><Text color="$color9">{t('home.lastDistribution.needs')}</Text><Text color="$color11">{formatAmount(totalNeeds)} {currency}</Text></XStack>}
-        {totalMinimums > 0 && <XStack justify="space-between"><Text color="$color9">{t('home.lastDistribution.minimums')}</Text><Text color="$color11">{formatAmount(totalMinimums)} {currency}</Text></XStack>}
-        {extra > 0 && <XStack justify="space-between"><Text color="$color9">{t('home.lastDistribution.extra')}</Text><Text color="$accent9">+{formatAmount(extra)} {currency}</Text></XStack>}
-        {alloc.unallocated > 0 && <XStack justify="space-between"><Text color="$color9">{t('home.lastDistribution.unallocated')}</Text><Text color="$color11">{formatAmount(alloc.unallocated)} {currency}</Text></XStack>}
+        {summary.needs > 0 && (
+          <AmountRow
+            label={t('home.lastDistribution.needs')}
+            amount={summary.needs}
+            currency={currency}
+            compact
+            labelMuted
+          />
+        )}
+        {summary.minimums > 0 && (
+          <AmountRow
+            label={t('home.lastDistribution.minimums')}
+            amount={summary.minimums}
+            currency={currency}
+            compact
+            labelMuted
+          />
+        )}
+        {summary.extra > 0 && (
+          <AmountRow
+            label={t('home.lastDistribution.extra')}
+            amount={summary.extra}
+            currency={currency}
+            accent
+            compact
+            labelMuted
+            amountPrefix="+"
+          />
+        )}
+        {summary.unallocated > 0 && (
+          <AmountRow
+            label={t('home.lastDistribution.unallocated')}
+            amount={summary.unallocated}
+            currency={currency}
+            compact
+            labelMuted
+          />
+        )}
       </YStack>
     </YStack>
   );
@@ -554,7 +587,7 @@ export default function HomeScreen() {
               <YStack gap="$2">
                 <SnowballCard debt={snowballTarget} incomes={incomes} />
                 <YStack px="$1" gap="$1">
-                  <Text color="$color9" fontSize="$2" lineHeight={18}>
+                  <Text color="$color11" fontSize="$2" lineHeight={18}>
                     {t(SOURCE_KEY[targetSource])}
                   </Text>
                   <Pressable onPress={() => setPickerOpen(true)} hitSlop={8}>

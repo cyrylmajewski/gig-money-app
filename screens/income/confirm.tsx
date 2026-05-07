@@ -14,6 +14,10 @@ import {
 } from 'tamagui';
 import { Check } from '@tamagui/lucide-icons-2';
 
+import { AllocationStack } from '@/components/allocation-stack';
+import type { AllocationStackSegment } from '@/components/allocation-stack';
+import { AmountRow } from '@/components/amount-row';
+import { summarizeAllocation } from '@/lib/allocation-summary';
 import { useAppStore } from '@/store';
 import { formatAmount } from '@/lib/format';
 import { computeDeferredWithReasons } from '@/lib/distribution';
@@ -35,42 +39,6 @@ function generateId(): string {
     return crypto.randomUUID();
   }
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-}
-
-// ── Summary row ───────────────────────────────────────────────────────────────
-
-interface SummaryRowProps {
-  label: string;
-  amount: number;
-  currency: string;
-  accent?: boolean;
-  warning?: boolean;
-  muted?: boolean;
-  bold?: boolean;
-}
-
-function SummaryRow({ label, amount, currency, accent, warning, muted, bold }: SummaryRowProps) {
-  const textColor = accent ? '$accent9' : warning ? '$yellow9' : muted ? '$color8' : '$color11';
-  return (
-    <XStack py="$2.5" items="center" justify="space-between">
-      <Text
-        color={textColor}
-        fontWeight={bold ? '600' : '400'}
-        flex={1}
-        pr="$3"
-        fontSize="$3"
-      >
-        {label}
-      </Text>
-      <Text
-        color={textColor}
-        fontWeight={bold ? '600' : '400'}
-        fontSize="$3"
-      >
-        {formatAmount(amount)} {currency}
-      </Text>
-    </XStack>
-  );
 }
 
 // ── Screen ────────────────────────────────────────────────────────────────────
@@ -142,23 +110,18 @@ export default function ConfirmScreen() {
     [debts]
   );
 
-  const totalNeeds =
-    allocation.needs.housing +
-    allocation.needs.food +
-    allocation.needs.transport +
-    allocation.needs.other;
-  const totalDebts = Object.values(allocation.minimumPayments).reduce(
-    (s, v) => s + v,
-    0
-  );
-  const extra = allocation.extraDebtPayment?.amount ?? 0;
-
-  const segments = [
-    { key: 'needs', label: t('home.lastDistribution.needs'), amount: totalNeeds, color: '$accent9' as const },
-    { key: 'debts', label: t('home.lastDistribution.minimums'), amount: totalDebts, color: '$yellow9' as const },
-    { key: 'extra', label: t('home.lastDistribution.extra'), amount: extra, color: '$green9' as const },
-    { key: 'unalloc', label: t('income.confirm.rows.unallocated'), amount: allocation.unallocated, color: '$color6' as const },
-  ].filter((s) => s.amount > 0);
+  const summary = summarizeAllocation(allocation);
+  const segments: AllocationStackSegment[] = summary.segments.map((segment) => ({
+    ...segment,
+    label:
+      segment.key === 'needs'
+        ? t('home.lastDistribution.needs')
+        : segment.key === 'minimums'
+          ? t('home.lastDistribution.minimums')
+          : segment.key === 'extra'
+            ? t('home.lastDistribution.extra')
+            : t('income.confirm.rows.unallocated'),
+  }));
 
   const handleSave = useCallback(() => {
     const newDeferred = computeDeferredWithReasons(allocation, stateSnapshot, reasons, note);
@@ -227,34 +190,12 @@ export default function ConfirmScreen() {
                 </Text>
               )}
 
-              {/* Stacked bar */}
-              <XStack height={10} rounded="$10" overflow="hidden" mt="$1">
-                {segments.map((seg) => (
-                  <YStack
-                    key={seg.key}
-                    flex={seg.amount}
-                    bg={seg.color}
-                    height={10}
-                  />
-                ))}
-              </XStack>
-
-              {/* Legend */}
-              <XStack flexWrap="wrap" gap="$2" mt="$1">
-                {segments.map((seg) => (
-                  <XStack key={seg.key} items="center" gap="$1.5">
-                    <YStack
-                      width={8}
-                      height={8}
-                      rounded="$10"
-                      bg={seg.color}
-                    />
-                    <Text color="$color9" fontSize="$1">
-                      {seg.label}
-                    </Text>
-                  </XStack>
-                ))}
-              </XStack>
+              <AllocationStack
+                segments={segments}
+                currency={currency}
+                barHeight={10}
+                legend="labels"
+              />
             </YStack>
 
             {/* Allocation breakdown card */}
@@ -277,7 +218,7 @@ export default function ConfirmScreen() {
 
                 {allocation.deferredPayments > 0 && (
                   <>
-                    <SummaryRow
+                    <AmountRow
                       label={t('income.confirm.rows.deferred')}
                       amount={allocation.deferredPayments}
                       currency={currency}
@@ -290,7 +231,7 @@ export default function ConfirmScreen() {
 
                 {allocation.needs.housing > 0 && (
                   <>
-                    <SummaryRow
+                    <AmountRow
                       label={t('income.confirm.rows.housing')}
                       amount={allocation.needs.housing}
                       currency={currency}
@@ -301,7 +242,7 @@ export default function ConfirmScreen() {
 
                 {allocation.needs.food > 0 && (
                   <>
-                    <SummaryRow
+                    <AmountRow
                       label={t('income.confirm.rows.food')}
                       amount={allocation.needs.food}
                       currency={currency}
@@ -312,7 +253,7 @@ export default function ConfirmScreen() {
 
                 {allocation.needs.transport > 0 && (
                   <>
-                    <SummaryRow
+                    <AmountRow
                       label={t('income.confirm.rows.transport')}
                       amount={allocation.needs.transport}
                       currency={currency}
@@ -323,7 +264,7 @@ export default function ConfirmScreen() {
 
                 {allocation.needs.other > 0 && (
                   <>
-                    <SummaryRow
+                    <AmountRow
                       label={t('income.confirm.rows.other')}
                       amount={allocation.needs.other}
                       currency={currency}
@@ -338,7 +279,7 @@ export default function ConfirmScreen() {
                       const debt = debtById[debtId];
                       return (
                         <YStack key={debtId}>
-                          <SummaryRow
+                          <AmountRow
                             label={t('income.confirm.rows.minimumPayment', {
                               label: debt?.label ?? debtId,
                             })}
@@ -354,7 +295,7 @@ export default function ConfirmScreen() {
 
                 {allocation.extraDebtPayment && (
                   <>
-                    <SummaryRow
+                    <AmountRow
                       label={t('income.confirm.rows.extraPayment', {
                         label:
                           debtById[allocation.extraDebtPayment.debtId]
@@ -371,7 +312,7 @@ export default function ConfirmScreen() {
                 )}
 
                 {allocation.unallocated > 0 && (
-                  <SummaryRow
+                  <AmountRow
                     label={t('income.confirm.rows.unallocated')}
                     amount={allocation.unallocated}
                     currency={currency}

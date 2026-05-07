@@ -15,6 +15,9 @@ import {
   Input,
   Sheet,
 } from 'tamagui';
+import { AllocationStack } from '@/components/allocation-stack';
+import type { AllocationStackSegment } from '@/components/allocation-stack';
+import { summarizeAllocation } from '@/lib/allocation-summary';
 import { useAppStore } from '@/store';
 import { formatAmount } from '@/lib/format';
 import { distributeIncome } from '@/lib/distribution';
@@ -54,25 +57,18 @@ function AllocationHeader({
   currency: string;
 }) {
   const { t } = useTranslation();
-
-  const totalNeeds =
-    allocation.needs.housing +
-    allocation.needs.food +
-    allocation.needs.transport +
-    allocation.needs.other;
-  const totalDebts = Object.values(allocation.minimumPayments).reduce(
-    (s, v) => s + v,
-    0
-  );
-  const extra = allocation.extraDebtPayment?.amount ?? 0;
-  const unalloc = allocation.unallocated;
-
-  const segments = [
-    { key: 'needs', label: t('home.lastDistribution.needs'), amount: totalNeeds, color: '$accent9' as const },
-    { key: 'debts', label: t('home.lastDistribution.minimums'), amount: totalDebts, color: '$yellow9' as const },
-    { key: 'extra', label: t('home.lastDistribution.extra'), amount: extra, color: '$green9' as const },
-    { key: 'unalloc', label: t('income.allocate.rows.unallocated'), amount: unalloc, color: '$color6' as const },
-  ].filter((s) => s.amount > 0);
+  const summary = summarizeAllocation(allocation);
+  const segments: AllocationStackSegment[] = summary.segments.map((segment) => ({
+    ...segment,
+    label:
+      segment.key === 'needs'
+        ? t('home.lastDistribution.needs')
+        : segment.key === 'minimums'
+          ? t('home.lastDistribution.minimums')
+          : segment.key === 'extra'
+            ? t('home.lastDistribution.extra')
+            : t('income.allocate.rows.unallocated'),
+  }));
 
   return (
     <YStack
@@ -90,22 +86,12 @@ function AllocationHeader({
         {formatAmount(incomeAmount)} {currency}
       </Text>
 
-      <XStack height={12} rounded="$10" overflow="hidden">
-        {segments.map((seg) => (
-          <YStack key={seg.key} flex={seg.amount} bg={seg.color} height={12} />
-        ))}
-      </XStack>
-
-      <XStack flexWrap="wrap" gap="$2">
-        {segments.map((seg) => (
-          <XStack key={seg.key} items="center" gap="$1.5">
-            <YStack width={8} height={8} rounded="$10" bg={seg.color} />
-            <Text color="$color9" fontSize="$1">
-              {seg.label}: {formatAmount(seg.amount)} {currency}
-            </Text>
-          </XStack>
-        ))}
-      </XStack>
+      <AllocationStack
+        segments={segments}
+        currency={currency}
+        barHeight={12}
+        legend="amounts"
+      />
     </YStack>
   );
 }
