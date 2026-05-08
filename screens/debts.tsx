@@ -1,6 +1,6 @@
 import { Crosshair, Plus } from '@tamagui/lucide-icons-2';
 import { Stack, useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -155,16 +155,23 @@ export default function DebtsScreen() {
 
   const [pickerOpen, setPickerOpen] = useState(false);
 
-  const rawActive = getActiveDebts(debts);
-  const { debt: targetDebt, source: targetSource } = getEffectiveSnowballTarget(rawActive, settings);
+  const rawActive = useMemo(() => getActiveDebts(debts), [debts]);
+  const { debt: targetDebt, source: targetSource } = useMemo(
+    () => getEffectiveSnowballTarget(rawActive, settings),
+    [rawActive, settings],
+  );
 
-  const activeDebts = [...rawActive].sort((a, b) => {
-    if (targetDebt && a.id === targetDebt.id) return -1;
-    if (targetDebt && b.id === targetDebt.id) return 1;
-    return a.remainingAmount - b.remainingAmount;
-  });
+  const activeDebts = useMemo(
+    () =>
+      [...rawActive].sort((a, b) => {
+        if (targetDebt && a.id === targetDebt.id) return -1;
+        if (targetDebt && b.id === targetDebt.id) return 1;
+        return a.remainingAmount - b.remainingAmount;
+      }),
+    [rawActive, targetDebt],
+  );
 
-  const closedDebts = getClosedDebts(debts);
+  const closedDebts = useMemo(() => getClosedDebts(debts), [debts]);
 
   return (
     <>

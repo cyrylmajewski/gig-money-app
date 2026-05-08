@@ -29,11 +29,11 @@ import {
 import { AmountRow } from '@/components/amount-row';
 import { Badge } from '@/components/badge';
 import { SnowballTargetPicker } from '@/components/snowball-target-picker';
-import { forecastDebtClosureDate } from '@/lib/debt-forecast';
 import { summarizeAllocation } from '@/lib/allocation-summary';
-import { getActiveDebts, getEffectiveSnowballTarget, getMonthKey } from '@/lib/distribution';
+import { forecastDebtClosureDate } from '@/lib/debt-forecast';
 import type { SnowballTargetSource } from '@/lib/distribution';
 import { formatAmount } from '@/lib/format';
+import { buildHomeSummary } from '@/lib/home-summary';
 import {
   getDebtCelebration,
   getFreshStartTrigger,
@@ -53,25 +53,6 @@ const SOURCE_KEY: Record<SnowballTargetSource, string> = {
 
 function formatMonthYear(date: Date): string {
   return date.toLocaleDateString('pl-PL', { month: 'short', year: 'numeric' });
-}
-
-function getRecentIncome(incomes: Income[]): Income | null {
-  if (incomes.length === 0) return null;
-  const sorted = [...incomes].sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-  );
-  const latest = sorted[0]!;
-  const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-  return new Date(latest.date).getTime() >= sevenDaysAgo ? latest : null;
-}
-
-function sumIncomeForMonth(incomes: Income[], monthKey: string): number {
-  let total = 0;
-  for (const income of incomes) {
-    if (getMonthKey(new Date(income.date)) !== monthKey) continue;
-    total += income.amount;
-  }
-  return total;
 }
 
 const NEED_CATEGORIES: Array<keyof MonthlyNeeds> = ['housing', 'food', 'transport', 'other'];
@@ -484,23 +465,31 @@ export default function HomeScreen() {
   const [dismissedFS, setDismissedFS] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
 
-  const activeDebts = getActiveDebts(debts).sort((a, b) => a.remainingAmount - b.remainingAmount);
-  const closedDebts = debts.filter((d) => d.closedAt !== null);
-  const { debt: snowballTarget, source: targetSource } = getEffectiveSnowballTarget(activeDebts, settings);
-  const recentIncome = getRecentIncome(incomes);
-  const pendingDeferred = deferredPayments.filter((p) => !p.resolved);
+  const homeSummary = useMemo(
+    () =>
+      buildHomeSummary({
+        debts,
+        incomes,
+        monthlyCoverage,
+        deferredPayments,
+        settings,
+      }),
+    [debts, incomes, monthlyCoverage, deferredPayments, settings],
+  );
 
-  const totalRemaining = activeDebts.reduce((s, d) => s + d.remainingAmount, 0);
-  const totalPaid = debts.reduce((s, d) => s + (d.originalAmount - d.remainingAmount), 0);
-
-  const now = new Date();
-  const thisMonthKey = getMonthKey(now);
-  const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  const lastMonthKey = getMonthKey(lastMonthDate);
-  const thisMonthCoverage = monthlyCoverage.find((coverage) => coverage.month === thisMonthKey);
-  const coveredNeeds = thisMonthCoverage?.needs ?? { housing: 0, food: 0, transport: 0, other: 0 };
-  const thisMonthPayments = sumIncomeForMonth(incomes, thisMonthKey);
-  const lastMonthPayments = sumIncomeForMonth(incomes, lastMonthKey);
+  const {
+    activeDebts,
+    closedDebts,
+    snowballTarget,
+    targetSource,
+    recentIncome,
+    coveredNeeds,
+    thisMonthPayments,
+    lastMonthPayments,
+    pendingDeferredCount,
+    totalRemaining,
+    totalPaid,
+  } = homeSummary;
 
   const realityCheckTrigger = useMemo(
     () => getRealityCheckTrigger(lastRealityCheckAt, installationDate),
@@ -570,7 +559,7 @@ export default function HomeScreen() {
             </XStack>
 
             {/* Deferred warning */}
-            {pendingDeferred.length > 0 && <DeferredBanner count={pendingDeferred.length} />}
+            {pendingDeferredCount > 0 && <DeferredBanner count={pendingDeferredCount} />}
 
             {/* Trigger cards */}
             {showFreshStart && <FreshStartCard messageKey={freshStartTrigger.messageKey} onDismiss={() => setDismissedFS(true)} />}

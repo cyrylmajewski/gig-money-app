@@ -1,7 +1,8 @@
 import { Clock } from '@tamagui/lucide-icons-2';
 import { Stack } from 'expo-router';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView } from 'react-native';
+import { SectionList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   H2,
@@ -15,56 +16,22 @@ import {
 import { AllocationStack } from '@/components/allocation-stack';
 import type { AllocationStackSegment } from '@/components/allocation-stack';
 import { summarizeAllocation } from '@/lib/allocation-summary';
-import { useAppStore } from '@/store';
 import { formatAmount } from '@/lib/format';
+import { groupIncomesByDay } from '@/lib/income-history';
+import type { IncomeDayGroup } from '@/lib/income-history';
+import { useAppStore } from '@/store';
 import type { Income } from '@/types/models';
 
-interface IncomeDayGroup {
-  key: string;
-  label: string;
-  total: number;
-  incomes: Income[];
+interface HistorySection extends IncomeDayGroup {
+  data: Income[];
 }
 
-function getDateKey(date: Date): string {
-  const month = `${date.getMonth() + 1}`.padStart(2, '0');
-  const day = `${date.getDate()}`.padStart(2, '0');
-  return `${date.getFullYear()}-${month}-${day}`;
-}
+type IncomeRowProps = {
+  income: Income;
+};
 
-function groupIncomesByDay(incomes: Income[]): IncomeDayGroup[] {
-  const sorted = [...incomes].sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
-  );
-  const groups: IncomeDayGroup[] = [];
-
-  for (const income of sorted) {
-    const date = new Date(income.date);
-    const key = getDateKey(date);
-    const existing = groups.find((group) => group.key === key);
-
-    if (existing) {
-      existing.incomes.push(income);
-      existing.total += income.amount;
-      continue;
-    }
-
-    groups.push({
-      key,
-      label: date.toLocaleDateString('pl-PL', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-      }),
-      total: income.amount,
-      incomes: [income],
-    });
-  }
-
-  return groups;
-}
-
-function IncomeRow({ income }: { income: Income }) {
+const IncomeRow = (props: IncomeRowProps) => {
+  const { income } = props;
   const { t } = useTranslation();
   const currency = t('common.currency');
   const summary = summarizeAllocation(income.allocation);
@@ -101,9 +68,14 @@ function IncomeRow({ income }: { income: Income }) {
       />
     </YStack>
   );
-}
+};
 
-function IncomeDayCard({ group }: { group: IncomeDayGroup }) {
+type IncomeDayHeaderProps = {
+  group: IncomeDayGroup;
+};
+
+const IncomeDayHeader = (props: IncomeDayHeaderProps) => {
+  const { group } = props;
   const { t } = useTranslation();
   const currency = t('common.currency');
 
@@ -111,8 +83,10 @@ function IncomeDayCard({ group }: { group: IncomeDayGroup }) {
     <YStack
       bg="$color2"
       borderWidth={1}
+      borderBottomWidth={0}
       borderColor="$color4"
-      rounded="$6"
+      borderTopLeftRadius="$6"
+      borderTopRightRadius="$6"
       overflow="hidden"
     >
       <XStack p="$4" pb="$2.5" items="center" justify="space-between" gap="$3">
@@ -123,51 +97,87 @@ function IncomeDayCard({ group }: { group: IncomeDayGroup }) {
           {formatAmount(group.total)} {currency}
         </Text>
       </XStack>
-
-      <YStack px="$4" pb="$2">
-        {group.incomes.map((income, i) => (
-          <YStack key={income.id}>
-            <IncomeRow income={income} />
-            {i < group.incomes.length - 1 && (
-              <Separator borderColor="$color3" />
-            )}
-          </YStack>
-        ))}
-      </YStack>
     </YStack>
   );
-}
+};
+
+type IncomeDayItemProps = {
+  income: Income;
+  isLast: boolean;
+};
+
+const IncomeDayItem = (props: IncomeDayItemProps) => {
+  const { income, isLast } = props;
+
+  return (
+    <YStack
+      bg="$color2"
+      borderLeftWidth={1}
+      borderRightWidth={1}
+      borderBottomWidth={isLast ? 1 : 0}
+      borderColor="$color4"
+      borderBottomLeftRadius={isLast ? '$6' : undefined}
+      borderBottomRightRadius={isLast ? '$6' : undefined}
+      overflow="hidden"
+      px="$4"
+      pb={isLast ? '$2' : '$0'}
+      mb={isLast ? '$3' : '$0'}
+    >
+      <IncomeRow income={income} />
+      {!isLast && <Separator borderColor="$color3" />}
+    </YStack>
+  );
+};
 
 export default function HistoryScreen() {
   const { t } = useTranslation();
   const incomes = useAppStore((s) => s.incomes);
-  const groups = groupIncomesByDay(incomes);
+  const sections: HistorySection[] = useMemo(
+    () =>
+      groupIncomesByDay(incomes).map((group) => ({
+        ...group,
+        data: group.incomes,
+      })),
+    [incomes],
+  );
 
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <SafeAreaView style={{ flex: 1 }} edges={['top']}>
-        <ScrollView
-          contentContainerStyle={{ paddingBottom: 100 }}
+        <SectionList
+          sections={sections}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={{
+            paddingHorizontal: 16,
+            paddingTop: 16,
+            paddingBottom: 100,
+          }}
           showsVerticalScrollIndicator={false}
-        >
-          <YStack px="$4" pt="$4" gap="$4">
-            <H2>{t('history.title')}</H2>
-
-            {groups.length === 0 ? (
-              <YStack bg="$color2" rounded="$6" p="$5" items="center" gap="$3">
-                <Clock size={40} color="$color8" />
-                <Paragraph color="$color9">{t('history.empty')}</Paragraph>
-              </YStack>
-            ) : (
-              <YStack gap="$3">
-                {groups.map((group) => (
-                  <IncomeDayCard key={group.key} group={group} />
-                ))}
-              </YStack>
-            )}
-          </YStack>
-        </ScrollView>
+          stickySectionHeadersEnabled={false}
+          ListHeaderComponent={
+            <YStack mb="$4">
+              <H2>{t('history.title')}</H2>
+            </YStack>
+          }
+          ListEmptyComponent={
+            <YStack bg="$color2" rounded="$6" p="$5" items="center" gap="$3">
+              <Clock size={40} color="$color8" />
+              <Paragraph color="$color9">{t('history.empty')}</Paragraph>
+            </YStack>
+          }
+          renderSectionHeader={({ section }) => (
+            <IncomeDayHeader group={section} />
+          )}
+          renderItem={({ item, index, section }) => (
+            <IncomeDayItem
+              income={item}
+              isLast={index === section.data.length - 1}
+            />
+          )}
+          style={{ flex: 1 }}
+          contentInsetAdjustmentBehavior="automatic"
+        />
       </SafeAreaView>
     </>
   );
