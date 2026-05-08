@@ -10,7 +10,7 @@ export interface Creditor {
   category: CreditorCategory;
 }
 
-// ── Banks ────────────────────────────────────────────────────────────────────
+// Banks
 
 const BANKS: Creditor[] = [
   {
@@ -85,7 +85,7 @@ const BANKS: Creditor[] = [
   },
 ];
 
-// ── BNPL / Installment providers ─────────────────────────────────────────────
+// BNPL / installment providers
 
 const BNPL: Creditor[] = [
   {
@@ -111,7 +111,7 @@ const BNPL: Creditor[] = [
   },
 ];
 
-// ── Payday lenders ───────────────────────────────────────────────────────────
+// Payday lenders
 
 const PAYDAY_LENDERS: Creditor[] = [
   {
@@ -136,8 +136,6 @@ const PAYDAY_LENDERS: Creditor[] = [
     category: 'payday_lender',
   },
 ];
-
-// ── All creditors ────────────────────────────────────────────────────────────
 
 export const POLISH_CREDITORS: Creditor[] = [
   ...BANKS,

@@ -81,7 +81,6 @@ export default function ShortfallScreen() {
     })
     .filter(Boolean);
 
-  // ── Strict mode state ──────────────────────────────────────────────────
   const hasHousingShortfall = needShortfalls.some((s) => s.kind === 'housing');
 
   // Pre-populate from persisted monthly contacts
@@ -99,7 +98,6 @@ export default function ShortfallScreen() {
   const [confirmedLandlord, setConfirmedLandlord] = useState(landlordAlreadyContacted);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Timer logic
   useEffect(() => {
     if (activeTimer && timerSeconds < CALL_TIMER_SECONDS) {
       timerRef.current = setInterval(() => {
@@ -112,7 +110,6 @@ export default function ShortfallScreen() {
     if (timerRef.current) clearInterval(timerRef.current);
   }, [activeTimer, timerSeconds]);
 
-  // Check if all strict mode requirements are met
   const allConfirmed = strictMode
     ? (() => {
         const bankIds = bankContacts.map((c) => c!.id);
@@ -166,7 +163,6 @@ export default function ShortfallScreen() {
       <YStack flex={1}>
         <ScrollView>
           <YStack px="$4" pt="$4" pb="$6" gap="$4">
-            {/* Warning header */}
             <YStack
               theme="warning"
               bg="$color3"
@@ -189,7 +185,6 @@ export default function ShortfallScreen() {
               </Paragraph>
             </YStack>
 
-            {/* Shortfall items */}
             <YStack
               bg="$color2"
               borderWidth={1}
@@ -236,7 +231,6 @@ export default function ShortfallScreen() {
               ))}
             </YStack>
 
-            {/* Housing shortfall — landlord advice */}
             {hasHousingShortfall && (
               <YStack
                 bg="$color2"
@@ -253,7 +247,6 @@ export default function ShortfallScreen() {
                   {t('income.shortfall.landlordTip')}
                 </Paragraph>
 
-                {/* Strict mode: confirm landlord contact */}
                 {strictMode && (
                   <Pressable
                     onPress={() => !confirmedLandlord && handleConfirmLandlord()}
@@ -296,7 +289,6 @@ export default function ShortfallScreen() {
               </YStack>
             )}
 
-            {/* Bank contact cards */}
             {bankContacts.map((contact) => {
               if (!contact) return null;
               const previouslyContacted = alreadyContactedBanks.has(contact.id);
@@ -336,7 +328,6 @@ export default function ShortfallScreen() {
                     </Text>
                   </YStack>
 
-                  {/* Step-by-step script */}
                   <YStack gap="$2">
                     <Text
                       color="$color9"
@@ -364,7 +355,6 @@ export default function ShortfallScreen() {
                     )}
                   </YStack>
 
-                  {/* Call button */}
                   <Pressable
                     onPress={() => handleCall(contact.phone, contact.id)}
                   >
@@ -384,7 +374,6 @@ export default function ShortfallScreen() {
                     </XStack>
                   </Pressable>
 
-                  {/* Strict mode: already contacted or timer flow */}
                   {strictMode && previouslyContacted && !hasCalled && (
                     <XStack
                       bg="$accent3"
@@ -403,7 +392,6 @@ export default function ShortfallScreen() {
 
                   {strictMode && hasCalled && (
                     <YStack gap="$2">
-                      {/* Timer */}
                       {!timerDone && (
                         <XStack
                           bg="$color3"
@@ -424,7 +412,6 @@ export default function ShortfallScreen() {
                         </XStack>
                       )}
 
-                      {/* Confirm checkbox — only after timer */}
                       {timerDone && !isConfirmed && (
                         <Pressable
                           onPress={() => handleConfirmBank(contact.id)}
@@ -453,7 +440,6 @@ export default function ShortfallScreen() {
                         </Pressable>
                       )}
 
-                      {/* Confirmed state */}
                       {isConfirmed && (
                         <XStack
                           bg="$accent3"
@@ -486,7 +472,6 @@ export default function ShortfallScreen() {
           </YStack>
         </ScrollView>
 
-        {/* Continue button */}
         <YStack px="$4" pt="$3" pb={insets.bottom + 12}>
           <Button
             size="$5"

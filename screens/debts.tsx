@@ -74,7 +74,6 @@ function DebtCard({
         overflow="hidden"
         opacity={isClosed ? 0.5 : 1}
       >
-        {/* Target label */}
         {isSnowballTarget ? (
           <XStack px="$4" pt="$3" pb="$1" items="center" gap="$2">
             <Crosshair size={12} color="$accent11" />
@@ -84,7 +83,6 @@ function DebtCard({
           </XStack>
         ) : null}
 
-        {/* Header row */}
         <XStack
           px="$4"
           pt={isSnowballTarget ? '$1' : '$4'}
@@ -105,13 +103,11 @@ function DebtCard({
 
         <Separator borderColor={isSnowballTarget ? '$color4' : '$color3'} />
 
-        {/* Progress section */}
         <YStack px="$4" py="$3" gap="$3">
           <Progress value={progressValue} size="$2">
             <Progress.Indicator bg={isSnowballTarget ? '$accent9' : undefined} />
           </Progress>
 
-          {/* Amounts row */}
           <XStack justify="space-between" items="center">
             <YStack gap="$0.5">
               <Text color="$color9" fontSize="$2">
@@ -132,7 +128,6 @@ function DebtCard({
             </YStack>
           </XStack>
 
-          {/* Paid progress text */}
           <Text color="$color8" fontSize="$2">
             {formatAmount(paid)} / {formatAmount(debt.originalAmount)}{' '}
             {currency} ({Math.round(progressValue)}%)
@@ -142,8 +137,6 @@ function DebtCard({
     </Pressable>
   );
 }
-
-// ── Main screen ──────────────────────────────────────────────────────────────
 
 export default function DebtsScreen() {
   const { t } = useTranslation();
@@ -183,7 +176,6 @@ export default function DebtsScreen() {
           contentContainerStyle={{ paddingBottom: 100 }}
         >
           <YStack px="$4" pt="$4" gap="$5">
-            {/* Title + Add button */}
             <XStack items="center" justify="space-between">
               <H2>{t('debts.list.title')}</H2>
               <Button
@@ -196,7 +188,6 @@ export default function DebtsScreen() {
               </Button>
             </XStack>
 
-            {/* Empty state */}
             {activeDebts.length === 0 && closedDebts.length === 0 ? (
               <YStack
                 bg="$color2"
@@ -222,7 +213,6 @@ export default function DebtsScreen() {
               </YStack>
             ) : null}
 
-            {/* Active debts — snowball order */}
             {activeDebts.length > 0 ? (
               <YStack gap="$3">
                 {activeDebts.map((debt) => (
@@ -234,7 +224,6 @@ export default function DebtsScreen() {
                   />
                 ))}
 
-                {/* Target source explanation */}
                 {targetDebt ? (
                   <YStack px="$1" gap="$1">
                     <Text color="$color9" fontSize="$2" lineHeight={18}>
@@ -265,7 +254,6 @@ export default function DebtsScreen() {
               }}
             />
 
-            {/* Closed debts section */}
             {closedDebts.length > 0 ? (
               <YStack gap="$3">
                 <XStack items="center" gap="$3">

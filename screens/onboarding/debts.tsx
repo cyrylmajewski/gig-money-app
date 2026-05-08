@@ -27,7 +27,6 @@ export default function OnboardingDebtsScreen() {
         <YStack px="$5" pt="$4" pb="$5" gap="$5" flex={1}>
           <H2>{t('onboarding.debts.title')}</H2>
 
-          {/* Debt list */}
           <YStack gap="$3">
             {!hasDebts ? (
               <Paragraph color="$color9" style={{ textAlign: 'center' }} py="$6">
@@ -94,7 +93,6 @@ export default function OnboardingDebtsScreen() {
             )}
           </YStack>
 
-          {/* Add debt button */}
           <Button
             size="$4"
             bg="transparent"
@@ -109,7 +107,6 @@ export default function OnboardingDebtsScreen() {
 
           <YStack flex={1} />
 
-          {/* Bottom navigation */}
           <YStack gap="$3">
             {hasDebts ? (
               <Button

@@ -29,8 +29,6 @@ import type {
   Income,
 } from '@/types/models';
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
 function generateId(): string {
   if (
     typeof crypto !== 'undefined' &&
@@ -40,8 +38,6 @@ function generateId(): string {
   }
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
-
-// ── Screen ────────────────────────────────────────────────────────────────────
 
 export default function ConfirmScreen() {
   const { t } = useTranslation();
@@ -163,7 +159,6 @@ export default function ConfirmScreen() {
               {t('income.confirm.subtitle')}
             </Paragraph>
 
-            {/* Income hero card */}
             <YStack
               bg="$color3"
               borderWidth={1}
@@ -198,7 +193,6 @@ export default function ConfirmScreen() {
               />
             </YStack>
 
-            {/* Allocation breakdown card */}
             <YStack
               bg="$color2"
               borderWidth={1}
@@ -320,7 +314,6 @@ export default function ConfirmScreen() {
                   />
                 )}
 
-                {/* Total row */}
                 <Separator borderColor="$color5" />
                 <XStack items="center" justify="space-between" py="$3">
                   <Text fontWeight="700" fontSize="$4">
@@ -339,7 +332,6 @@ export default function ConfirmScreen() {
           </YStack>
         </ScrollView>
 
-        {/* Sticky save button */}
         <YStack px="$4" pt="$3" pb={insets.bottom + 12}>
           <Button
             size="$5"

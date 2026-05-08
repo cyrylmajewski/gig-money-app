@@ -45,7 +45,6 @@ export default function DebtDetailScreen() {
   const [showOverdue, setShowOverdue] = useState(false);
   const [overdueAmount, setOverdueAmount] = useState('');
 
-  // Debt not found state
   if (!debt) {
     return (
       <SafeAreaView style={{ flex: 1 }} edges={['bottom']}>
@@ -152,7 +151,6 @@ export default function DebtDetailScreen() {
         showsVerticalScrollIndicator={false}
         automaticallyAdjustKeyboardInsets
       >
-        {/* Closed notice */}
         {isClosed && (
           <XStack items="center" gap="$2" mb="$5">
             <Badge label={t('debts.edit.closed')} variant="muted" />
@@ -179,7 +177,6 @@ export default function DebtDetailScreen() {
           onSubmit={handleSubmit}
           disabled={isClosed}
         >
-          {/* Existing deferred payments */}
           {pendingOverdue.length > 0 && (
             <YStack gap="$2" mb="$5">
               <Text color="$color11" fontSize="$2" textTransform="uppercase" letterSpacing={0.6}>
@@ -223,7 +220,6 @@ export default function DebtDetailScreen() {
             </YStack>
           )}
 
-          {/* Record missed payment — detail only */}
           {!isClosed && debt.minimumPayment > 0 && (
             <YStack gap="$3" mb="$5">
               {!showOverdue ? (
@@ -312,7 +308,6 @@ export default function DebtDetailScreen() {
             </YStack>
           )}
 
-          {/* Mark closed button — detail only, hidden during onboarding */}
           {!isClosed && !onboarding && (
             <Button
               size="$4"

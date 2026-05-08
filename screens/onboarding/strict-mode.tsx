@@ -88,7 +88,6 @@ export default function StrictModeScreen() {
             ))}
           </YStack>
 
-          {/* Spacer pushes buttons to bottom when content is short */}
           <YStack flex={1} />
 
           <YStack gap="$3">

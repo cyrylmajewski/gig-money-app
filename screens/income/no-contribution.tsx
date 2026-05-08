@@ -134,7 +134,6 @@ export default function NoContributionScreen() {
           <YStack flex={1}>
             <ScrollView keyboardShouldPersistTaps="handled">
               <YStack px="$4" pt="$4" pb="$6" gap="$4">
-                {/* Warning header */}
                 <Theme name="error">
                   <YStack
                     bg="$color3"
@@ -158,7 +157,6 @@ export default function NoContributionScreen() {
                   </YStack>
                 </Theme>
 
-                {/* Debts being zeroed */}
                 {activeDebts.length > 0 && (
                   <YStack
                     bg="$color2"
@@ -197,7 +195,6 @@ export default function NoContributionScreen() {
                   </YStack>
                 )}
 
-                {/* Mandatory note */}
                 <YStack gap="$2">
                   <Text color="$color11" fontWeight="600" fontSize="$3">
                     {t('income.allocate.guardrail.l4.noteLabel')}
@@ -228,9 +225,7 @@ export default function NoContributionScreen() {
               </YStack>
             </ScrollView>
 
-            {/* Sticky action buttons */}
             <YStack px="$4" pt="$3" pb="$4" gap="$3">
-              {/* Hold button with smooth filling background */}
               <Pressable
                 onPressIn={startHold}
                 onPressOut={cancelHold}
@@ -274,7 +269,6 @@ export default function NoContributionScreen() {
                 </Theme>
               </Pressable>
 
-              {/* Back button */}
               <Button
                 size="$4"
                 variant="outlined"

@@ -38,14 +38,10 @@ import type {
   MonthlyNeeds,
 } from '@/types/models';
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-
 interface L3QueueItem {
   key: string;
   label: string;
 }
-
-// ── Allocation header with stacked bar ────────────────────────────────────────
 
 function AllocationHeader({
   incomeAmount,
@@ -95,8 +91,6 @@ function AllocationHeader({
     </YStack>
   );
 }
-
-// ── Remaining card ─────────────────────────────────────────────────────────────
 
 function RemainingCard({
   incomeAmount,
@@ -148,8 +142,6 @@ function RemainingCard({
     </YStack>
   );
 }
-
-// ── Editable row ──────────────────────────────────────────────────────────────
 
 interface EditableRowProps {
   label: string;
@@ -269,8 +261,6 @@ function EditableRow({
   );
 }
 
-// ── Read-only row (for deferred + snowball preview) ───────────────────────────
-
 function ReadOnlyRow({
   label,
   sublabel,
@@ -304,8 +294,6 @@ function ReadOnlyRow({
     </YStack>
   );
 }
-
-// ── L3 Sheet ──────────────────────────────────────────────────────────────────
 
 interface L3SheetProps {
   open: boolean;
@@ -418,8 +406,6 @@ function L3Sheet({
     </Sheet>
   );
 }
-
-// ── Screen ────────────────────────────────────────────────────────────────────
 
 export default function AllocateScreen() {
   const { t } = useTranslation();
@@ -822,21 +808,18 @@ export default function AllocateScreen() {
       <YStack flex={1}>
         <ScrollView>
           <YStack px="$4" pt="$4" pb="$6" gap="$4">
-            {/* Received amount header with allocation bar */}
             <AllocationHeader
               incomeAmount={incomeAmount}
               allocation={editedAllocation}
               currency={currency}
             />
 
-            {/* Remaining / overspent card */}
             <RemainingCard
               incomeAmount={incomeAmount}
               spent={editedSpent}
               currency={currency}
             />
 
-            {/* Coverage summary card */}
             <YStack
               bg="$color2"
               borderWidth={1}
@@ -892,7 +875,6 @@ export default function AllocateScreen() {
               )}
             </YStack>
 
-            {/* Editable allocation breakdown */}
             <YStack
               bg="$color2"
               borderWidth={1}
@@ -900,7 +882,6 @@ export default function AllocateScreen() {
               rounded="$6"
               px="$4"
             >
-              {/* Deferred payments — read-only */}
               {hasDeferred && (
                 <>
                   <ReadOnlyRow
@@ -914,7 +895,6 @@ export default function AllocateScreen() {
                 </>
               )}
 
-              {/* Housing */}
               {outstanding.needs.housing > 0 && (
                 <>
                   <EditableRow
@@ -930,7 +910,6 @@ export default function AllocateScreen() {
                 </>
               )}
 
-              {/* Food */}
               {outstanding.needs.food > 0 && (
                 <>
                   <EditableRow
@@ -946,7 +925,6 @@ export default function AllocateScreen() {
                 </>
               )}
 
-              {/* Minimum payments per debt */}
               {activeDebtsList.map((debt) => {
                 const needed = outstanding.mins[debt.id] ?? 0;
                 if (needed <= 0) return null;
@@ -965,7 +943,6 @@ export default function AllocateScreen() {
                 );
               })}
 
-              {/* Transport */}
               {outstanding.needs.transport > 0 && (
                 <>
                   <EditableRow
@@ -980,7 +957,6 @@ export default function AllocateScreen() {
                 </>
               )}
 
-              {/* Other needs */}
               {outstanding.needs.other > 0 && (
                 <>
                   <EditableRow
@@ -995,7 +971,6 @@ export default function AllocateScreen() {
                 </>
               )}
 
-              {/* Auto-assigned snowball (read-only preview) */}
               {computedSnowball && (
                 <>
                   <ReadOnlyRow
@@ -1020,7 +995,6 @@ export default function AllocateScreen() {
           </YStack>
         </ScrollView>
 
-        {/* Sticky confirm button */}
         <YStack px="$4" pt="$3" pb={insets.bottom + 12}>
           <Button
             size="$5"
@@ -1038,7 +1012,6 @@ export default function AllocateScreen() {
         </YStack>
       </YStack>
 
-      {/* L3 guardrail sheet */}
       <L3Sheet
         open={l3SheetOpen}
         currentItem={l3Queue[l3QueueIndex] ?? null}

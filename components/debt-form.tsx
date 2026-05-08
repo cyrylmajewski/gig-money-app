@@ -160,7 +160,6 @@ const DebtForm = ({
 
   return (
     <YStack>
-      {/* Label */}
       <form.Field
         name="label"
         validators={{
@@ -206,7 +205,6 @@ const DebtForm = ({
         )}
       </form.Field>
 
-      {/* Type chips */}
       <form.Field name="type">
         {(field) => (
           <YStack gap="$2" mb="$5">
@@ -255,7 +253,6 @@ const DebtForm = ({
         )}
       </form.Field>
 
-      {/* Creditor picker — filtered by debt type */}
       <form.Subscribe selector={(s) => s.values.type}>
         {(currentType) => {
           const creditors = getCreditorsByDebtType(currentType);
@@ -277,7 +274,6 @@ const DebtForm = ({
         }}
       </form.Subscribe>
 
-      {/* Remaining amount */}
       <form.Field
         name="remainingAmount"
         validators={{
@@ -331,7 +327,6 @@ const DebtForm = ({
         )}
       </form.Field>
 
-      {/* Minimum payment */}
       <form.Field name="minimumPayment">
         {(field) => (
           <YStack gap="$2" mb="$5">
@@ -372,7 +367,6 @@ const DebtForm = ({
         )}
       </form.Field>
 
-      {/* Interest rate */}
       <form.Field name="interestRate">
         {(field) => (
           <YStack gap="$2" mb="$5">
@@ -413,7 +407,6 @@ const DebtForm = ({
         )}
       </form.Field>
 
-      {/* Payment day */}
       <form.Field name="paymentDay">
         {(field) => (
           <YStack gap="$2" mb="$5">
@@ -461,7 +454,6 @@ const DebtForm = ({
         )}
       </form.Field>
 
-      {/* Overdue amount (optional, only for new debt) */}
       {showOverdueField && (
         <form.Field name="overdueAmount">
           {(field) => (
@@ -502,10 +494,8 @@ const DebtForm = ({
         </form.Field>
       )}
 
-      {/* Extra content slot (missed payment, mark closed, etc.) */}
       {children}
 
-      {/* Submit */}
       {!disabled && (
         <Button
           theme="accent"

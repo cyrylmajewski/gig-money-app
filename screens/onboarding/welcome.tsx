@@ -32,7 +32,6 @@ export default function WelcomeScreen() {
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <YStack flex={1} px="$5" pb="$4">
-        {/* Hero — animation + title */}
         <YStack flex={3} justify="center" items="center" gap="$3">
           <LottieView
             source={require('@/assets/animations/wallet.json')}
@@ -45,7 +44,6 @@ export default function WelcomeScreen() {
           </H1>
         </YStack>
 
-        {/* Feature highlights */}
         <YStack flex={2} justify="center" gap="$5" px="$2">
           <FeatureRow
             icon={<Wallet color="$accent11" size={22} />}
@@ -61,7 +59,6 @@ export default function WelcomeScreen() {
           />
         </YStack>
 
-        {/* CTA */}
         <Button
           theme="accent"
           size="$5"

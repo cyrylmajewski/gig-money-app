@@ -133,7 +133,6 @@ export function NeedsForm({
                 ))}
               </YStack>
 
-              {/* Running total */}
               <XStack
                 justify="space-between"
                 items="center"
@@ -159,7 +158,6 @@ export function NeedsForm({
         }}
       </form.Subscribe>
 
-      {/* Validation error */}
       <form.Subscribe selector={(s) => s.submissionAttempts}>
         {(attempts) => {
           if (attempts === 0) return null;
@@ -187,7 +185,6 @@ export function NeedsForm({
         }}
       </form.Subscribe>
 
-      {/* Submit */}
       <Button
         size="$5"
         bg="$accent9"

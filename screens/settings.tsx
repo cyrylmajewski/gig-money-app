@@ -88,7 +88,6 @@ export default function SettingsScreen() {
         <YStack px="$4" pt="$4" gap="$5">
           <H2>{t('settings.title')}</H2>
 
-          {/* General section */}
           <GlassView
             glassEffectStyle="regular"
             style={styles.card}
@@ -114,7 +113,6 @@ export default function SettingsScreen() {
             </YStack>
           </GlassView>
 
-          {/* Strategy section */}
           <GlassView glassEffectStyle="regular" style={styles.card}>
             <YStack bg="$color2" rounded="$6" overflow="hidden" px="$4" py="$3.5" gap="$3">
               <XStack items="center" gap="$3">
@@ -137,7 +135,6 @@ export default function SettingsScreen() {
             </YStack>
           </GlassView>
 
-          {/* Language section */}
           <YStack gap="$2">
             <XStack items="center" gap="$2" px="$1">
               <Globe size={14} color="$color9" />
@@ -184,7 +181,6 @@ export default function SettingsScreen() {
             </GlassView>
           </YStack>
 
-          {/* Danger zone */}
           <GlassView glassEffectStyle="regular" style={styles.card}>
             <YStack theme="error" bg="$color2" rounded="$6" overflow="hidden">
               <Pressable onPress={handleReset} accessibilityRole="button">
@@ -199,7 +195,6 @@ export default function SettingsScreen() {
             </YStack>
           </GlassView>
 
-          {/* App version */}
           <Text color="$color8" fontSize="$2" style={{ textAlign: 'center' }}>
             {t('settings.version')} {appVersion}
           </Text>

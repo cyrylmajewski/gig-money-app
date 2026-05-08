@@ -24,7 +24,6 @@ export default function ReadyScreen() {
           <LottieView
             source={require('@/assets/animations/coin.json')}
             autoPlay
-            // loop={false}
             style={{ width: 160, height: 160 }}
           />
 

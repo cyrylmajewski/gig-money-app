@@ -49,8 +49,6 @@ const SOURCE_KEY: Record<SnowballTargetSource, string> = {
   'auto-fallback-cc': 'home.snowball.targetSourceAutoFallbackCc',
 };
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
-
 function formatMonthYear(date: Date): string {
   return date.toLocaleDateString('pl-PL', { month: 'short', year: 'numeric' });
 }
@@ -60,8 +58,6 @@ const NEED_CATEGORIES: Array<keyof MonthlyNeeds> = ['housing', 'food', 'transpor
 function sumNeeds(needs: MonthlyNeeds): number {
   return NEED_CATEGORIES.reduce((sum, category) => sum + needs[category], 0);
 }
-
-// ── Trigger cards ────────────────────────────────────────────────────────────
 
 function RealityCheckCard({
   questionKey,
@@ -117,8 +113,6 @@ function DebtCelebrationCard({
     </YStack>
   );
 }
-
-// ── Content cards ────────────────────────────────────────────────────────────
 
 function DeferredBanner({ count }: { count: number }) {
   const { t } = useTranslation();
@@ -444,8 +438,6 @@ function LastDistributionCard({ income }: { income: Income }) {
   );
 }
 
-// ── Main screen ──────────────────────────────────────────────────────────────
-
 export default function HomeScreen() {
   const { t } = useTranslation();
 
@@ -545,7 +537,6 @@ export default function HomeScreen() {
       <SafeAreaView style={{ flex: 1 }} edges={['top']}>
         <ScrollView contentContainerStyle={{ paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
           <YStack px="$4" pt="$4" gap="$4">
-            {/* Greeting */}
             <XStack items="center" justify="space-between" gap="$3">
               <H2 flex={1} fontSize="$8" lineHeight={40}>{t('home.greeting')}</H2>
               <Button
@@ -558,20 +549,15 @@ export default function HomeScreen() {
               />
             </XStack>
 
-            {/* Deferred warning */}
             {pendingDeferredCount > 0 && <DeferredBanner count={pendingDeferredCount} />}
 
-            {/* Trigger cards */}
             {showFreshStart && <FreshStartCard messageKey={freshStartTrigger.messageKey} onDismiss={() => setDismissedFS(true)} />}
             {showRealityCheck && <RealityCheckCard questionKey={realityCheckTrigger.questionKey} onAnswer={handleRealityCheckAnswer} />}
 
-            {/* Needs coverage */}
             <NeedsCoverageCard monthlyNeeds={monthlyNeeds} coveredNeeds={coveredNeeds} />
 
-            {/* Hero donut — total debt overview */}
             {hasDebts && <HeroCard totalRemaining={totalRemaining} totalPaid={totalPaid} />}
 
-            {/* Snowball target */}
             {snowballTarget ? (
               <YStack gap="$2">
                 <SnowballCard debt={snowballTarget} incomes={incomes} />
@@ -605,12 +591,10 @@ export default function HomeScreen() {
               }}
             />
 
-            {/* Monthly comparison */}
             {hasDebts && (
               <MonthlyComparisonCard thisMonth={thisMonthPayments} lastMonth={lastMonthPayments} />
             )}
 
-            {/* Per-debt progress */}
             {activeDebts.length > 1 && (
               <YStack gap="$3">
                 <Text color="$color9" fontSize="$1" letterSpacing={1}>
@@ -622,10 +606,8 @@ export default function HomeScreen() {
               </YStack>
             )}
 
-            {/* Closed debts */}
             {closedDebts.length > 0 && <ClosedDebtsRow count={closedDebts.length} />}
 
-            {/* Last distribution */}
             {recentIncome && <LastDistributionCard income={recentIncome} />}
           </YStack>
         </ScrollView>

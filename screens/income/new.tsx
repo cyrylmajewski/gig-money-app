@@ -80,7 +80,6 @@ export default function NewIncomeScreen() {
           keyboardVerticalOffset={100}
         >
           <YStack flex={1} px="$5" pt="$4" pb="$5">
-            {/* Subtitle */}
             <Paragraph color="$color9" style={{ textAlign: 'center' }}>
               {t('income.new.subtitle')}
             </Paragraph>
@@ -165,7 +164,6 @@ export default function NewIncomeScreen() {
               }}
             </form.Field>
 
-            {/* Source field */}
             <form.Field name="source">
               {(field) => (
                 <YStack

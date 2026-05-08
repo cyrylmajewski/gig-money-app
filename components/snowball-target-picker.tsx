@@ -57,7 +57,6 @@ export function SnowballTargetPicker({
 
         <ScrollView showsVerticalScrollIndicator={false}>
           <YStack gap="$2">
-            {/* Automatic row */}
             <Pressable onPress={() => onSelect(null)}>
               <XStack
                 bg={autoSelected ? '$accent3' : '$color3'}
@@ -97,7 +96,6 @@ export function SnowballTargetPicker({
 
             <Separator borderColor="$color4" my="$1" />
 
-            {/* Per-debt rows */}
             {debts.map((debt) => {
               const selected = currentOverride === debt.id;
               const isCurrent = effectiveTargetId === debt.id && autoSelected;
