@@ -441,7 +441,7 @@ function LastDistributionCard({ income }: { income: Income }) {
 export default function HomeScreen() {
   const { t } = useTranslation();
 
-  const router = useRouter();
+  const { push } = useRouter();
   const debts = useAppStore((s) => s.debts);
   const incomes = useAppStore((s) => s.incomes);
   const monthlyNeeds = useAppStore((s) => s.monthlyNeeds);
@@ -501,11 +501,11 @@ export default function HomeScreen() {
     useAppStore.getState().updateSettings({
       lastCelebrationDebtId: debtCelebration.debtLabel,
     });
-    router.push({
+    push({
       pathname: '/celebration',
       params: { debtLabel: debtCelebration.debtLabel, debtType: debtCelebration.debtType },
     });
-  }, [debtCelebration?.shouldShow, debtCelebration?.debtLabel, debtCelebration?.debtType, router]);
+  }, [debtCelebration?.shouldShow, debtCelebration?.debtLabel, debtCelebration?.debtType, push]);
 
   function handleRealityCheckAnswer(answer: 'yes' | 'barely' | 'no') {
     if (!realityCheckTrigger.shouldShow) return;
@@ -524,7 +524,7 @@ export default function HomeScreen() {
   }
 
   function handleNewIncome() {
-    router.push('/income/new');
+    push('/income/new');
   }
 
   const showRealityCheck = realityCheckTrigger.shouldShow && !dismissedRC;

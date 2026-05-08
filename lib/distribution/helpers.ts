@@ -107,7 +107,7 @@ export function getSnowballTarget(
   if (active.length === 0) return null;
 
   const pickSmallest = (pool: Debt[]): Debt => {
-    const sorted = [...pool].sort((a, b) => {
+    const sorted = pool.toSorted((a, b) => {
       if (a.remainingAmount !== b.remainingAmount) {
         return a.remainingAmount - b.remainingAmount;
       }
@@ -279,9 +279,12 @@ export function allocateTier(
   available: number,
 ): TierResult {
   // Filter out zero-outstanding categories
-  const active = categories
-    .filter((c) => c.outstanding > 0)
-    .map((c) => ({ ...c, floor: Math.min(c.floor, c.outstanding) }));
+  const active = categories.reduce<TierCategory[]>((items, c) => {
+    if (c.outstanding > 0) {
+      items.push({ ...c, floor: Math.min(c.floor, c.outstanding) });
+    }
+    return items;
+  }, []);
 
   if (active.length === 0) return { allocations: {}, remaining: available };
 
@@ -314,7 +317,7 @@ export function allocateTier(
   let rem = roundPLN(available - sumFloors);
 
   // PASS 2: waterfall by priority for the remainder
-  const sorted = [...active].sort((a, b) => a.priority - b.priority);
+  const sorted = active.toSorted((a, b) => a.priority - b.priority);
   for (const c of sorted) {
     const need = roundPLN(c.outstanding - c.floor);
     const give = roundPLN(Math.min(need, rem));

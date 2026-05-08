@@ -9,12 +9,12 @@ import { useAppStore } from '@/store';
 
 export default function CelebrationScreen() {
   const { t } = useTranslation();
-  const router = useRouter();
+  const { back } = useRouter();
   const params = useLocalSearchParams<{ debtLabel: string; debtType: string }>();
 
   function handleCelebrate() {
     useAppStore.getState().updateSettings({ lastCelebrationDebtId: params.debtLabel });
-    router.back();
+    back();
   }
 
   return (

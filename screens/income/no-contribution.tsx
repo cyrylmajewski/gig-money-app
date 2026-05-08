@@ -34,7 +34,7 @@ const HOLD_DURATION = 3000;
 
 export default function NoContributionScreen() {
   const { t } = useTranslation();
-  const router = useRouter();
+  const { back, push } = useRouter();
   const params = useLocalSearchParams<{
     amount: string;
     source?: string;
@@ -64,7 +64,7 @@ export default function NoContributionScreen() {
     for (const debt of activeDebts) {
       reasons[`debt:${debt.id}`] = 'other';
     }
-    router.push({
+    push({
       pathname: '/income/confirm',
       params: {
         amount: params.amount ?? '0',
@@ -115,7 +115,7 @@ export default function NoContributionScreen() {
           title: t('income.allocate.guardrail.l4.title'),
           headerLeft: () => (
             <Pressable
-              onPress={() => router.back()}
+              onPress={back}
               hitSlop={8}
               style={{ paddingHorizontal: 8, paddingVertical: 4 }}
             >
@@ -274,7 +274,7 @@ export default function NoContributionScreen() {
                 variant="outlined"
                 borderColor="$color6"
                 bg="transparent"
-                onPress={() => router.back()}
+                onPress={back}
                 pressStyle={{ bg: '$color3' }}
               >
                 <Button.Text color="$color11">

@@ -11,13 +11,13 @@ import type { MonthlyNeeds } from '@/types/models';
 
 export default function EditNeedsScreen() {
   const { t } = useTranslation();
-  const router = useRouter();
+  const { back } = useRouter();
   const monthlyNeeds = useAppStore((s) => s.monthlyNeeds);
   const setMonthlyNeeds = useAppStore((s) => s.setMonthlyNeeds);
 
   function handleSubmit(parsed: MonthlyNeeds) {
     setMonthlyNeeds(parsed);
-    router.back();
+    back();
   }
 
   return (

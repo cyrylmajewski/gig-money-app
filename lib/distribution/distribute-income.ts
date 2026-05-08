@@ -177,9 +177,9 @@ export function computeNewDeferredPayments(
   const outstandingMins = getOutstandingMinimums(activeDebts, coverage);
   const result: DeferredPayment[] = [];
   const unresolvedKeys = new Set(
-    state.deferredPayments
-      .filter((payment) => !payment.resolved)
-      .map(getDeferredPaymentKey),
+    state.deferredPayments.flatMap((payment) =>
+      payment.resolved ? [] : [getDeferredPaymentKey(payment)]
+    ),
   );
   let counter = 0;
 

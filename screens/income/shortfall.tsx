@@ -37,7 +37,7 @@ function formatTimer(seconds: number): string {
 
 export default function ShortfallScreen() {
   const { t } = useTranslation();
-  const router = useRouter();
+  const { push } = useRouter();
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{
     amount: string;
@@ -66,53 +66,60 @@ export default function ShortfallScreen() {
   const debtShortfalls = shortfalls.filter((s) => s.kind === 'debt');
   const needShortfalls = shortfalls.filter((s) => s.kind !== 'debt');
 
-  const bankContacts = debtShortfalls
-    .map((s) => {
-      const debt = debts.find((d) => d.id === s.debtId);
-      if (!debt) return null;
-      const creditor = getCreditorById(debt.creditorId);
-      return creditor
-        ? {
+  const bankContacts = debtShortfalls.flatMap((s) => {
+    const debt = debts.find((d) => d.id === s.debtId);
+    if (!debt) return [];
+    const creditor = getCreditorById(debt.creditorId);
+    return creditor
+      ? [
+          {
             ...creditor,
             debtLabel: debt.label,
             shortAmount: s.shortAmount,
-          }
-        : null;
-    })
-    .filter(Boolean);
+          },
+        ]
+      : [];
+  });
 
   const hasHousingShortfall = needShortfalls.some((s) => s.kind === 'housing');
 
   // Pre-populate from persisted monthly contacts
   const landlordAlreadyContacted = wasContactedThisMonth('landlord');
   const alreadyContactedBanks = new Set(
-    bankContacts
-      .filter((c) => c && wasContactedThisMonth(c.id))
-      .map((c) => c!.id)
+    bankContacts.flatMap((c) => (wasContactedThisMonth(c.id) ? [c.id] : []))
   );
 
   const [calledBanks, setCalledBanks] = useState<Set<string>>(new Set());
-  const [activeTimer, setActiveTimer] = useState<string | null>(null);
   const [timerSeconds, setTimerSeconds] = useState(0);
   const [confirmedCall, setConfirmedCall] = useState<Set<string>>(alreadyContactedBanks);
   const [confirmedLandlord, setConfirmedLandlord] = useState(landlordAlreadyContacted);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    if (activeTimer && timerSeconds < CALL_TIMER_SECONDS) {
-      timerRef.current = setInterval(() => {
-        setTimerSeconds((prev) => prev + 1);
-      }, 1000);
-      return () => {
-        if (timerRef.current) clearInterval(timerRef.current);
-      };
-    }
-    if (timerRef.current) clearInterval(timerRef.current);
-  }, [activeTimer, timerSeconds]);
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, []);
+
+  function startCallTimer() {
+    if (timerRef.current) return;
+
+    setTimerSeconds(0);
+    timerRef.current = setInterval(() => {
+      setTimerSeconds((prev) => {
+        const next = prev + 1;
+        if (next >= CALL_TIMER_SECONDS && timerRef.current) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+        }
+        return next;
+      });
+    }, 1000);
+  }
 
   const allConfirmed = strictMode
     ? (() => {
-        const bankIds = bankContacts.map((c) => c!.id);
+        const bankIds = bankContacts.map((c) => c.id);
         const allBanksConfirmed =
           bankIds.length === 0 ||
           bankIds.every((id) => confirmedCall.has(id));
@@ -126,10 +133,7 @@ export default function ShortfallScreen() {
     Linking.openURL(`tel:${cleaned}`);
     if (strictMode) {
       setCalledBanks((prev) => new Set(prev).add(bankId));
-      if (!activeTimer) {
-        setActiveTimer(bankId);
-        setTimerSeconds(0);
-      }
+      startCallTimer();
     }
   }
 
@@ -144,7 +148,7 @@ export default function ShortfallScreen() {
   }
 
   function handleContinue() {
-    router.push({
+    push({
       pathname: '/income/confirm',
       params: {
         amount: params.amount,

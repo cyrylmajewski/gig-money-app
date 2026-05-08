@@ -1,5 +1,5 @@
-import { DebtForm } from '@/components/debt-form';
 import type { DebtFormValues } from '@/components/debt-form';
+import { DebtForm } from '@/components/debt-form';
 import { parseAmount } from '@/lib/format';
 import { useAppStore } from '@/store';
 import { Stack, useRouter } from 'expo-router';
@@ -10,7 +10,7 @@ import { Text } from 'tamagui';
 
 export default function NewDebtScreen() {
   const { t } = useTranslation();
-  const router = useRouter();
+  const { back } = useRouter();
   const addDebt = useAppStore((s) => s.addDebt);
   const addDeferredPayment = useAppStore((s) => s.addDeferredPayment);
 
@@ -46,7 +46,7 @@ export default function NewDebtScreen() {
       });
     }
 
-    router.back();
+    back();
   };
 
   return (
@@ -56,7 +56,7 @@ export default function NewDebtScreen() {
           title: t('debts.new.title'),
           headerShadowVisible: false,
           headerLeft: () => (
-            <Pressable onPress={() => router.back()} hitSlop={8}>
+            <Pressable onPress={back} hitSlop={8}>
               <Text color="$color11">{t('common.back')}</Text>
             </Pressable>
           ),
@@ -66,7 +66,11 @@ export default function NewDebtScreen() {
       <ScrollView
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
-        contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 24, paddingBottom: 40 }}
+        contentContainerStyle={{
+          paddingHorizontal: 20,
+          paddingTop: 24,
+          paddingBottom: 40,
+        }}
         showsVerticalScrollIndicator={false}
         automaticallyAdjustKeyboardInsets
       >

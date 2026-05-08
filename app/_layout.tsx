@@ -34,7 +34,7 @@ export const unstable_settings = {
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const onboardingCompleted = useAppStore((s) => s.onboardingCompleted);
-  const router = useRouter();
+  const { replace } = useRouter();
   const segments = useSegments();
 
   const [fontsLoaded, fontError] = useFonts({
@@ -61,11 +61,11 @@ export default function RootLayout() {
     const inOnboarding = segments[0] === 'onboarding' || segments[0] === 'debt';
 
     if (!onboardingCompleted && !inOnboarding) {
-      router.replace('/onboarding/welcome');
+      replace('/onboarding/welcome');
     } else if (onboardingCompleted && segments[0] === 'onboarding') {
-      router.replace('/(tabs)');
+      replace('/(tabs)');
     }
-  }, [onboardingCompleted, fontsLoaded, fontError, segments, router]);
+  }, [onboardingCompleted, fontsLoaded, fontError, segments, replace]);
 
   if (!fontsLoaded && !fontError) {
     return null;

@@ -7,12 +7,12 @@ import { Button, H1, Paragraph, YStack } from 'tamagui';
 
 export default function ReadyScreen() {
   const { t } = useTranslation();
-  const router = useRouter();
+  const { replace } = useRouter();
   const setOnboardingCompleted = useAppStore((s) => s.setOnboardingCompleted);
 
   function handlePress() {
     setOnboardingCompleted(true);
-    router.replace('/(tabs)');
+    replace('/(tabs)');
   }
 
   return (

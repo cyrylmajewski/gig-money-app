@@ -26,7 +26,7 @@ import {
 
 export default function DebtDetailScreen() {
   const { t } = useTranslation();
-  const router = useRouter();
+  const { back } = useRouter();
   const theme = useTheme();
   const { id, onboarding } = useLocalSearchParams<{ id: string; onboarding?: string }>();
 
@@ -58,7 +58,7 @@ export default function DebtDetailScreen() {
           <Paragraph color="$color12" style={{ textAlign: 'center' }}>
             {t('debts.edit.notFound')}
           </Paragraph>
-          <Pressable onPress={() => router.back()} accessibilityRole="button">
+          <Pressable onPress={back} accessibilityRole="button">
             <Text color="$color11">{t('common.back')}</Text>
           </Pressable>
         </YStack>
@@ -77,7 +77,7 @@ export default function DebtDetailScreen() {
       interestRate: parseAmount(value.interestRate),
       paymentDay: value.paymentDay ? parseInt(value.paymentDay, 10) : null,
     });
-    router.back();
+    back();
   };
 
   const handleMarkClosed = () => {
@@ -88,7 +88,7 @@ export default function DebtDetailScreen() {
         style: 'destructive',
         onPress: () => {
           updateDebt(debt.id, { closedAt: new Date().toISOString() });
-          router.back();
+          back();
         },
       },
     ]);
@@ -129,7 +129,7 @@ export default function DebtDetailScreen() {
           headerShadowVisible: false,
           headerLeft: () => (
             <Pressable
-              onPress={() => router.back()}
+              onPress={back}
               accessibilityRole="button"
               accessibilityLabel={t('common.back')}
               hitSlop={8}

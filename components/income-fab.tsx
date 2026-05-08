@@ -5,14 +5,14 @@ import { Pressable, StyleSheet } from 'react-native';
 import { useTheme } from 'tamagui';
 
 export function IncomeFab() {
-  const router = useRouter();
+  const { push } = useRouter();
   const theme = useTheme();
 
   function handlePress() {
     if (process.env.EXPO_OS === 'ios') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
-    router.push('/income/new');
+    push('/income/new');
   }
 
   return (
@@ -37,10 +37,6 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
+    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)',
   },
 });

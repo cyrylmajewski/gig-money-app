@@ -10,7 +10,7 @@ import { Button, Card, H2, Paragraph, Separator, Text, XStack, YStack } from 'ta
 
 export default function OnboardingDebtsScreen() {
   const { t } = useTranslation();
-  const router = useRouter();
+  const { push } = useRouter();
 
   const debts = useAppStore((s) => s.debts);
   const removeDebt = useAppStore((s) => s.removeDebt);
@@ -34,7 +34,7 @@ export default function OnboardingDebtsScreen() {
               </Paragraph>
             ) : (
               debts.map((debt) => (
-                <Pressable key={debt.id} onPress={() => router.push(`/debt/${debt.id}?onboarding=1`)}>
+                <Pressable key={debt.id} onPress={() => push(`/debt/${debt.id}?onboarding=1`)}>
                 <Card borderWidth={1} borderColor="$color5" rounded="$4" p="$4" bg="$color3">
                   <XStack justify="space-between" items="flex-start">
                     <YStack flex={1} gap="$1.5">
@@ -100,7 +100,7 @@ export default function OnboardingDebtsScreen() {
             borderColor="$color5"
             rounded="$4"
             icon={<Plus size={18} color="$color11" />}
-            onPress={() => router.push('/debt/new')}
+            onPress={() => push('/debt/new')}
           >
             {t('onboarding.debts.addDebt')}
           </Button>
@@ -113,7 +113,7 @@ export default function OnboardingDebtsScreen() {
                 theme="accent"
                 size="$5"
                 rounded="$4"
-                onPress={() => router.push('/onboarding/strict-mode')}
+                onPress={() => push('/onboarding/strict-mode')}
               >
                 {t('common.continue')}
               </Button>
@@ -123,7 +123,7 @@ export default function OnboardingDebtsScreen() {
                 bg="transparent"
                 rounded="$4"
                 pressStyle={{ opacity: 0.7 }}
-                onPress={() => router.push('/onboarding/strict-mode')}
+                onPress={() => push('/onboarding/strict-mode')}
               >
                 <Text color="$color9">{t('onboarding.debts.skip')}</Text>
               </Button>

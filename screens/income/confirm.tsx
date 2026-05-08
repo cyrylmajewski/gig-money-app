@@ -41,7 +41,7 @@ function generateId(): string {
 
 export default function ConfirmScreen() {
   const { t } = useTranslation();
-  const router = useRouter();
+  const { back, dismissAll, replace } = useRouter();
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{
     amount: string;
@@ -129,9 +129,9 @@ export default function ConfirmScreen() {
       allocation,
     };
     processIncome(income, newDeferred);
-    router.dismissAll();
-    router.replace('/(tabs)');
-  }, [incomeAmount, source, allocation, stateSnapshot, reasons, note, processIncome, router]);
+    dismissAll();
+    replace('/(tabs)');
+  }, [incomeAmount, source, allocation, stateSnapshot, reasons, note, processIncome, dismissAll, replace]);
 
   const hasMinimums = Object.keys(allocation.minimumPayments).length > 0;
 
@@ -142,7 +142,7 @@ export default function ConfirmScreen() {
           title: t('income.confirm.title'),
           headerLeft: () => (
             <Pressable
-              onPress={() => router.back()}
+              onPress={back}
               hitSlop={8}
               style={{ paddingHorizontal: 8, paddingVertical: 4 }}
             >

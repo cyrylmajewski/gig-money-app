@@ -140,7 +140,7 @@ function DebtCard({
 
 export default function DebtsScreen() {
   const { t } = useTranslation();
-  const router = useRouter();
+  const { push } = useRouter();
 
   const debts = useAppStore((s) => s.debts);
   const settings = useAppStore((s) => s.settings);
@@ -156,7 +156,7 @@ export default function DebtsScreen() {
 
   const activeDebts = useMemo(
     () =>
-      [...rawActive].sort((a, b) => {
+      rawActive.toSorted((a, b) => {
         if (targetDebt && a.id === targetDebt.id) return -1;
         if (targetDebt && b.id === targetDebt.id) return 1;
         return a.remainingAmount - b.remainingAmount;
@@ -182,7 +182,7 @@ export default function DebtsScreen() {
                 size="$3"
                 variant="outlined"
                 icon={<Plus size={14} />}
-                onPress={() => router.push('/debt/new')}
+                onPress={() => push('/debt/new')}
               >
                 <Button.Text>{t('debts.list.addDebt')}</Button.Text>
               </Button>
@@ -204,7 +204,7 @@ export default function DebtsScreen() {
                   bg="$accent9"
                   pressStyle={{ bg: '$accent10' }}
                   icon={<Plus size={18} />}
-                  onPress={() => router.push('/debt/new')}
+                  onPress={() => push('/debt/new')}
                 >
                   <Button.Text color="$color12">
                     {t('debts.list.addDebt')}
@@ -220,7 +220,7 @@ export default function DebtsScreen() {
                     key={debt.id}
                     debt={debt}
                     isSnowballTarget={debt.id === targetDebt?.id}
-                    onPress={() => router.push(`/debt/${debt.id}`)}
+                    onPress={() => push(`/debt/${debt.id}`)}
                   />
                 ))}
 
@@ -269,7 +269,7 @@ export default function DebtsScreen() {
                     key={debt.id}
                     debt={debt}
                     isSnowballTarget={false}
-                    onPress={() => router.push(`/debt/${debt.id}`)}
+                    onPress={() => push(`/debt/${debt.id}`)}
                     isClosed
                   />
                 ))}

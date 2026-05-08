@@ -28,7 +28,7 @@ type LocaleCode = 'pl' | 'en' | 'ru';
 
 export default function SettingsScreen() {
   const { t } = useTranslation();
-  const router = useRouter();
+  const { push, replace } = useRouter();
   const resetState = useAppStore((s) => s.resetState);
   const updateSettings = useAppStore((s) => s.updateSettings);
   const currentLocale = useAppStore((s) => s.settings.locale);
@@ -39,7 +39,7 @@ export default function SettingsScreen() {
   const appVersion = Constants.expoConfig?.version ?? '—';
 
   function handleEditNeeds() {
-    router.push('/settings/needs');
+    push('/settings/needs');
   }
 
   async function handleExportData() {
@@ -71,7 +71,7 @@ export default function SettingsScreen() {
           style: 'destructive',
           onPress: () => {
             resetState();
-            router.replace('/onboarding/welcome');
+            replace('/onboarding/welcome');
           },
         },
       ]

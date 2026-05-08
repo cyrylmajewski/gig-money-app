@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState, useCallback, useRef } from 'react';
 import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -409,7 +409,7 @@ function L3Sheet({
 
 export default function AllocateScreen() {
   const { t } = useTranslation();
-  const router = useRouter();
+  const { back, push } = useRouter();
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{ amount: string; source?: string }>();
 
@@ -452,10 +452,7 @@ export default function AllocateScreen() {
   const [l3QueueIndex, setL3QueueIndex] = useState(0);
   const [l3CurrentReason, setL3CurrentReason] =
     useState<DeferredPaymentReason>('postponing');
-  const [l3CollectedReasons, setL3CollectedReasons] =
-    useState<DeferredPaymentReasons>({});
-  const [pendingConfirmReasons, setPendingConfirmReasons] =
-    useState<DeferredPaymentReasons>({});
+  const l3CollectedReasonsRef = useRef<DeferredPaymentReasons>({});
 
   const outstanding = useMemo(() => {
     const coverage = getCurrentMonthlyCoverage(monthlyCoverage);
@@ -679,7 +676,7 @@ export default function AllocateScreen() {
     const reasonsJson = JSON.stringify(reasons);
 
     if (shortfalls.length > 0) {
-      router.push({
+      push({
         pathname: '/income/shortfall',
         params: {
           amount: params.amount,
@@ -691,7 +688,7 @@ export default function AllocateScreen() {
         },
       });
     } else {
-      router.push({
+      push({
         pathname: '/income/confirm',
         params: {
           amount: params.amount,
@@ -725,7 +722,7 @@ export default function AllocateScreen() {
         unallocated: roundPLN(Math.max(0, remaining)),
         wasAdjustedByUser: true,
       };
-      router.push({
+      push({
         pathname: '/income/no-contribution',
         params: {
           amount: params.amount,
@@ -743,9 +740,8 @@ export default function AllocateScreen() {
     if (queue.length > 0) {
       setL3Queue(queue);
       setL3QueueIndex(0);
-      setL3CollectedReasons({});
+      l3CollectedReasonsRef.current = {};
       setL3CurrentReason('postponing');
-      setPendingConfirmReasons({});
       setL3SheetOpen(true);
       return;
     }
@@ -766,8 +762,11 @@ export default function AllocateScreen() {
     const currentItem = l3Queue[l3QueueIndex];
     if (!currentItem) return;
 
-    const updated = { ...l3CollectedReasons, [currentItem.key]: l3CurrentReason };
-    setL3CollectedReasons(updated);
+    const updated = {
+      ...l3CollectedReasonsRef.current,
+      [currentItem.key]: l3CurrentReason,
+    };
+    l3CollectedReasonsRef.current = updated;
 
     if (l3QueueIndex < l3Queue.length - 1) {
       setL3QueueIndex((i) => i + 1);
@@ -782,7 +781,7 @@ export default function AllocateScreen() {
     setL3SheetOpen(false);
     setL3Queue([]);
     setL3QueueIndex(0);
-    setL3CollectedReasons({});
+    l3CollectedReasonsRef.current = {};
   }
 
   const isConfirmDisabled = roundPLN(incomeAmount - editedSpent) < 0;
@@ -795,7 +794,7 @@ export default function AllocateScreen() {
           title: t('income.allocate.title'),
           headerLeft: () => (
             <Pressable
-              onPress={() => router.back()}
+              onPress={back}
               hitSlop={8}
               style={{ paddingHorizontal: 8, paddingVertical: 4 }}
             >

@@ -27,7 +27,7 @@ function FeatureRow({ icon, text }: { icon: React.ReactNode; text: string }) {
 
 export default function WelcomeScreen() {
   const { t } = useTranslation();
-  const router = useRouter();
+  const { push } = useRouter();
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
@@ -63,7 +63,7 @@ export default function WelcomeScreen() {
           theme="accent"
           size="$5"
           rounded="$4"
-          onPress={() => router.push('/onboarding/needs-intro')}
+          onPress={() => push('/onboarding/needs-intro')}
         >
           {t('onboarding.welcome.cta')}
         </Button>

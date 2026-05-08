@@ -14,7 +14,7 @@ import { useForm } from '@tanstack/react-form';
 
 export default function NewIncomeScreen() {
   const { t } = useTranslation();
-  const router = useRouter();
+  const { back, push } = useRouter();
   const theme = useTheme();
   const inputRef = useRef<TextInput>(null);
 
@@ -26,7 +26,7 @@ export default function NewIncomeScreen() {
     onSubmit: ({ value }) => {
       Keyboard.dismiss();
       const parsed = parseFloat(value.amount.replace(',', '.'));
-      router.push({
+      push({
         pathname: '/income/allocate',
         params: {
           amount: parsed.toString(),
@@ -63,7 +63,7 @@ export default function NewIncomeScreen() {
           title: t('income.new.title'),
           headerLeft: () => (
             <Pressable
-              onPress={() => router.back()}
+              onPress={back}
               hitSlop={8}
               style={{ paddingHorizontal: 8, paddingVertical: 4 }}
             >
@@ -140,7 +140,6 @@ export default function NewIncomeScreen() {
                         inputMode="decimal"
                         value={displayAmount}
                         onChangeText={handleAmountChange}
-                        autoFocus
                         selectionColor={theme.accent9.val}
                         accessibilityLabel={t('income.new.amount')}
                       />

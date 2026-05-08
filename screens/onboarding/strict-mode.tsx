@@ -21,17 +21,17 @@ const FEATURES = [
 
 export default function StrictModeScreen() {
   const { t } = useTranslation();
-  const router = useRouter();
+  const { push } = useRouter();
   const updateSettings = useAppStore((s) => s.updateSettings);
 
   function handleEnable() {
     updateSettings({ strictMode: true });
-    router.push('/onboarding/ready');
+    push('/onboarding/ready');
   }
 
   function handleSkip() {
     updateSettings({ strictMode: false });
-    router.push('/onboarding/ready');
+    push('/onboarding/ready');
   }
 
   return (

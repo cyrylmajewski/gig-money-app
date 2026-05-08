@@ -5,9 +5,9 @@ import { Pressable } from 'react-native';
 import { useNavOptions } from '@/hooks/use-nav-options';
 
 function BackButton() {
-  const router = useRouter();
+  const { back } = useRouter();
   return (
-    <Pressable onPress={() => router.back()} hitSlop={8} style={{ padding: 4 }}>
+    <Pressable onPress={back} hitSlop={8} style={{ padding: 4 }}>
       <ChevronLeft size={28} />
     </Pressable>
   );

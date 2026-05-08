@@ -6,7 +6,7 @@ import { Button, H1, Paragraph, YStack } from 'tamagui';
 
 export default function NeedsIntroScreen() {
   const { t } = useTranslation();
-  const router = useRouter();
+  const { push } = useRouter();
 
   return (
     <SafeAreaView style={{ flex: 1 }} edges={['bottom']}>
@@ -42,7 +42,7 @@ export default function NeedsIntroScreen() {
           size="$5"
           rounded="$4"
           mb="$3"
-          onPress={() => router.push('/onboarding/needs')}
+          onPress={() => push('/onboarding/needs')}
         >
           {t('onboarding.needsIntro.cta')}
         </Button>

@@ -1,8 +1,8 @@
 import { Clock } from '@tamagui/lucide-icons-2';
 import { Stack } from 'expo-router';
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { SectionList } from 'react-native';
+import { SectionList, type SectionListRenderItem } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   H2,
@@ -140,6 +140,17 @@ export default function HistoryScreen() {
       })),
     [incomes],
   );
+  const renderIncomeItem = useCallback<
+    SectionListRenderItem<Income, HistorySection>
+  >(
+    ({ item, index, section }) => (
+      <IncomeDayItem
+        income={item}
+        isLast={index === section.data.length - 1}
+      />
+    ),
+    []
+  );
 
   return (
     <>
@@ -169,12 +180,7 @@ export default function HistoryScreen() {
           renderSectionHeader={({ section }) => (
             <IncomeDayHeader group={section} />
           )}
-          renderItem={({ item, index, section }) => (
-            <IncomeDayItem
-              income={item}
-              isLast={index === section.data.length - 1}
-            />
-          )}
+          renderItem={renderIncomeItem}
           style={{ flex: 1 }}
           contentInsetAdjustmentBehavior="automatic"
         />

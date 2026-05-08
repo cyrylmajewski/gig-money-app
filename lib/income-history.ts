@@ -42,7 +42,7 @@ export function groupIncomesByDay(incomes: Income[]): IncomeDayGroup[] {
   return [...groupsByKey.values()]
     .map((group) => ({
       ...group,
-      incomes: [...group.incomes].sort(
+      incomes: group.incomes.toSorted(
         (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
       ),
     }))
