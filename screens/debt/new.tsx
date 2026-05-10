@@ -5,7 +5,6 @@ import { useAppStore } from '@/store';
 import { Stack, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text } from 'tamagui';
 
 export default function NewDebtScreen() {
@@ -50,7 +49,7 @@ export default function NewDebtScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['bottom']}>
+    <>
       <Stack.Screen
         options={{
           title: t('debts.new.title'),
@@ -64,6 +63,7 @@ export default function NewDebtScreen() {
       />
 
       <ScrollView
+        style={{ flex: 1 }}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
         contentContainerStyle={{
@@ -73,9 +73,10 @@ export default function NewDebtScreen() {
         }}
         showsVerticalScrollIndicator={false}
         automaticallyAdjustKeyboardInsets
+        contentInsetAdjustmentBehavior="automatic"
       >
         <DebtForm onSubmit={handleSubmit} showOverdueField />
       </ScrollView>
-    </SafeAreaView>
+    </>
   );
 }

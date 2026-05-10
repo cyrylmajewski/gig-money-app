@@ -12,7 +12,6 @@ import { GlassView } from 'expo-glass-effect';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Alert, Pressable, ScrollView, Share, StyleSheet, Switch } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { H2, Paragraph, Separator, Text, XStack, YStack } from 'tamagui';
 
 import i18n from '@/i18n';
@@ -79,12 +78,12 @@ export default function SettingsScreen() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top']}>
-      <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={{ paddingBottom: 24 }}
-        showsVerticalScrollIndicator={false}
-      >
+    <ScrollView
+      style={{ flex: 1 }}
+      contentContainerStyle={{ paddingBottom: 24 }}
+      showsVerticalScrollIndicator={false}
+      contentInsetAdjustmentBehavior="automatic"
+    >
         <YStack px="$4" pt="$4" gap="$5">
           <H2>{t('settings.title')}</H2>
 
@@ -199,8 +198,7 @@ export default function SettingsScreen() {
             {t('settings.version')} {appVersion}
           </Text>
         </YStack>
-      </ScrollView>
-    </SafeAreaView>
+    </ScrollView>
   );
 }
 

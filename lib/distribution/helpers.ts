@@ -1,3 +1,4 @@
+import { sortCopy } from '@/lib/array';
 import type {
   Debt,
   DeferredPayment,
@@ -107,7 +108,7 @@ export function getSnowballTarget(
   if (active.length === 0) return null;
 
   const pickSmallest = (pool: Debt[]): Debt => {
-    const sorted = pool.toSorted((a, b) => {
+    const sorted = sortCopy(pool, (a, b) => {
       if (a.remainingAmount !== b.remainingAmount) {
         return a.remainingAmount - b.remainingAmount;
       }
@@ -317,7 +318,7 @@ export function allocateTier(
   let rem = roundPLN(available - sumFloors);
 
   // PASS 2: waterfall by priority for the remainder
-  const sorted = active.toSorted((a, b) => a.priority - b.priority);
+  const sorted = sortCopy(active, (a, b) => a.priority - b.priority);
   for (const c of sorted) {
     const need = roundPLN(c.outstanding - c.floor);
     const give = roundPLN(Math.min(need, rem));

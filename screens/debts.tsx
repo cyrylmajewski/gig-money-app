@@ -3,7 +3,6 @@ import { Stack, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Button,
   H2,
@@ -19,6 +18,7 @@ import {
 import { Badge } from '@/components/badge';
 import { IncomeFab } from '@/components/income-fab';
 import { SnowballTargetPicker } from '@/components/snowball-target-picker';
+import { sortCopy } from '@/lib/array';
 import { useAppStore } from '@/store';
 import { formatAmount } from '@/lib/format';
 import { getActiveDebts, getEffectiveSnowballTarget } from '@/lib/distribution';
@@ -156,7 +156,7 @@ export default function DebtsScreen() {
 
   const activeDebts = useMemo(
     () =>
-      rawActive.toSorted((a, b) => {
+      sortCopy(rawActive, (a, b) => {
         if (targetDebt && a.id === targetDebt.id) return -1;
         if (targetDebt && b.id === targetDebt.id) return 1;
         return a.remainingAmount - b.remainingAmount;
@@ -170,11 +170,12 @@ export default function DebtsScreen() {
     <>
       <Stack.Screen options={{ headerShown: false }} />
 
-      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 100 }}
-        >
+      <ScrollView
+        style={{ flex: 1 }}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 100 }}
+        contentInsetAdjustmentBehavior="automatic"
+      >
           <YStack px="$4" pt="$4" gap="$5">
             <XStack items="center" justify="space-between">
               <H2>{t('debts.list.title')}</H2>
@@ -276,9 +277,8 @@ export default function DebtsScreen() {
               </YStack>
             ) : null}
           </YStack>
-        </ScrollView>
-        <IncomeFab />
-      </SafeAreaView>
+      </ScrollView>
+      <IncomeFab />
     </>
   );
 }

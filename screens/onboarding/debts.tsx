@@ -5,7 +5,6 @@ import { Plus, X } from '@tamagui/lucide-icons-2';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Card, H2, Paragraph, Separator, Text, XStack, YStack } from 'tamagui';
 
 export default function OnboardingDebtsScreen() {
@@ -18,12 +17,12 @@ export default function OnboardingDebtsScreen() {
   const hasDebts = debts.length > 0;
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['bottom']}>
-      <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={{ flexGrow: 1 }}
-        showsVerticalScrollIndicator={false}
-      >
+    <ScrollView
+      style={{ flex: 1 }}
+      contentContainerStyle={{ flexGrow: 1 }}
+      showsVerticalScrollIndicator={false}
+      contentInsetAdjustmentBehavior="automatic"
+    >
         <YStack px="$5" pt="$4" pb="$5" gap="$5" flex={1}>
           <H2>{t('onboarding.debts.title')}</H2>
 
@@ -130,7 +129,6 @@ export default function OnboardingDebtsScreen() {
             )}
           </YStack>
         </YStack>
-      </ScrollView>
-    </SafeAreaView>
+    </ScrollView>
   );
 }

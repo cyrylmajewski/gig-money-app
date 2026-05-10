@@ -7,7 +7,6 @@ import {
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, H2, Paragraph, Text, XStack, YStack } from 'tamagui';
 
 import { useAppStore } from '@/store';
@@ -35,11 +34,12 @@ export default function StrictModeScreen() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['bottom']}>
-      <ScrollView
-        contentContainerStyle={{ flexGrow: 1 }}
-        showsVerticalScrollIndicator={false}
-      >
+    <ScrollView
+      style={{ flex: 1 }}
+      contentContainerStyle={{ flexGrow: 1 }}
+      showsVerticalScrollIndicator={false}
+      contentInsetAdjustmentBehavior="automatic"
+    >
         <YStack flex={1} px="$5" pt="$4" pb="$5" gap="$5">
           <YStack gap="$2">
             <H2>{t('onboarding.strictMode.title')}</H2>
@@ -108,7 +108,6 @@ export default function StrictModeScreen() {
             </Button>
           </YStack>
         </YStack>
-      </ScrollView>
-    </SafeAreaView>
+    </ScrollView>
   );
 }

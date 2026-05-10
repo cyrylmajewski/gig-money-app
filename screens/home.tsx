@@ -13,7 +13,6 @@ import { Stack, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Button,
   H2,
@@ -534,8 +533,12 @@ export default function HomeScreen() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
-        <ScrollView contentContainerStyle={{ paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{ paddingBottom: 120 }}
+        showsVerticalScrollIndicator={false}
+        contentInsetAdjustmentBehavior="automatic"
+      >
           <YStack px="$4" pt="$4" gap="$4">
             <XStack items="center" justify="space-between" gap="$3">
               <H2 flex={1} fontSize="$8" lineHeight={40}>{t('home.greeting')}</H2>
@@ -610,8 +613,7 @@ export default function HomeScreen() {
 
             {recentIncome && <LastDistributionCard income={recentIncome} />}
           </YStack>
-        </ScrollView>
-      </SafeAreaView>
+      </ScrollView>
     </>
   );
 }

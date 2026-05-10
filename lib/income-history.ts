@@ -1,3 +1,4 @@
+import { sortCopy } from '@/lib/array';
 import type { Income } from '@/types/models';
 
 export interface IncomeDayGroup {
@@ -42,7 +43,8 @@ export function groupIncomesByDay(incomes: Income[]): IncomeDayGroup[] {
   return [...groupsByKey.values()]
     .map((group) => ({
       ...group,
-      incomes: group.incomes.toSorted(
+      incomes: sortCopy(
+        group.incomes,
         (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
       ),
     }))

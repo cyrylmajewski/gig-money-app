@@ -1,7 +1,6 @@
 import { Stack, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { YStack } from 'tamagui';
 
 import { NeedsForm } from '@/components/needs-form';
@@ -21,7 +20,7 @@ export default function EditNeedsScreen() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['bottom']}>
+    <>
       <Stack.Screen options={{ title: t('onboarding.needs.title') }} />
       <ScrollView
         style={{ flex: 1 }}
@@ -30,6 +29,7 @@ export default function EditNeedsScreen() {
         keyboardDismissMode="on-drag"
         showsVerticalScrollIndicator={false}
         automaticallyAdjustKeyboardInsets
+        contentInsetAdjustmentBehavior="automatic"
       >
         <YStack px="$5" pt="$4" gap="$4">
           <NeedsForm
@@ -44,6 +44,6 @@ export default function EditNeedsScreen() {
           />
         </YStack>
       </ScrollView>
-    </SafeAreaView>
+    </>
   );
 }

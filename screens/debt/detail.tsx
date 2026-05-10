@@ -122,7 +122,7 @@ export default function DebtDetailScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['bottom']}>
+    <>
       <Stack.Screen
         options={{
           title: t('debts.edit.title'),
@@ -141,6 +141,7 @@ export default function DebtDetailScreen() {
       />
 
       <ScrollView
+        style={{ flex: 1 }}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
         contentContainerStyle={{
@@ -150,6 +151,7 @@ export default function DebtDetailScreen() {
         }}
         showsVerticalScrollIndicator={false}
         automaticallyAdjustKeyboardInsets
+        contentInsetAdjustmentBehavior="automatic"
       >
         {isClosed && (
           <XStack items="center" gap="$2" mb="$5">
@@ -325,6 +327,6 @@ export default function DebtDetailScreen() {
           )}
         </DebtForm>
       </ScrollView>
-    </SafeAreaView>
+    </>
   );
 }

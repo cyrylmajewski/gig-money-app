@@ -1,7 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { H2, YStack } from 'tamagui';
 
 import { NeedsForm } from '@/components/needs-form';
@@ -21,15 +20,15 @@ export default function NeedsScreen() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['bottom']}>
-      <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={{ paddingBottom: 32 }}
-        keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="on-drag"
-        showsVerticalScrollIndicator={false}
-        automaticallyAdjustKeyboardInsets
-      >
+    <ScrollView
+      style={{ flex: 1 }}
+      contentContainerStyle={{ paddingBottom: 32 }}
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="on-drag"
+      showsVerticalScrollIndicator={false}
+      automaticallyAdjustKeyboardInsets
+      contentInsetAdjustmentBehavior="automatic"
+    >
         <YStack px="$5" pt="$4" gap="$4">
           <H2 letterSpacing={-0.5}>{t('onboarding.needs.title')}</H2>
           <NeedsForm
@@ -43,7 +42,6 @@ export default function NeedsScreen() {
             submitLabel={t('common.continue')}
           />
         </YStack>
-      </ScrollView>
-    </SafeAreaView>
+    </ScrollView>
   );
 }
