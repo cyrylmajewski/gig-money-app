@@ -1,4 +1,5 @@
 import type { Debt, Income } from '@/types/models';
+import { getExtraDebtPaymentAmount } from './allocation-extra';
 import { getMonthKey } from './distribution';
 
 export interface DebtClosureForecast {
@@ -17,10 +18,7 @@ export function forecastDebtClosureDate(
 
   for (const income of incomes) {
     const minimum = income.allocation.minimumPayments[debt.id] ?? 0;
-    const extra =
-      income.allocation.extraDebtPayment?.debtId === debt.id
-        ? income.allocation.extraDebtPayment.amount
-        : 0;
+    const extra = getExtraDebtPaymentAmount(income.allocation, debt.id);
     const total = minimum + extra;
     if (total <= 0) continue;
 

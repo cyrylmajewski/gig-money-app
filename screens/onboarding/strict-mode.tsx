@@ -12,10 +12,30 @@ import { Button, H2, Paragraph, Text, XStack, YStack } from 'tamagui';
 import { useAppStore } from '@/store';
 
 const FEATURES = [
-  { icon: Phone, titleKey: 'feature1Title', descKey: 'feature1Desc', theme: 'error' as const },
-  { icon: ShieldCheck, titleKey: 'feature2Title', descKey: 'feature2Desc', theme: 'warning' as const },
-  { icon: CalendarCheck, titleKey: 'feature3Title', descKey: 'feature3Desc', theme: undefined },
-  { icon: Bell, titleKey: 'feature4Title', descKey: 'feature4Desc', theme: 'error' as const },
+  {
+    icon: Phone,
+    titleKey: 'feature1Title',
+    descKey: 'feature1Desc',
+    theme: 'error' as const,
+  },
+  {
+    icon: ShieldCheck,
+    titleKey: 'feature2Title',
+    descKey: 'feature2Desc',
+    theme: 'warning' as const,
+  },
+  {
+    icon: CalendarCheck,
+    titleKey: 'feature3Title',
+    descKey: 'feature3Desc',
+    theme: undefined,
+  },
+  {
+    icon: Bell,
+    titleKey: 'feature4Title',
+    descKey: 'feature4Desc',
+    theme: 'error' as const,
+  },
 ];
 
 export default function StrictModeScreen() {
@@ -40,20 +60,26 @@ export default function StrictModeScreen() {
       showsVerticalScrollIndicator={false}
       contentInsetAdjustmentBehavior="automatic"
     >
-        <YStack flex={1} px="$5" pt="$4" pb="$5" gap="$5">
-          <YStack gap="$2">
-            <H2>{t('onboarding.strictMode.title')}</H2>
-            <Paragraph color="$color9">
-              {t('onboarding.strictMode.subtitle')}
-            </Paragraph>
-          </YStack>
-
-          <Paragraph color="$color11" fontSize="$3">
-            {t('onboarding.strictMode.description')}
+      <YStack flex={1} px="$5" pt="$4" pb="$5" gap="$5">
+        <YStack gap="$2">
+          <H2>{t('onboarding.strictMode.title')}</H2>
+          <Paragraph color="$color9">
+            {t('onboarding.strictMode.subtitle')}
           </Paragraph>
+        </YStack>
 
-          <YStack gap="$3">
-            {FEATURES.map(({ icon: IconComponent, titleKey, descKey, theme: featureTheme }) => (
+        <Paragraph color="$color11" fontSize="$3">
+          {t('onboarding.strictMode.description')}
+        </Paragraph>
+
+        <YStack gap="$3">
+          {FEATURES.map(
+            ({
+              icon: IconComponent,
+              titleKey,
+              descKey,
+              theme: featureTheme,
+            }) => (
               <XStack
                 key={titleKey}
                 bg="$color2"
@@ -85,29 +111,30 @@ export default function StrictModeScreen() {
                   </Text>
                 </YStack>
               </XStack>
-            ))}
-          </YStack>
-
-          <YStack flex={1} />
-
-          <YStack gap="$3">
-            <Button
-              size="$5"
-              bg="$accent9"
-              pressStyle={{ bg: '$accent10' }}
-              onPress={handleEnable}
-            >
-              <Button.Text color="$color12">
-                {t('onboarding.strictMode.enable')}
-              </Button.Text>
-            </Button>
-            <Button size="$4" chromeless onPress={handleSkip}>
-              <Button.Text color="$color8">
-                {t('onboarding.strictMode.skip')}
-              </Button.Text>
-            </Button>
-          </YStack>
+            )
+          )}
         </YStack>
+
+        <YStack flex={1} />
+
+        <YStack gap="$3">
+          <Button
+            size="$5"
+            bg="$accent9"
+            pressStyle={{ bg: '$accent10' }}
+            onPress={handleEnable}
+          >
+            <Button.Text color="white">
+              {t('onboarding.strictMode.enable')}
+            </Button.Text>
+          </Button>
+          <Button size="$4" chromeless onPress={handleSkip}>
+            <Button.Text color="$color8">
+              {t('onboarding.strictMode.skip')}
+            </Button.Text>
+          </Button>
+        </YStack>
+      </YStack>
     </ScrollView>
   );
 }

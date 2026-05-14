@@ -8,10 +8,10 @@ import {
   allocateTier,
   getActiveDebts,
   getCurrentMonthlyCoverage,
-  getEffectiveSnowballTarget,
   getFloorForCategory,
   getOutstandingMinimums,
   getOutstandingNeeds,
+  getSnowballQueue,
   roundPLN,
 } from './helpers';
 
@@ -20,9 +20,9 @@ import {
  *
  * Current order:
  *   1. Housing + food needs (outstanding this month)
- *   2. Minimum debt payments (all active debts)
- *   3. Transport + other needs (outstanding this month)
- *   4. Extra snowball payment (smallest remaining balance first)
+ *   2. Transport + other needs (outstanding this month)
+ *   3. Minimum debt payments (snowball queue when there is not enough for all)
+ *   4. Extra snowball payments (smallest remaining balance first)
  *
  * Existing deferred payments are manual-only: a new income never resolves them
  * or pays them automatically.
@@ -62,11 +62,20 @@ export function distributeIncome(
   const foodAlloc = tier1.allocations['food'] ?? 0;
   remaining = tier1.remaining;
 
-  // ── Step 2: Minimum debt payments ─────────────────────────────────────
+  // ── Step 2: Transport + other needs (Floor + Waterfall) ───────────────
+
+  const tier3 = allocateTier([
+    { key: 'transport', outstanding: outstanding.transport, floor: getFloorForCategory('transport', outstanding.transport, state.settings.floorOverrides), priority: 1 },
+    { key: 'other', outstanding: outstanding.other, floor: getFloorForCategory('other', outstanding.other, state.settings.floorOverrides), priority: 2 },
+  ], remaining);
+  const transportAlloc = tier3.allocations['transport'] ?? 0;
+  const otherAlloc = tier3.allocations['other'] ?? 0;
+  remaining = tier3.remaining;
+
+  // ── Step 3: Minimum debt payments ─────────────────────────────────────
 
   const outstandingMins = getOutstandingMinimums(activeDebts, coverage);
   const minimumPayments: Record<string, number> = {};
-
   // Determine total outstanding minimums to enable proportional allocation
   const totalMinsNeeded = roundPLN(
     Object.values(outstandingMins).reduce((sum, v) => sum + v, 0),
@@ -80,61 +89,50 @@ export function distributeIncome(
       }
       remaining = roundPLN(remaining - totalMinsNeeded);
     } else {
-      // Not enough -- allocate proportionally
-      let distributed = 0;
-      const entries = Object.entries(outstandingMins);
+      // Not enough -- avoid splitting one income into several unusable partial
+      // payments. Pay minimums in the same focused order as the snowball plan.
+      for (const debt of getSnowballQueue(activeDebts, state.settings)) {
+        const needed = outstandingMins[debt.id] ?? 0;
+        if (needed <= 0) continue;
 
-      for (let i = 0; i < entries.length; i++) {
-        const [debtId, needed] = entries[i];
-        if (i === entries.length - 1) {
-          // Last entry gets the remainder to avoid rounding drift
-          const share = roundPLN(remaining - distributed);
-          if (share > 0) minimumPayments[debtId] = share;
-        } else {
-          const share = roundPLN((needed / totalMinsNeeded) * remaining);
-          if (share > 0) minimumPayments[debtId] = share;
-          distributed = roundPLN(distributed + share);
+        const share = roundPLN(Math.min(remaining, needed));
+        if (share > 0) {
+          minimumPayments[debt.id] = share;
+          remaining = roundPLN(remaining - share);
         }
+
+        if (remaining <= 0) break;
       }
-      remaining = 0;
     }
   }
-
-  // ── Step 3: Transport + other needs (Floor + Waterfall) ───────────────
-
-  const tier3 = allocateTier([
-    { key: 'transport', outstanding: outstanding.transport, floor: getFloorForCategory('transport', outstanding.transport, state.settings.floorOverrides), priority: 1 },
-    { key: 'other', outstanding: outstanding.other, floor: getFloorForCategory('other', outstanding.other, state.settings.floorOverrides), priority: 2 },
-  ], remaining);
-  const transportAlloc = tier3.allocations['transport'] ?? 0;
-  const otherAlloc = tier3.allocations['other'] ?? 0;
-  remaining = tier3.remaining;
 
   // ── Step 4: Extra snowball payment ────────────────────────────────────
 
-  let extraDebtPayment: Allocation['extraDebtPayment'] = null;
+  const extraDebtPayments: Record<string, number> = {};
 
   if (remaining > 0) {
-    const { debt: snowballTarget } = getEffectiveSnowballTarget(activeDebts, state.settings);
-    if (snowballTarget) {
-      // Don't pay more than the remaining balance (minus what was already
-      // allocated as a minimum in this same distribution)
-      const alreadyAllocated = minimumPayments[snowballTarget.id] ?? 0;
-      const coveredThisMonth = coverage.minimumPayments[snowballTarget.id] ?? 0;
-      const maxExtra = roundPLN(
-        snowballTarget.remainingAmount - alreadyAllocated - coveredThisMonth,
-      );
+    for (const debt of getSnowballQueue(activeDebts, state.settings)) {
+      const alreadyAllocated = minimumPayments[debt.id] ?? 0;
+      const maxExtra = roundPLN(debt.remainingAmount - alreadyAllocated);
       const snowballAmount = roundPLN(Math.min(remaining, Math.max(0, maxExtra)));
 
-      if (snowballAmount > 0) {
-        extraDebtPayment = {
-          debtId: snowballTarget.id,
-          amount: snowballAmount,
-        };
-        remaining = roundPLN(remaining - snowballAmount);
-      }
+      if (snowballAmount <= 0) continue;
+
+      extraDebtPayments[debt.id] = snowballAmount;
+      remaining = roundPLN(remaining - snowballAmount);
+
+      if (remaining <= 0) break;
     }
   }
+
+  const extraDebtPaymentEntries = Object.entries(extraDebtPayments);
+  const extraDebtPayment =
+    extraDebtPaymentEntries.length > 0
+      ? {
+          debtId: extraDebtPaymentEntries[0][0],
+          amount: extraDebtPaymentEntries[0][1],
+        }
+      : null;
 
   // ── Build result ──────────────────────────────────────────────────────
 
@@ -149,6 +147,8 @@ export function distributeIncome(
     },
     minimumPayments,
     extraDebtPayment,
+    extraDebtPayments:
+      extraDebtPaymentEntries.length > 0 ? extraDebtPayments : undefined,
     unallocated: roundPLN(remaining),
     wasAdjustedByUser: false,
   };

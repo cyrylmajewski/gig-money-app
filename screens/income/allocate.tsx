@@ -1,35 +1,19 @@
-import { useMemo, useState, useCallback, useRef } from 'react';
-import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
-import { useTranslation } from 'react-i18next';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Pressable } from 'react-native';
-import {
-  YStack,
-  XStack,
-  Text,
-  Button,
-  Paragraph,
-  Progress,
-  Separator,
-  ScrollView,
-  Input,
-  Sheet,
-} from 'tamagui';
-import { AllocationStack } from '@/components/allocation-stack';
 import type { AllocationStackSegment } from '@/components/allocation-stack';
+import { AllocationStack } from '@/components/allocation-stack';
 import { summarizeAllocation } from '@/lib/allocation-summary';
-import { useAppStore } from '@/store';
-import { formatAmount } from '@/lib/format';
 import { distributeIncome } from '@/lib/distribution';
 import {
-  getCurrentMonthlyCoverage,
-  getOutstandingNeeds,
-  getOutstandingMinimums,
   getActiveDebts,
+  getCurrentMonthlyCoverage,
   getFloorForCategory,
+  getOutstandingMinimums,
+  getOutstandingNeeds,
   getPreviousMonthsAverage,
+  getSnowballQueue,
   roundPLN,
 } from '@/lib/distribution/helpers';
+import { formatAmount } from '@/lib/format';
+import { useAppStore } from '@/store';
 import type {
   Allocation,
   AppState,
@@ -37,6 +21,23 @@ import type {
   DeferredPaymentReasons,
   MonthlyNeeds,
 } from '@/types/models';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Pressable } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import {
+  Button,
+  Input,
+  Paragraph,
+  Progress,
+  ScrollView,
+  Separator,
+  Sheet,
+  Text,
+  XStack,
+  YStack,
+} from 'tamagui';
 
 interface L3QueueItem {
   key: string;
@@ -54,17 +55,19 @@ function AllocationHeader({
 }) {
   const { t } = useTranslation();
   const summary = summarizeAllocation(allocation);
-  const segments: AllocationStackSegment[] = summary.segments.map((segment) => ({
-    ...segment,
-    label:
-      segment.key === 'needs'
-        ? t('home.lastDistribution.needs')
-        : segment.key === 'minimums'
-          ? t('home.lastDistribution.minimums')
-          : segment.key === 'extra'
-            ? t('home.lastDistribution.extra')
-            : t('income.allocate.rows.unallocated'),
-  }));
+  const segments: AllocationStackSegment[] = summary.segments.map(
+    (segment) => ({
+      ...segment,
+      label:
+        segment.key === 'needs'
+          ? t('home.lastDistribution.needs')
+          : segment.key === 'minimums'
+            ? t('home.lastDistribution.minimums')
+            : segment.key === 'extra'
+              ? t('home.lastDistribution.extra')
+              : t('income.allocate.rows.unallocated'),
+    })
+  );
 
   return (
     <YStack
@@ -162,7 +165,9 @@ function EditableRow({
   currency,
   l2Warning,
 }: EditableRowProps) {
-  const [inputText, setInputText] = useState(value > 0 ? String(Math.round(value)) : '');
+  const [inputText, setInputText] = useState(
+    value > 0 ? String(Math.round(value)) : ''
+  );
 
   function handleIncrement() {
     const next = roundPLN(value + step);
@@ -208,7 +213,9 @@ function EditableRow({
           items="center"
           justify="center"
         >
-          <Button.Text fontWeight="700" fontSize="$5">−</Button.Text>
+          <Button.Text fontWeight="700" fontSize="$5">
+            −
+          </Button.Text>
         </Button>
 
         <Input
@@ -239,7 +246,9 @@ function EditableRow({
           items="center"
           justify="center"
         >
-          <Button.Text fontWeight="700" fontSize="$5">+</Button.Text>
+          <Button.Text fontWeight="700" fontSize="$5">
+            +
+          </Button.Text>
         </Button>
       </XStack>
 
@@ -319,17 +328,27 @@ function L3Sheet({
   const { t } = useTranslation();
 
   const reasons: { value: DeferredPaymentReason; labelKey: string }[] = [
-    { value: 'agreed_delay', labelKey: 'income.allocate.guardrail.l3.reasonAgreedDelay' },
-    { value: 'postponing', labelKey: 'income.allocate.guardrail.l3.reasonPostponing' },
+    {
+      value: 'agreed_delay',
+      labelKey: 'income.allocate.guardrail.l3.reasonAgreedDelay',
+    },
+    {
+      value: 'postponing',
+      labelKey: 'income.allocate.guardrail.l3.reasonPostponing',
+    },
     { value: 'other', labelKey: 'income.allocate.guardrail.l3.reasonOther' },
   ];
 
   return (
     <Sheet
       open={open}
+      onOpenChange={(nextOpen: boolean) => {
+        if (!nextOpen) onBack();
+      }}
       snapPoints={[52]}
       dismissOnSnapToBottom={false}
-      modal
+      modal={false}
+      zIndex={100_000}
     >
       <Sheet.Overlay />
       <Sheet.Frame p="$5" gap="$4">
@@ -363,7 +382,9 @@ function L3Sheet({
                   height={18}
                   rounded="$10"
                   borderWidth={2}
-                  borderColor={selectedReason === value ? '$accent9' : '$color7'}
+                  borderColor={
+                    selectedReason === value ? '$accent9' : '$color7'
+                  }
                   bg={selectedReason === value ? '$accent9' : 'transparent'}
                 />
                 <Text
@@ -397,7 +418,7 @@ function L3Sheet({
             pressStyle={{ bg: '$accent10' }}
             onPress={onSave}
           >
-            <Button.Text color="$color12">
+            <Button.Text color="white">
               {t('income.allocate.guardrail.l3.save')}
             </Button.Text>
           </Button>
@@ -444,7 +465,8 @@ export default function AllocateScreen() {
     [incomeAmount, stateSnapshot]
   );
 
-  const [editedAllocation, setEditedAllocation] = useState<Allocation>(seededAllocation);
+  const [editedAllocation, setEditedAllocation] =
+    useState<Allocation>(seededAllocation);
   const [wasAdjustedByUser, setWasAdjustedByUser] = useState(false);
 
   const [l3SheetOpen, setL3SheetOpen] = useState(false);
@@ -475,60 +497,135 @@ export default function AllocateScreen() {
         editedAllocation.needs.food +
         editedAllocation.needs.transport +
         editedAllocation.needs.other +
-        Object.values(editedAllocation.minimumPayments).reduce((s, v) => s + v, 0) +
+        Object.values(editedAllocation.minimumPayments).reduce(
+          (s, v) => s + v,
+          0
+        ) +
         editedAllocation.deferredPayments
     );
   }, [editedAllocation]);
 
-  const computedSnowball = useMemo(() => {
+  const computedSnowballPayments = useMemo(() => {
     const remaining = roundPLN(incomeAmount - editedSpent);
-    if (remaining <= 0 || !seededAllocation.extraDebtPayment) return null;
-    const debtId = seededAllocation.extraDebtPayment.debtId;
-    const snowballDebt = debtById[debtId];
-    if (!snowballDebt) return null;
-    const maxExtra = roundPLN(
-      snowballDebt.remainingAmount -
-        (editedAllocation.minimumPayments[debtId] ?? 0)
-    );
-    const snowballAmount = Math.min(remaining, Math.max(0, maxExtra));
-    if (snowballAmount <= 0) return null;
-    return { debtId, amount: roundPLN(snowballAmount) };
-  }, [incomeAmount, editedSpent, seededAllocation, debtById, editedAllocation.minimumPayments]);
+    const payments: Record<string, number> = {};
+    if (remaining <= 0) return payments;
+
+    let available = remaining;
+    for (const debt of getSnowballQueue(activeDebtsList, settings)) {
+      const alreadyAllocated = editedAllocation.minimumPayments[debt.id] ?? 0;
+      const maxExtra = roundPLN(debt.remainingAmount - alreadyAllocated);
+      const amount = roundPLN(Math.min(available, Math.max(0, maxExtra)));
+
+      if (amount <= 0) continue;
+
+      payments[debt.id] = amount;
+      available = roundPLN(available - amount);
+      if (available <= 0) break;
+    }
+
+    return payments;
+  }, [
+    activeDebtsList,
+    incomeAmount,
+    editedSpent,
+    editedAllocation.minimumPayments,
+    settings,
+  ]);
+
+  const computedSnowballEntries = useMemo(
+    () =>
+      Object.entries(computedSnowballPayments).map(([debtId, amount]) => ({
+        debtId,
+        amount,
+      })),
+    [computedSnowballPayments]
+  );
+
+  const computedSnowballTotal = useMemo(
+    () =>
+      roundPLN(
+        computedSnowballEntries.reduce((sum, entry) => sum + entry.amount, 0)
+      ),
+    [computedSnowballEntries]
+  );
+
+  const computedSnowball = computedSnowballEntries[0] ?? null;
+
+  const previewAllocation: Allocation = useMemo(
+    () => ({
+      ...editedAllocation,
+      extraDebtPayment: computedSnowball,
+      extraDebtPayments:
+        computedSnowballEntries.length > 0
+          ? computedSnowballPayments
+          : undefined,
+      unallocated: roundPLN(
+        Math.max(0, incomeAmount - editedSpent - computedSnowballTotal)
+      ),
+    }),
+    [
+      editedAllocation,
+      computedSnowball,
+      computedSnowballEntries.length,
+      computedSnowballPayments,
+      incomeAmount,
+      editedSpent,
+      computedSnowballTotal,
+    ]
+  );
 
   const coverageStats = useMemo(() => {
+    const coverage = getCurrentMonthlyCoverage(monthlyCoverage);
+    const coveredNeeds: MonthlyNeeds = {
+      housing: Math.min(
+        monthlyNeeds.housing,
+        (coverage.needs.housing ?? 0) + editedAllocation.needs.housing
+      ),
+      food: Math.min(
+        monthlyNeeds.food,
+        (coverage.needs.food ?? 0) + editedAllocation.needs.food
+      ),
+      transport: Math.min(
+        monthlyNeeds.transport,
+        (coverage.needs.transport ?? 0) + editedAllocation.needs.transport
+      ),
+      other: Math.min(
+        monthlyNeeds.other,
+        (coverage.needs.other ?? 0) + editedAllocation.needs.other
+      ),
+    };
     const covered =
-      editedAllocation.needs.housing +
-      editedAllocation.needs.food +
-      editedAllocation.needs.transport +
-      editedAllocation.needs.other;
+      coveredNeeds.housing +
+      coveredNeeds.food +
+      coveredNeeds.transport +
+      coveredNeeds.other;
     const totalNeeds =
       monthlyNeeds.housing +
       monthlyNeeds.food +
       monthlyNeeds.transport +
       monthlyNeeds.other;
-    const pct =
-      totalNeeds > 0 ? Math.round((covered / totalNeeds) * 100) : 100;
+    const pct = totalNeeds > 0 ? Math.round((covered / totalNeeds) * 100) : 100;
     const hasShortfall = covered < totalNeeds;
 
     const tips: string[] = [];
-    if (editedAllocation.needs.food < monthlyNeeds.food && monthlyNeeds.food > 0) {
+    if (
+      coveredNeeds.food < monthlyNeeds.food &&
+      monthlyNeeds.food > 0
+    ) {
       tips.push('income.allocate.tips.food');
     }
-    if (editedAllocation.needs.transport === 0 && monthlyNeeds.transport > 0) {
+    if (
+      coveredNeeds.transport < monthlyNeeds.transport &&
+      monthlyNeeds.transport > 0
+    ) {
       tips.push('income.allocate.tips.transport');
-    }
-    const unpaidDebts = Object.entries(outstanding.mins).filter(
-      ([id]) => (editedAllocation.minimumPayments[id] ?? 0) === 0
-    );
-    if (unpaidDebts.length > 0) {
-      tips.push('income.allocate.tips.contactCreditor');
     }
     if (tips.length === 0 && hasShortfall) {
       tips.push('income.allocate.tips.nextIncome');
     }
 
     return { pct, hasShortfall, tips };
-  }, [editedAllocation, monthlyNeeds, outstanding]);
+  }, [editedAllocation, monthlyCoverage, monthlyNeeds, outstanding]);
 
   const foodAvg = useMemo(
     () => getPreviousMonthsAverage('food', monthlyCoverage, 3),
@@ -600,7 +697,7 @@ export default function AllocateScreen() {
     const queue: L3QueueItem[] = [];
     const coverage = getCurrentMonthlyCoverage(monthlyCoverage);
 
-    const needCategories: Array<{ cat: keyof MonthlyNeeds; label: string }> = [
+    const needCategories: { cat: keyof MonthlyNeeds; label: string }[] = [
       { cat: 'housing', label: t('income.allocate.rows.housing') },
       { cat: 'food', label: t('income.allocate.rows.food') },
       { cat: 'transport', label: t('income.allocate.rows.transport') },
@@ -608,7 +705,11 @@ export default function AllocateScreen() {
     ];
 
     for (const { cat, label } of needCategories) {
-      const floor = getFloorForCategory(cat, outstanding.needs[cat], settings.floorOverrides);
+      const floor = getFloorForCategory(
+        cat,
+        outstanding.needs[cat],
+        settings.floorOverrides
+      );
       const covered = coverage.needs[cat] ?? 0;
       const outstandingCat = Math.max(0, floor - covered);
       if (outstandingCat > 0 && (editedAllocation.needs[cat] ?? 0) === 0) {
@@ -622,7 +723,9 @@ export default function AllocateScreen() {
       if (needed > 0 && edited === 0) {
         queue.push({
           key: `debt:${debt.id}`,
-          label: t('income.allocate.rows.minimumPayment', { label: debt.label }),
+          label: t('income.allocate.rows.minimumPayment', {
+            label: debt.label,
+          }),
         });
       }
     }
@@ -634,25 +737,37 @@ export default function AllocateScreen() {
     const finalAllocation: Allocation = {
       ...editedAllocation,
       extraDebtPayment: computedSnowball,
-      unallocated: roundPLN(Math.max(0, incomeAmount - editedSpent - (computedSnowball?.amount ?? 0))),
+      extraDebtPayments:
+        computedSnowballEntries.length > 0
+          ? computedSnowballPayments
+          : undefined,
+      unallocated: roundPLN(
+        Math.max(0, incomeAmount - editedSpent - computedSnowballTotal)
+      ),
       wasAdjustedByUser: true,
     };
 
-    const shortfalls: Array<{
+    const shortfalls: {
       kind: 'housing' | 'food' | 'debt';
       label: string;
       shortAmount: number;
       debtId?: string;
-    }> = [];
+    }[] = [];
 
-    if (outstanding.needs.housing > 0 && finalAllocation.needs.housing < outstanding.needs.housing) {
+    if (
+      outstanding.needs.housing > 0 &&
+      finalAllocation.needs.housing < outstanding.needs.housing
+    ) {
       shortfalls.push({
         kind: 'housing',
         label: t('income.allocate.rows.housing'),
         shortAmount: outstanding.needs.housing - finalAllocation.needs.housing,
       });
     }
-    if (outstanding.needs.food > 0 && finalAllocation.needs.food < outstanding.needs.food) {
+    if (
+      outstanding.needs.food > 0 &&
+      finalAllocation.needs.food < outstanding.needs.food
+    ) {
       shortfalls.push({
         kind: 'food',
         label: t('income.allocate.rows.food'),
@@ -676,6 +791,11 @@ export default function AllocateScreen() {
     const reasonsJson = JSON.stringify(reasons);
 
     if (shortfalls.length > 0) {
+      console.log('[Allocate] finalizeWithReasons -> shortfall', {
+        reasons,
+        shortfalls,
+        finalAllocation,
+      });
       push({
         pathname: '/income/shortfall',
         params: {
@@ -688,6 +808,10 @@ export default function AllocateScreen() {
         },
       });
     } else {
+      console.log('[Allocate] finalizeWithReasons -> confirm', {
+        reasons,
+        finalAllocation,
+      });
       push({
         pathname: '/income/confirm',
         params: {
@@ -701,9 +825,40 @@ export default function AllocateScreen() {
     }
   }
 
-  const handleConfirm = useCallback(() => {
+  function handleConfirm() {
     const remaining = roundPLN(incomeAmount - editedSpent);
-    if (remaining < 0) return;
+    const debtContributions = activeDebtsList.map((debt) => {
+      const minimum = editedAllocation.minimumPayments[debt.id] ?? 0;
+      const extra = computedSnowballPayments[debt.id] ?? 0;
+      return {
+        id: debt.id,
+        label: debt.label,
+        minimum,
+        extra,
+        total: minimum + extra,
+      };
+    });
+
+    console.log('[Allocate] handleConfirm:start', {
+      incomeAmount,
+      editedSpent,
+      remaining,
+      computedSnowball,
+      computedSnowballPayments,
+      debtContributions,
+      needs: editedAllocation.needs,
+      minimumPayments: editedAllocation.minimumPayments,
+      deferredPayments: editedAllocation.deferredPayments,
+    });
+
+    if (remaining < 0) {
+      console.log('[Allocate] handleConfirm:blocked-negative-remaining', {
+        remaining,
+        incomeAmount,
+        editedSpent,
+      });
+      return;
+    }
 
     // L4 check: every active debt receives 0 — counting both minimums AND the
     // auto-assigned snowball extra. If snowball will pay any debt, user IS
@@ -712,16 +867,21 @@ export default function AllocateScreen() {
       activeDebtsList.length > 0 &&
       activeDebtsList.every((d) => {
         const minimum = editedAllocation.minimumPayments[d.id] ?? 0;
-        const extra = computedSnowball?.debtId === d.id ? computedSnowball.amount : 0;
+        const extra = computedSnowballPayments[d.id] ?? 0;
         return minimum + extra === 0;
       })
     ) {
       const finalAllocation: Allocation = {
         ...editedAllocation,
         extraDebtPayment: null,
+        extraDebtPayments: undefined,
         unallocated: roundPLN(Math.max(0, remaining)),
         wasAdjustedByUser: true,
       };
+      console.log('[Allocate] handleConfirm -> no-contribution', {
+        finalAllocation,
+        debtContributions,
+      });
       push({
         pathname: '/income/no-contribution',
         params: {
@@ -737,7 +897,14 @@ export default function AllocateScreen() {
 
     // L3 check
     const queue = buildL3Queue();
+    console.log('[Allocate] handleConfirm:L3 queue', {
+      queue,
+      queueLength: queue.length,
+    });
     if (queue.length > 0) {
+      console.log('[Allocate] handleConfirm -> open L3 sheet', {
+        firstItem: queue[0],
+      });
       setL3Queue(queue);
       setL3QueueIndex(0);
       l3CollectedReasonsRef.current = {};
@@ -746,21 +913,19 @@ export default function AllocateScreen() {
       return;
     }
 
+    console.log('[Allocate] handleConfirm -> finalize without L3 reasons');
     finalizeWithReasons({});
-  }, [
-    incomeAmount,
-    editedSpent,
-    editedAllocation,
-    activeDebtsList,
-    outstanding,
-    computedSnowball,
-    wasAdjustedByUser,
-    params,
-  ]);
+  }
 
   function handleL3Save() {
     const currentItem = l3Queue[l3QueueIndex];
-    if (!currentItem) return;
+    if (!currentItem) {
+      console.log('[Allocate] handleL3Save:missing-current-item', {
+        l3Queue,
+        l3QueueIndex,
+      });
+      return;
+    }
 
     const updated = {
       ...l3CollectedReasonsRef.current,
@@ -768,10 +933,23 @@ export default function AllocateScreen() {
     };
     l3CollectedReasonsRef.current = updated;
 
+    console.log('[Allocate] handleL3Save', {
+      currentItem,
+      l3QueueIndex,
+      queueLength: l3Queue.length,
+      reason: l3CurrentReason,
+      collectedReasons: updated,
+    });
+
     if (l3QueueIndex < l3Queue.length - 1) {
+      console.log('[Allocate] handleL3Save -> next L3 item', {
+        nextIndex: l3QueueIndex + 1,
+        nextItem: l3Queue[l3QueueIndex + 1],
+      });
       setL3QueueIndex((i) => i + 1);
       setL3CurrentReason('postponing');
     } else {
+      console.log('[Allocate] handleL3Save -> finalize with L3 reasons');
       setL3SheetOpen(false);
       finalizeWithReasons(updated);
     }
@@ -809,7 +987,7 @@ export default function AllocateScreen() {
           <YStack px="$4" pt="$4" pb="$6" gap="$4">
             <AllocationHeader
               incomeAmount={incomeAmount}
-              allocation={editedAllocation}
+              allocation={previewAllocation}
               currency={currency}
             />
 
@@ -898,7 +1076,13 @@ export default function AllocateScreen() {
                 <>
                   <EditableRow
                     label={t('income.allocate.rows.housing')}
-                    sublabel={t('income.allocate.edit.remainingLabel') + ': ' + formatAmount(outstanding.needs.housing) + ' ' + currency}
+                    sublabel={
+                      t('income.allocate.edit.remainingLabel') +
+                      ': ' +
+                      formatAmount(outstanding.needs.housing) +
+                      ' ' +
+                      currency
+                    }
                     value={editedAllocation.needs.housing}
                     step={50}
                     onChange={(v) => updateNeed('housing', v)}
@@ -913,7 +1097,13 @@ export default function AllocateScreen() {
                 <>
                   <EditableRow
                     label={t('income.allocate.rows.food')}
-                    sublabel={t('income.allocate.edit.remainingLabel') + ': ' + formatAmount(outstanding.needs.food) + ' ' + currency}
+                    sublabel={
+                      t('income.allocate.edit.remainingLabel') +
+                      ': ' +
+                      formatAmount(outstanding.needs.food) +
+                      ' ' +
+                      currency
+                    }
                     value={editedAllocation.needs.food}
                     step={50}
                     onChange={(v) => updateNeed('food', v)}
@@ -930,8 +1120,16 @@ export default function AllocateScreen() {
                 return (
                   <YStack key={debt.id}>
                     <EditableRow
-                      label={t('income.allocate.rows.minimumPayment', { label: debt.label })}
-                      sublabel={t('income.allocate.rows.minimumPaymentSublabel') + ': ' + formatAmount(needed) + ' ' + currency}
+                      label={t('income.allocate.rows.minimumPayment', {
+                        label: debt.label,
+                      })}
+                      sublabel={
+                        t('income.allocate.rows.minimumPaymentSublabel') +
+                        ': ' +
+                        formatAmount(needed) +
+                        ' ' +
+                        currency
+                      }
                       value={editedAllocation.minimumPayments[debt.id] ?? 0}
                       step={10}
                       onChange={(v) => updateMinimum(debt.id, v)}
@@ -946,7 +1144,13 @@ export default function AllocateScreen() {
                 <>
                   <EditableRow
                     label={t('income.allocate.rows.transport')}
-                    sublabel={t('income.allocate.edit.remainingLabel') + ': ' + formatAmount(outstanding.needs.transport) + ' ' + currency}
+                    sublabel={
+                      t('income.allocate.edit.remainingLabel') +
+                      ': ' +
+                      formatAmount(outstanding.needs.transport) +
+                      ' ' +
+                      currency
+                    }
                     value={editedAllocation.needs.transport}
                     step={10}
                     onChange={(v) => updateNeed('transport', v)}
@@ -960,7 +1164,13 @@ export default function AllocateScreen() {
                 <>
                   <EditableRow
                     label={t('income.allocate.rows.other')}
-                    sublabel={t('income.allocate.edit.remainingLabel') + ': ' + formatAmount(outstanding.needs.other) + ' ' + currency}
+                    sublabel={
+                      t('income.allocate.edit.remainingLabel') +
+                      ': ' +
+                      formatAmount(outstanding.needs.other) +
+                      ' ' +
+                      currency
+                    }
                     value={editedAllocation.needs.other}
                     step={10}
                     onChange={(v) => updateNeed('other', v)}
@@ -970,25 +1180,29 @@ export default function AllocateScreen() {
                 </>
               )}
 
-              {computedSnowball && (
-                <>
+              {computedSnowballEntries.map((payment) => (
+                <YStack key={payment.debtId}>
                   <ReadOnlyRow
                     label={t('income.allocate.rows.extraPayment', {
                       label:
-                        debtById[computedSnowball.debtId]?.label ??
+                        debtById[payment.debtId]?.label ??
                         t('income.allocate.rows.extraPaymentFallback'),
                     })}
                     sublabel={t('income.allocate.rows.extraPaymentSublabel')}
-                    amount={computedSnowball.amount}
+                    amount={payment.amount}
                     currency={currency}
                     highlight
                   />
                   <Separator borderColor="$color3" />
-                </>
-              )}
+                </YStack>
+              ))}
             </YStack>
 
-            <Paragraph color="$color8" fontSize="$2" style={{ textAlign: 'center' }}>
+            <Paragraph
+              color="$color8"
+              fontSize="$2"
+              style={{ textAlign: 'center' }}
+            >
               {t('income.allocate.defaultBiasNote')}
             </Paragraph>
           </YStack>
@@ -1004,7 +1218,7 @@ export default function AllocateScreen() {
             disabled={isConfirmDisabled}
             accessibilityRole="button"
           >
-            <Button.Text color="$color12">
+            <Button.Text color="white">
               {t('income.allocate.confirm')}
             </Button.Text>
           </Button>

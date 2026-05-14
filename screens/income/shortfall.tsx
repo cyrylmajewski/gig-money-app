@@ -1,5 +1,5 @@
 import { AlertTriangle, Check, Phone, Timer } from '@tamagui/lucide-icons-2';
-import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Linking, Pressable, ScrollView } from 'react-native';
@@ -91,8 +91,12 @@ export default function ShortfallScreen() {
 
   const [calledBanks, setCalledBanks] = useState<Set<string>>(new Set());
   const [timerSeconds, setTimerSeconds] = useState(0);
-  const [confirmedCall, setConfirmedCall] = useState<Set<string>>(alreadyContactedBanks);
-  const [confirmedLandlord, setConfirmedLandlord] = useState(landlordAlreadyContacted);
+  const [confirmedCall, setConfirmedCall] = useState<Set<string>>(
+    alreadyContactedBanks
+  );
+  const [confirmedLandlord, setConfirmedLandlord] = useState(
+    landlordAlreadyContacted
+  );
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -121,8 +125,7 @@ export default function ShortfallScreen() {
     ? (() => {
         const bankIds = bankContacts.map((c) => c.id);
         const allBanksConfirmed =
-          bankIds.length === 0 ||
-          bankIds.every((id) => confirmedCall.has(id));
+          bankIds.length === 0 || bankIds.every((id) => confirmedCall.has(id));
         const landlordOk = !hasHousingShortfall || confirmedLandlord;
         return allBanksConfirmed && landlordOk;
       })()
@@ -244,16 +247,16 @@ export default function ShortfallScreen() {
                 p="$4"
                 gap="$3"
               >
-                <H3 fontSize="$4">
-                  {t('income.shortfall.landlordTitle')}
-                </H3>
+                <H3 fontSize="$4">{t('income.shortfall.landlordTitle')}</H3>
                 <Paragraph color="$color9" fontSize="$3">
                   {t('income.shortfall.landlordTip')}
                 </Paragraph>
 
                 {strictMode && (
                   <Pressable
-                    onPress={() => !confirmedLandlord && handleConfirmLandlord()}
+                    onPress={() =>
+                      !confirmedLandlord && handleConfirmLandlord()
+                    }
                     disabled={confirmedLandlord}
                   >
                     <XStack
@@ -269,16 +272,12 @@ export default function ShortfallScreen() {
                         height={20}
                         rounded="$2"
                         borderWidth={2}
-                        borderColor={
-                          confirmedLandlord ? '$accent9' : '$color6'
-                        }
+                        borderColor={confirmedLandlord ? '$accent9' : '$color6'}
                         bg={confirmedLandlord ? '$accent9' : 'transparent'}
                         items="center"
                         justify="center"
                       >
-                        {confirmedLandlord && (
-                          <Check size={12} color="white" />
-                        )}
+                        {confirmedLandlord && <Check size={12} color="white" />}
                       </YStack>
                       <Text
                         color={confirmedLandlord ? '$accent11' : '$color11'}
@@ -298,8 +297,7 @@ export default function ShortfallScreen() {
               const previouslyContacted = alreadyContactedBanks.has(contact.id);
               const hasCalled = calledBanks.has(contact.id);
               const isConfirmed = confirmedCall.has(contact.id);
-              const timerDone =
-                hasCalled && timerSeconds >= CALL_TIMER_SECONDS;
+              const timerDone = hasCalled && timerSeconds >= CALL_TIMER_SECONDS;
 
               return (
                 <YStack
@@ -341,22 +339,16 @@ export default function ShortfallScreen() {
                     >
                       {t('income.shortfall.stepsTitle')}
                     </Text>
-                    {['step1', 'step2', 'step3', 'step4'].map(
-                      (step, idx) => (
-                        <XStack key={step} gap="$2" items="flex-start">
-                          <Text
-                            color="$accent9"
-                            fontSize="$3"
-                            fontWeight="600"
-                          >
-                            {idx + 1}.
-                          </Text>
-                          <Text color="$color11" flex={1} fontSize="$3">
-                            {t(`income.shortfall.${step}`)}
-                          </Text>
-                        </XStack>
-                      )
-                    )}
+                    {['step1', 'step2', 'step3', 'step4'].map((step, idx) => (
+                      <XStack key={step} gap="$2" items="flex-start">
+                        <Text color="$accent9" fontSize="$3" fontWeight="600">
+                          {idx + 1}.
+                        </Text>
+                        <Text color="$color11" flex={1} fontSize="$3">
+                          {t(`income.shortfall.${step}`)}
+                        </Text>
+                      </XStack>
+                    ))}
                   </YStack>
 
                   <Pressable
@@ -485,7 +477,7 @@ export default function ShortfallScreen() {
             opacity={allConfirmed ? 1 : 0.4}
             disabled={!allConfirmed}
           >
-            <Button.Text color="$color12">
+            <Button.Text color="white">
               {t('income.shortfall.continue')}
             </Button.Text>
           </Button>

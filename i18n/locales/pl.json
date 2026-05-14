@@ -97,6 +97,23 @@
     "cta": {
       "receivedMoney": "Otrzymałem pieniądze"
     },
+    "action": {
+      "eyebrow": "Co zrobić teraz",
+      "needsFirstTitle": "Najpierw domknij potrzeby",
+      "needsFirstBody": "Brakuje jeszcze {{amount}}, zanim bezpiecznie przyspieszysz spłatę długu.",
+      "debtNextTitle": "Potrzeby domknięte",
+      "debtNextBody": "Teraz spłacamy {{debtLabel}}. Zostało {{amount}}.",
+      "doneTitle": "Masz czysty plan",
+      "doneBody": "Potrzeby są domknięte i nie masz aktywnych długów.",
+      "cta": "Dodaj przychód"
+    },
+    "progress": {
+      "needs": "Potrzeby",
+      "needsDetail": "{{covered}} z {{total}}",
+      "debt": "Dług",
+      "debtDetail": "Pozostało {{amount}}",
+      "noDebt": "Brak aktywnych długów"
+    },
     "snowball": {
       "target": "Aktualny cel",
       "remaining": "Pozostało {{amount}}",
@@ -173,7 +190,14 @@
         "l4": {
           "title": "Nie spłacasz żadnego długu",
           "subtitle": "Zerujesz wszystkie raty minimalne. To poważna decyzja.",
-          "noteLabel": "Wyjaśnij sytuację (zostanie zapisane)",
+          "reasonTitle": "Co zrobisz z ratą?",
+          "reasonSubtitle": "Wybierz jedną opcję. Zapiszemy ją przy odroczonej płatności.",
+          "reasonPostponingTitle": "Zapłacę później z kolejnego przychodu",
+          "reasonPostponingBody": "Najpierw zabezpieczam podstawowe potrzeby w tym miesiącu.",
+          "reasonAgreedDelayTitle": "Mam uzgodnione odroczenie",
+          "reasonAgreedDelayBody": "Bank lub wierzyciel wie, że płatność będzie później.",
+          "reasonOtherTitle": "Zmieniam plan na ten miesiąc",
+          "reasonOtherBody": "Świadomie pomijam ratę i wrócę do niej później.",
           "confirmHold": "Przytrzymaj, aby potwierdzić",
           "back": "Wróć i edytuj"
         }
@@ -343,8 +367,6 @@
   "settings": {
     "title": "Ustawienia",
     "editNeeds": "Edytuj wydatki miesięczne",
-    "exportData": "Eksportuj dane",
-    "exportSuccess": "Dane zostały eksportowane pomyślnie",
     "deleteData": "Usuń wszystkie dane",
     "deleteConfirm": "Czy na pewno chcesz usunąć wszystkie dane? Tej operacji nie można cofnąć.",
     "language": "Język",

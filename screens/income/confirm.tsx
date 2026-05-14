@@ -1,27 +1,28 @@
-import { useMemo, useCallback } from 'react';
-import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
+import { Check } from '@tamagui/lucide-icons-2';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Pressable } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  YStack,
-  XStack,
-  Text,
   Button,
   Paragraph,
-  Separator,
   ScrollView,
+  Separator,
+  Text,
+  XStack,
+  YStack,
 } from 'tamagui';
-import { Check } from '@tamagui/lucide-icons-2';
 
-import { AllocationStack } from '@/components/allocation-stack';
 import type { AllocationStackSegment } from '@/components/allocation-stack';
+import { AllocationStack } from '@/components/allocation-stack';
 import { AmountRow } from '@/components/amount-row';
+import { getExtraDebtPaymentEntries } from '@/lib/allocation-extra';
 import { summarizeAllocation } from '@/lib/allocation-summary';
-import { useAppStore } from '@/store';
-import { formatAmount } from '@/lib/format';
 import { computeDeferredWithReasons } from '@/lib/distribution';
+import { formatAmount } from '@/lib/format';
 import { parseJsonParam } from '@/lib/route-params';
+import { useAppStore } from '@/store';
 import type {
   Allocation,
   AppState,
@@ -107,20 +108,27 @@ export default function ConfirmScreen() {
   );
 
   const summary = summarizeAllocation(allocation);
-  const segments: AllocationStackSegment[] = summary.segments.map((segment) => ({
-    ...segment,
-    label:
-      segment.key === 'needs'
-        ? t('home.lastDistribution.needs')
-        : segment.key === 'minimums'
-          ? t('home.lastDistribution.minimums')
-          : segment.key === 'extra'
-            ? t('home.lastDistribution.extra')
-            : t('income.confirm.rows.unallocated'),
-  }));
+  const segments: AllocationStackSegment[] = summary.segments.map(
+    (segment) => ({
+      ...segment,
+      label:
+        segment.key === 'needs'
+          ? t('home.lastDistribution.needs')
+          : segment.key === 'minimums'
+            ? t('home.lastDistribution.minimums')
+            : segment.key === 'extra'
+              ? t('home.lastDistribution.extra')
+              : t('income.confirm.rows.unallocated'),
+    })
+  );
 
   const handleSave = useCallback(() => {
-    const newDeferred = computeDeferredWithReasons(allocation, stateSnapshot, reasons, note);
+    const newDeferred = computeDeferredWithReasons(
+      allocation,
+      stateSnapshot,
+      reasons,
+      note
+    );
     const income: Income = {
       id: generateId(),
       amount: incomeAmount,
@@ -131,9 +139,20 @@ export default function ConfirmScreen() {
     processIncome(income, newDeferred);
     dismissAll();
     replace('/(tabs)');
-  }, [incomeAmount, source, allocation, stateSnapshot, reasons, note, processIncome, dismissAll, replace]);
+  }, [
+    incomeAmount,
+    source,
+    allocation,
+    stateSnapshot,
+    reasons,
+    note,
+    processIncome,
+    dismissAll,
+    replace,
+  ]);
 
   const hasMinimums = Object.keys(allocation.minimumPayments).length > 0;
+  const extraDebtPayments = getExtraDebtPaymentEntries(allocation);
 
   return (
     <>
@@ -169,11 +188,7 @@ export default function ConfirmScreen() {
               p="$4"
               gap="$2"
             >
-              <Text
-                color="$color9"
-                fontSize="$1"
-                letterSpacing={1}
-              >
+              <Text color="$color9" fontSize="$1" letterSpacing={1}>
                 {t('income.confirm.incomeSection').toUpperCase()}
               </Text>
               <Text fontSize="$7" fontWeight="700">
@@ -201,12 +216,7 @@ export default function ConfirmScreen() {
               px="$4"
             >
               <YStack py="$2">
-                <Text
-                  color="$color9"
-                  fontSize="$1"
-                  letterSpacing={1}
-                  py="$2"
-                >
+                <Text color="$color9" fontSize="$1" letterSpacing={1} py="$2">
                   {t('income.confirm.allocationSection').toUpperCase()}
                 </Text>
 
@@ -287,23 +297,22 @@ export default function ConfirmScreen() {
                     }
                   )}
 
-                {allocation.extraDebtPayment && (
-                  <>
+                {extraDebtPayments.map((payment) => (
+                  <YStack key={payment.debtId}>
                     <AmountRow
                       label={t('income.confirm.rows.extraPayment', {
                         label:
-                          debtById[allocation.extraDebtPayment.debtId]
-                            ?.label ??
+                          debtById[payment.debtId]?.label ??
                           t('income.confirm.rows.extraPaymentFallback'),
                       })}
-                      amount={allocation.extraDebtPayment.amount}
+                      amount={payment.amount}
                       currency={currency}
                       accent
                       bold
                     />
                     <Separator borderColor="$color3" />
-                  </>
-                )}
+                  </YStack>
+                ))}
 
                 {allocation.unallocated > 0 && (
                   <AmountRow
@@ -326,7 +335,11 @@ export default function ConfirmScreen() {
               </YStack>
             </YStack>
 
-            <Paragraph color="$color8" fontSize="$2" style={{ textAlign: 'center' }}>
+            <Paragraph
+              color="$color8"
+              fontSize="$2"
+              style={{ textAlign: 'center' }}
+            >
               {t('income.confirm.saveNote')}
             </Paragraph>
           </YStack>
@@ -338,12 +351,10 @@ export default function ConfirmScreen() {
             bg="$accent9"
             pressStyle={{ bg: '$accent10' }}
             onPress={handleSave}
-            iconAfter={<Check size={18} color="$color12" />}
+            iconAfter={<Check size={18} color="white" />}
             accessibilityRole="button"
           >
-            <Button.Text color="$color12">
-              {t('income.confirm.save')}
-            </Button.Text>
+            <Button.Text color="white">{t('income.confirm.save')}</Button.Text>
           </Button>
         </YStack>
       </YStack>

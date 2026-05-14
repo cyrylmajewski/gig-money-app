@@ -1,6 +1,7 @@
 import { Badge } from '@/components/badge';
 import type { DebtFormValues } from '@/components/debt-form';
 import { DebtForm } from '@/components/debt-form';
+import { HeaderBackButton } from '@/components/header-back-button';
 import {
   formatAmount,
   formatAmountForInput,
@@ -8,8 +9,8 @@ import {
   sanitiseDecimal,
 } from '@/lib/format';
 import { useAppStore } from '@/store';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { X } from '@tamagui/lucide-icons-2';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, Pressable, ScrollView, TextInput } from 'react-native';
@@ -28,7 +29,10 @@ export default function DebtDetailScreen() {
   const { t } = useTranslation();
   const { back } = useRouter();
   const theme = useTheme();
-  const { id, onboarding } = useLocalSearchParams<{ id: string; onboarding?: string }>();
+  const { id, onboarding } = useLocalSearchParams<{
+    id: string;
+    onboarding?: string;
+  }>();
 
   const debts = useAppStore((s) => s.debts);
   const deferredPayments = useAppStore((s) => s.deferredPayments);
@@ -127,16 +131,7 @@ export default function DebtDetailScreen() {
         options={{
           title: t('debts.edit.title'),
           headerShadowVisible: false,
-          headerLeft: () => (
-            <Pressable
-              onPress={back}
-              accessibilityRole="button"
-              accessibilityLabel={t('common.back')}
-              hitSlop={8}
-            >
-              <Text color="$color11">{t('common.back')}</Text>
-            </Pressable>
-          ),
+          headerLeft: () => <HeaderBackButton onPress={back} />,
         }}
       />
 
@@ -181,7 +176,12 @@ export default function DebtDetailScreen() {
         >
           {pendingOverdue.length > 0 && (
             <YStack gap="$2" mb="$5">
-              <Text color="$color11" fontSize="$2" textTransform="uppercase" letterSpacing={0.6}>
+              <Text
+                color="$color11"
+                fontSize="$2"
+                textTransform="uppercase"
+                letterSpacing={0.6}
+              >
                 {t('debts.form.pendingOverdue')}
               </Text>
               {pendingOverdue.map((p) => (
@@ -270,9 +270,7 @@ export default function DebtDetailScreen() {
                       style={inputStyle}
                       keyboardType="decimal-pad"
                       value={overdueAmount}
-                      onChangeText={(v) =>
-                        setOverdueAmount(sanitiseDecimal(v))
-                      }
+                      onChangeText={(v) => setOverdueAmount(sanitiseDecimal(v))}
                       accessibilityLabel={t('debts.form.missedPaymentTitle')}
                     />
                     <Text color="$color12" fontSize="$3">

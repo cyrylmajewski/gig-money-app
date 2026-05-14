@@ -1,11 +1,11 @@
 import type { DebtFormValues } from '@/components/debt-form';
 import { DebtForm } from '@/components/debt-form';
+import { HeaderBackButton } from '@/components/header-back-button';
 import { parseAmount } from '@/lib/format';
 import { useAppStore } from '@/store';
 import { Stack, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Pressable, ScrollView } from 'react-native';
-import { Text } from 'tamagui';
+import { ScrollView } from 'react-native';
 
 export default function NewDebtScreen() {
   const { t } = useTranslation();
@@ -54,11 +54,7 @@ export default function NewDebtScreen() {
         options={{
           title: t('debts.new.title'),
           headerShadowVisible: false,
-          headerLeft: () => (
-            <Pressable onPress={back} hitSlop={8}>
-              <Text color="$color11">{t('common.back')}</Text>
-            </Pressable>
-          ),
+          headerLeft: () => <HeaderBackButton onPress={back} />,
         }}
       />
 

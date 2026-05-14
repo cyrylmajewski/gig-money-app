@@ -3,22 +3,19 @@ import { Stack } from 'expo-router';
 import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SectionList, type SectionListRenderItem } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import {
-  H2,
-  Paragraph,
-  Separator,
-  Text,
-  XStack,
-  YStack,
-} from 'tamagui';
+  SafeAreaView,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
+import { H2, Paragraph, Separator, Text, XStack, YStack } from 'tamagui';
 
-import { AllocationStack } from '@/components/allocation-stack';
 import type { AllocationStackSegment } from '@/components/allocation-stack';
+import { AllocationStack } from '@/components/allocation-stack';
+import { TopSafeAreaScrim } from '@/components/top-safe-area-scrim';
 import { summarizeAllocation } from '@/lib/allocation-summary';
 import { formatAmount } from '@/lib/format';
-import { groupIncomesByDay } from '@/lib/income-history';
 import type { IncomeDayGroup } from '@/lib/income-history';
+import { groupIncomesByDay } from '@/lib/income-history';
 import { useAppStore } from '@/store';
 import type { Income } from '@/types/models';
 
@@ -35,17 +32,19 @@ const IncomeRow = (props: IncomeRowProps) => {
   const { t } = useTranslation();
   const currency = t('common.currency');
   const summary = summarizeAllocation(income.allocation);
-  const segments: AllocationStackSegment[] = summary.segments.map((segment) => ({
-    ...segment,
-    label:
-      segment.key === 'needs'
-        ? t('home.lastDistribution.needs')
-        : segment.key === 'minimums'
-          ? t('home.lastDistribution.minimums')
-          : segment.key === 'extra'
-            ? t('home.lastDistribution.extra')
-            : t('home.lastDistribution.unallocated'),
-  }));
+  const segments: AllocationStackSegment[] = summary.segments.map(
+    (segment) => ({
+      ...segment,
+      label:
+        segment.key === 'needs'
+          ? t('home.lastDistribution.needs')
+          : segment.key === 'minimums'
+            ? t('home.lastDistribution.minimums')
+            : segment.key === 'extra'
+              ? t('home.lastDistribution.extra')
+              : t('home.lastDistribution.unallocated'),
+    })
+  );
 
   return (
     <YStack py="$2.5" gap="$2">
@@ -131,6 +130,7 @@ const IncomeDayItem = (props: IncomeDayItemProps) => {
 
 export default function HistoryScreen() {
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
   const incomes = useAppStore((s) => s.incomes);
   const sections: HistorySection[] = useMemo(
     () =>
@@ -138,16 +138,13 @@ export default function HistoryScreen() {
         ...group,
         data: group.incomes,
       })),
-    [incomes],
+    [incomes]
   );
   const renderIncomeItem = useCallback<
     SectionListRenderItem<Income, HistorySection>
   >(
     ({ item, index, section }) => (
-      <IncomeDayItem
-        income={item}
-        isLast={index === section.data.length - 1}
-      />
+      <IncomeDayItem income={item} isLast={index === section.data.length - 1} />
     ),
     []
   );
@@ -162,7 +159,7 @@ export default function HistoryScreen() {
           contentContainerStyle={{
             paddingHorizontal: 16,
             paddingTop: 16,
-            paddingBottom: 100,
+            paddingBottom: 100 + insets.bottom,
           }}
           showsVerticalScrollIndicator={false}
           stickySectionHeadersEnabled={false}
@@ -185,6 +182,7 @@ export default function HistoryScreen() {
           contentInsetAdjustmentBehavior="automatic"
         />
       </SafeAreaView>
+      <TopSafeAreaScrim topInset={insets.top} />
     </>
   );
 }

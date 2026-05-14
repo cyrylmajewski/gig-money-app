@@ -1,8 +1,8 @@
-import { AlertTriangle, ArrowLeft } from '@tamagui/lucide-icons-2';
+import { AlertTriangle, ArrowLeft, Check } from '@tamagui/lucide-icons-2';
 import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView } from 'react-native';
+import { Pressable, ScrollView } from 'react-native';
 import Animated, {
   Easing,
   cancelAnimation,
@@ -18,7 +18,6 @@ import {
   Paragraph,
   Separator,
   Text,
-  TextArea,
   Theme,
   XStack,
   YStack,
@@ -28,9 +27,34 @@ import { getCreditorById } from '@/lib/creditors';
 import { formatAmount } from '@/lib/format';
 import { parseJsonParam } from '@/lib/route-params';
 import { useAppStore } from '@/store';
-import type { DeferredPaymentReasons } from '@/types/models';
+import type {
+  DeferredPaymentReason,
+  DeferredPaymentReasons,
+} from '@/types/models';
 
 const HOLD_DURATION = 3000;
+
+const L4_REASONS: Array<{
+  value: DeferredPaymentReason;
+  titleKey: string;
+  bodyKey: string;
+}> = [
+  {
+    value: 'postponing',
+    titleKey: 'income.allocate.guardrail.l4.reasonPostponingTitle',
+    bodyKey: 'income.allocate.guardrail.l4.reasonPostponingBody',
+  },
+  {
+    value: 'agreed_delay',
+    titleKey: 'income.allocate.guardrail.l4.reasonAgreedDelayTitle',
+    bodyKey: 'income.allocate.guardrail.l4.reasonAgreedDelayBody',
+  },
+  {
+    value: 'other',
+    titleKey: 'income.allocate.guardrail.l4.reasonOtherTitle',
+    bodyKey: 'income.allocate.guardrail.l4.reasonOtherBody',
+  },
+];
 
 export default function NoContributionScreen() {
   const { t } = useTranslation();
@@ -50,19 +74,17 @@ export default function NoContributionScreen() {
     (d) => d.closedAt === null && d.remainingAmount > 0,
   );
 
-  const [note, setNote] = useState('');
+  const [selectedReason, setSelectedReason] =
+    useState<DeferredPaymentReason>('postponing');
   const completedRef = useRef(false);
   const progress = useSharedValue(0);
-
-  const noteValid = note.trim().length >= 10;
-  const canConfirm = noteValid;
 
   function handleConfirm() {
     if (completedRef.current) return;
     completedRef.current = true;
     const reasons = parseJsonParam<DeferredPaymentReasons>(params.reasons, {});
     for (const debt of activeDebts) {
-      reasons[`debt:${debt.id}`] = 'other';
+      reasons[`debt:${debt.id}`] = selectedReason;
     }
     push({
       pathname: '/income/confirm',
@@ -72,13 +94,12 @@ export default function NoContributionScreen() {
         allocation: params.allocation,
         reasons: JSON.stringify(reasons),
         wasAdjustedByUser: params.wasAdjustedByUser ?? 'true',
-        note,
       },
     });
   }
 
   function startHold() {
-    if (!canConfirm || completedRef.current) return;
+    if (completedRef.current) return;
     progress.value = 0;
     progress.value = withTiming(
       1,
@@ -126,14 +147,9 @@ export default function NoContributionScreen() {
       />
 
       <SafeAreaView style={{ flex: 1 }} edges={['bottom']}>
-        <KeyboardAvoidingView
-          style={{ flex: 1 }}
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          keyboardVerticalOffset={90}
-        >
-          <YStack flex={1}>
-            <ScrollView keyboardShouldPersistTaps="handled">
-              <YStack px="$4" pt="$4" pb="$6" gap="$4">
+        <YStack flex={1}>
+          <ScrollView>
+            <YStack px="$4" pt="$4" pb="$6" gap="$4">
                 <Theme name="error">
                   <YStack
                     bg="$color3"
@@ -195,32 +211,61 @@ export default function NoContributionScreen() {
                   </YStack>
                 )}
 
-                <YStack gap="$2">
-                  <Text color="$color11" fontWeight="600" fontSize="$3">
-                    {t('income.allocate.guardrail.l4.noteLabel')}
-                  </Text>
-                  <TextArea
-                    value={note}
-                    onChangeText={setNote}
-                    placeholder={t('income.allocate.guardrail.l4.noteLabel')}
-                    height={100}
-                    borderColor={noteValid ? '$color6' : '$color5'}
-                    bg="$color2"
-                    color="$color11"
-                    placeholderTextColor="$color8"
-                    fontSize="$3"
-                    p="$3"
-                    rounded="$4"
-                  />
-                  {note.trim().length > 0 && !noteValid && (
-                    <Theme name="error">
-                      <Text color="$color9" fontSize="$2">
-                        {t('income.allocate.guardrail.l4.noteMinLength', {
-                          defaultValue: 'Minimum 10 znaków',
-                        })}
-                      </Text>
-                    </Theme>
-                  )}
+                <YStack gap="$3">
+                  <YStack gap="$1">
+                    <Text color="$color11" fontWeight="600" fontSize="$3">
+                      {t('income.allocate.guardrail.l4.reasonTitle')}
+                    </Text>
+                    <Text color="$color9" fontSize="$2" lineHeight={18}>
+                      {t('income.allocate.guardrail.l4.reasonSubtitle')}
+                    </Text>
+                  </YStack>
+
+                  {L4_REASONS.map((reason) => {
+                    const selected = selectedReason === reason.value;
+                    return (
+                      <Pressable
+                        key={reason.value}
+                        onPress={() => setSelectedReason(reason.value)}
+                      >
+                        <XStack
+                          bg={selected ? '$accent3' : '$color2'}
+                          borderWidth={1}
+                          borderColor={selected ? '$accent7' : '$color4'}
+                          rounded="$5"
+                          p="$3"
+                          gap="$3"
+                          items="flex-start"
+                        >
+                          <YStack
+                            width={22}
+                            height={22}
+                            rounded="$10"
+                            borderWidth={2}
+                            borderColor={selected ? '$accent9' : '$color6'}
+                            bg={selected ? '$accent9' : 'transparent'}
+                            items="center"
+                            justify="center"
+                            mt="$0.5"
+                          >
+                            {selected && <Check size={13} color="white" />}
+                          </YStack>
+                          <YStack flex={1} gap="$1">
+                            <Text
+                              color={selected ? '$accent11' : '$color11'}
+                              fontWeight="600"
+                              fontSize="$3"
+                            >
+                              {t(reason.titleKey)}
+                            </Text>
+                            <Text color="$color9" fontSize="$2" lineHeight={18}>
+                              {t(reason.bodyKey)}
+                            </Text>
+                          </YStack>
+                        </XStack>
+                      </Pressable>
+                    );
+                  })}
                 </YStack>
               </YStack>
             </ScrollView>
@@ -229,36 +274,32 @@ export default function NoContributionScreen() {
               <Pressable
                 onPressIn={startHold}
                 onPressOut={cancelHold}
-                disabled={!canConfirm}
               >
                 <Theme name="error">
                   <YStack
-                    bg={canConfirm ? '$color5' : '$color4'}
+                    bg="$color5"
                     rounded="$4"
                     height={52}
                     items="center"
                     justify="center"
-                    opacity={canConfirm ? 1 : 0.5}
                     overflow="hidden"
                   >
-                    {canConfirm && (
-                      <Animated.View
-                        style={[
-                          {
-                            position: 'absolute',
-                            left: 0,
-                            top: 0,
-                            bottom: 0,
-                            right: 0,
-                            backgroundColor: 'rgba(220, 38, 38, 1)',
-                            transformOrigin: 'left',
-                          },
-                          fillStyle,
-                        ]}
-                      />
-                    )}
+                    <Animated.View
+                      style={[
+                        {
+                          position: 'absolute',
+                          left: 0,
+                          top: 0,
+                          bottom: 0,
+                          right: 0,
+                          backgroundColor: 'rgba(220, 38, 38, 1)',
+                          transformOrigin: 'left',
+                        },
+                        fillStyle,
+                      ]}
+                    />
                     <Text
-                      color={canConfirm ? 'white' : '$color9'}
+                      color="white"
                       fontWeight="600"
                       fontSize="$4"
                       z={1}
@@ -283,7 +324,6 @@ export default function NoContributionScreen() {
               </Button>
             </YStack>
           </YStack>
-        </KeyboardAvoidingView>
       </SafeAreaView>
     </>
   );

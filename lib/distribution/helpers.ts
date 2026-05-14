@@ -126,6 +126,39 @@ export function getSnowballTarget(
   return pickSmallest(active);
 }
 
+export function getSnowballQueue(
+  debts: Debt[],
+  settings: {
+    snowballTargetOverride?: string | null;
+    deprioritizeCreditCards?: boolean;
+  } = {},
+): Debt[] {
+  const active = debts.filter((d) => d.closedAt === null && d.remainingAmount > 0);
+  const sortByBalance = (pool: Debt[]) =>
+    sortCopy(pool, (a, b) => {
+      if (a.remainingAmount !== b.remainingAmount) {
+        return a.remainingAmount - b.remainingAmount;
+      }
+      return a.label.localeCompare(b.label);
+    });
+
+  const manualTarget = settings.snowballTargetOverride
+    ? active.find((debt) => debt.id === settings.snowballTargetOverride)
+    : null;
+  const rest = manualTarget
+    ? active.filter((debt) => debt.id !== manualTarget.id)
+    : active;
+
+  const autoQueue = settings.deprioritizeCreditCards
+    ? [
+        ...sortByBalance(rest.filter((debt) => debt.type !== 'credit_card')),
+        ...sortByBalance(rest.filter((debt) => debt.type === 'credit_card')),
+      ]
+    : sortByBalance(rest);
+
+  return manualTarget ? [manualTarget, ...autoQueue] : autoQueue;
+}
+
 export type SnowballTargetSource =
   | 'manual'              // user-picked override
   | 'auto-smallest'       // flag off — smallest active debt

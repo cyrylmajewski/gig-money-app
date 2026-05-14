@@ -1,4 +1,5 @@
 import type { Allocation } from '@/types/models';
+import { getExtraDebtPaymentTotal } from './allocation-extra';
 
 export type AllocationSegmentKey = 'needs' | 'minimums' | 'extra' | 'unallocated';
 
@@ -21,7 +22,7 @@ export function summarizeAllocation(allocation: Allocation): AllocationSummary {
     (sum, value) => sum + value,
     0,
   );
-  const extra = allocation.extraDebtPayment?.amount ?? 0;
+  const extra = getExtraDebtPaymentTotal(allocation);
   const unallocated = allocation.unallocated;
 
   const rawSegments: AllocationSummarySegment[] = [

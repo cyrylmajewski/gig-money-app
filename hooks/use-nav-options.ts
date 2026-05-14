@@ -5,6 +5,7 @@ export function useNavOptions() {
   return {
     headerStyle: { backgroundColor: theme.background.val },
     headerTintColor: theme.color.val,
+    headerTitleAlign: 'center',
     headerShadowVisible: false,
     contentStyle: { backgroundColor: theme.background.val },
   } as const;

@@ -42,6 +42,9 @@ app-example
 tamagui-prompt.md
 .tamagui/
 
+# local planning notes
+HOME_UX_PLAN_CONTEXT.md
+
 # generated native folders
 /ios
 /android

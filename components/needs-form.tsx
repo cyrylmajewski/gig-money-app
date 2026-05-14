@@ -205,7 +205,7 @@ export function NeedsForm({
           form.handleSubmit();
         }}
       >
-        <Button.Text color="$color12">{submitLabel}</Button.Text>
+        <Button.Text color="white">{submitLabel}</Button.Text>
       </Button>
     </YStack>
   );

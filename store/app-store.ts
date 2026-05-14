@@ -9,7 +9,66 @@ import type {
   MonthlyNeeds,
   Settings,
 } from '@/types/models';
+import { getExtraDebtPaymentAmount } from '@/lib/allocation-extra';
 import { getMonthKey, roundPLN } from '@/lib/distribution/helpers';
+
+const isSameMonth = (isoDate: string, monthKey: string) =>
+  getMonthKey(new Date(isoDate)) === monthKey;
+
+function isCovered(amount: number, required: number) {
+  return required > 0 && roundPLN(amount) >= roundPLN(required);
+}
+
+function resolveCoveredDeferredPayments(
+  payments: DeferredPayment[],
+  state: Pick<AppState, 'monthlyNeeds'>,
+  monthlyCoverage: AppState['monthlyCoverage'],
+  debts: Debt[],
+  monthKey: string,
+): DeferredPayment[] {
+  const coverage = monthlyCoverage.find((c) => c.month === monthKey);
+  if (!coverage) return payments;
+
+  const debtsById = new Map(debts.map((debt) => [debt.id, debt]));
+  let changed = false;
+
+  const resolved = payments.map((payment) => {
+    if (payment.resolved || !isSameMonth(payment.deferredAt, monthKey)) {
+      return payment;
+    }
+
+    if (payment.kind === 'need' && payment.needCategory) {
+      const required = state.monthlyNeeds[payment.needCategory];
+      const covered = coverage.needs[payment.needCategory] ?? 0;
+      if (isCovered(covered, required)) {
+        changed = true;
+        return { ...payment, resolved: true };
+      }
+      return payment;
+    }
+
+    if (payment.kind === 'minimum_payment' && payment.debtId) {
+      const debt = debtsById.get(payment.debtId);
+      if (!debt) return payment;
+
+      if (debt.closedAt !== null || debt.remainingAmount <= 0) {
+        changed = true;
+        return { ...payment, resolved: true };
+      }
+
+      const covered = coverage.minimumPayments[payment.debtId] ?? 0;
+      if (isCovered(covered, debt.minimumPayment)) {
+        changed = true;
+        return { ...payment, resolved: true };
+      }
+      return payment;
+    }
+
+    return payment;
+  });
+
+  return changed ? resolved : payments;
+}
 
 interface AppActions {
   setOnboardingCompleted: (completed: boolean) => void;
@@ -21,6 +80,7 @@ interface AppActions {
   processIncome: (income: Income, newDeferredPayments?: DeferredPayment[]) => void;
   addDeferredPayment: (payment: DeferredPayment) => void;
   resolveDeferredPayment: (id: string) => void;
+  reconcileDeferredPayments: () => void;
   recordShortfallContact: (contactId: string) => void;
   updateSettings: (settings: Partial<Settings>) => void;
   resetState: () => void;
@@ -115,9 +175,7 @@ export const useAppStore = create<AppStore>()(
             if (allocation.minimumPayments[d.id]) {
               reduction += allocation.minimumPayments[d.id];
             }
-            if (allocation.extraDebtPayment?.debtId === d.id) {
-              reduction += allocation.extraDebtPayment.amount;
-            }
+            reduction += getExtraDebtPaymentAmount(allocation, d.id);
             if (reduction <= 0) return d;
 
             const newRemaining = roundPLN(Math.max(0, d.remainingAmount - reduction));
@@ -128,9 +186,16 @@ export const useAppStore = create<AppStore>()(
             };
           });
 
-          const deferredPayments = newDeferredPayments
+          const unresolvedAndNew = newDeferredPayments
             ? [...state.deferredPayments, ...newDeferredPayments]
             : state.deferredPayments;
+          const deferredPayments = resolveCoveredDeferredPayments(
+            unresolvedAndNew,
+            state,
+            monthlyCoverage,
+            debts,
+            monthKey,
+          );
 
           return { incomes, monthlyCoverage, debts, deferredPayments };
         }),
@@ -146,6 +211,20 @@ export const useAppStore = create<AppStore>()(
             p.id === id ? { ...p, resolved: true } : p
           ),
         })),
+
+      reconcileDeferredPayments: () =>
+        set((state) => {
+          const monthKey = getMonthKey(new Date());
+          const deferredPayments = resolveCoveredDeferredPayments(
+            state.deferredPayments,
+            state,
+            state.monthlyCoverage,
+            state.debts,
+            monthKey,
+          );
+          if (deferredPayments === state.deferredPayments) return state;
+          return { deferredPayments };
+        }),
 
       recordShortfallContact: (contactId) =>
         set((state) => {

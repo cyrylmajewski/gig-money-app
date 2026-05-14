@@ -97,6 +97,23 @@
     "cta": {
       "receivedMoney": "I received money"
     },
+    "action": {
+      "eyebrow": "What to do now",
+      "needsFirstTitle": "Cover your needs first",
+      "needsFirstBody": "You still need {{amount}} before it is safe to speed up debt payoff.",
+      "debtNextTitle": "Needs are covered",
+      "debtNextBody": "Now we are paying down {{debtLabel}}. {{amount}} left.",
+      "doneTitle": "You have a clean plan",
+      "doneBody": "Your needs are covered and you have no active debts.",
+      "cta": "Add income"
+    },
+    "progress": {
+      "needs": "Needs",
+      "needsDetail": "{{covered}} of {{total}}",
+      "debt": "Debt",
+      "debtDetail": "{{amount}} left",
+      "noDebt": "No active debts"
+    },
     "snowball": {
       "target": "Current target",
       "remaining": "{{amount}} remaining",
@@ -173,7 +190,14 @@
         "l4": {
           "title": "You're not paying any debt",
           "subtitle": "Zeroing all minimum payments. This is a serious decision.",
-          "noteLabel": "Explain the situation (will be saved)",
+          "reasonTitle": "What will you do with the payment?",
+          "reasonSubtitle": "Choose one option. It will be saved with the deferred payment.",
+          "reasonPostponingTitle": "I'll pay later from the next income",
+          "reasonPostponingBody": "I am protecting basic needs first this month.",
+          "reasonAgreedDelayTitle": "I have agreed on a delay",
+          "reasonAgreedDelayBody": "The bank or creditor knows the payment will be late.",
+          "reasonOtherTitle": "I am changing this month's plan",
+          "reasonOtherBody": "I am consciously skipping the payment and will return to it later.",
           "confirmHold": "Hold to confirm",
           "back": "Back to edit"
         }
@@ -341,8 +365,6 @@
   "settings": {
     "title": "Settings",
     "editNeeds": "Edit monthly expenses",
-    "exportData": "Export data",
-    "exportSuccess": "Data exported successfully",
     "deleteData": "Delete all data",
     "deleteConfirm": "Are you sure you want to delete all data? This action cannot be undone.",
     "language": "Language",

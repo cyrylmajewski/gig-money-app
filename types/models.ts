@@ -78,6 +78,8 @@ export interface Allocation {
     debtId: string;
     amount: number;
   } | null;
+  /** Additional snowball payments. New records use this map; extraDebtPayment is kept for older saved data. */
+  extraDebtPayments?: Record<string, number>; // debtId -> amount
   unallocated: number;
   wasAdjustedByUser: boolean;
 }
@@ -100,7 +102,7 @@ export interface RealityCheckResponse {
 
 export interface Settings {
   currency: 'PLN';
-  locale: 'pl' | 'en' | 'ru';
+  locale: 'pl' | 'en';
   strictMode: boolean;
   deprioritizeCreditCards: boolean;
   snowballTargetOverride: string | null;  // debtId, or null = auto-pick

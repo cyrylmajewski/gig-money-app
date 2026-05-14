@@ -1,3 +1,4 @@
+import { useForm } from '@tanstack/react-form';
 import { Stack as ExpoStack, useRouter } from 'expo-router';
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -9,8 +10,15 @@ import {
   TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, Input, Paragraph, Text, XStack, YStack, useTheme } from 'tamagui';
-import { useForm } from '@tanstack/react-form';
+import {
+  Button,
+  Input,
+  Paragraph,
+  Text,
+  XStack,
+  YStack,
+  useTheme,
+} from 'tamagui';
 
 export default function NewIncomeScreen() {
   const { t } = useTranslation();
@@ -125,7 +133,9 @@ export default function NewIncomeScreen() {
                     >
                       <TextInput
                         ref={inputRef}
+                        underlineColorAndroid="transparent"
                         style={{
+                          backgroundColor: 'transparent',
                           color: theme.color12.val,
                           fontSize: 56,
                           fontWeight: '700',
@@ -208,9 +218,7 @@ export default function NewIncomeScreen() {
                   opacity={!amount ? 0.5 : 1}
                   accessibilityRole="button"
                 >
-                  <Button.Text color="$color12">
-                    {t('income.new.cta')}
-                  </Button.Text>
+                  <Button.Text color="white">{t('income.new.cta')}</Button.Text>
                 </Button>
               )}
             </form.Subscribe>

@@ -1,57 +1,50 @@
 import {
   ChevronRight,
   CreditCard,
-  Download,
   Globe,
   Receipt,
   Trash2,
 } from '@tamagui/lucide-icons-2';
 import Constants from 'expo-constants';
-import { File, Paths } from 'expo-file-system';
 import { GlassView } from 'expo-glass-effect';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Alert, Pressable, ScrollView, Share, StyleSheet, Switch } from 'react-native';
+import {
+  Alert,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Switch,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { H2, Paragraph, Separator, Text, XStack, YStack } from 'tamagui';
 
+import { TopSafeAreaScrim } from '@/components/top-safe-area-scrim';
 import i18n from '@/i18n';
 import { useAppStore } from '@/store';
 
 const LOCALES = [
   { code: 'pl', label: 'PL' },
   { code: 'en', label: 'EN' },
-  { code: 'ru', label: 'RU' },
 ] as const;
 
-type LocaleCode = 'pl' | 'en' | 'ru';
+type LocaleCode = (typeof LOCALES)[number]['code'];
 
 export default function SettingsScreen() {
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
   const { push, replace } = useRouter();
   const resetState = useAppStore((s) => s.resetState);
   const updateSettings = useAppStore((s) => s.updateSettings);
   const currentLocale = useAppStore((s) => s.settings.locale);
   const deprioritizeCreditCards = useAppStore(
-    (s) => s.settings.deprioritizeCreditCards,
+    (s) => s.settings.deprioritizeCreditCards
   );
 
   const appVersion = Constants.expoConfig?.version ?? '—';
 
   function handleEditNeeds() {
     push('/settings/needs');
-  }
-
-  async function handleExportData() {
-    const state = useAppStore.getState();
-    const json = JSON.stringify(state, null, 2);
-    const file = new File(Paths.cache, 'gigmoney-export.json');
-
-    try {
-      file.write(json);
-      await Share.share({ url: file.uri, title: t('settings.exportData') });
-    } catch {
-      Alert.alert(t('settings.exportSuccess'));
-    }
   }
 
   function handleLanguageChange(locale: LocaleCode) {
@@ -78,19 +71,17 @@ export default function SettingsScreen() {
   }
 
   return (
-    <ScrollView
-      style={{ flex: 1 }}
-      contentContainerStyle={{ paddingBottom: 24 }}
-      showsVerticalScrollIndicator={false}
-      contentInsetAdjustmentBehavior="automatic"
-    >
-        <YStack px="$4" pt="$4" gap="$5">
+    <>
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{ paddingBottom: 120 + insets.bottom }}
+        showsVerticalScrollIndicator={false}
+        contentInsetAdjustmentBehavior="automatic"
+      >
+        <YStack px="$4" pt={insets.top + 16} gap="$5">
           <H2>{t('settings.title')}</H2>
 
-          <GlassView
-            glassEffectStyle="regular"
-            style={styles.card}
-          >
+          <GlassView glassEffectStyle="regular" style={styles.card}>
             <YStack bg="$color2" rounded="$6" overflow="hidden">
               <Pressable onPress={handleEditNeeds} accessibilityRole="button">
                 <XStack px="$4" py="$3.5" items="center" gap="$3">
@@ -99,21 +90,18 @@ export default function SettingsScreen() {
                   <ChevronRight size={16} color="$color8" />
                 </XStack>
               </Pressable>
-
-              <Separator borderColor="$color4" />
-
-              <Pressable onPress={handleExportData} accessibilityRole="button">
-                <XStack px="$4" py="$3.5" items="center" gap="$3">
-                  <Download size={18} color="$accent9" />
-                  <Text flex={1}>{t('settings.exportData')}</Text>
-                  <ChevronRight size={16} color="$color8" />
-                </XStack>
-              </Pressable>
             </YStack>
           </GlassView>
 
           <GlassView glassEffectStyle="regular" style={styles.card}>
-            <YStack bg="$color2" rounded="$6" overflow="hidden" px="$4" py="$3.5" gap="$3">
+            <YStack
+              bg="$color2"
+              rounded="$6"
+              overflow="hidden"
+              px="$4"
+              py="$3.5"
+              gap="$3"
+            >
               <XStack items="center" gap="$3">
                 <CreditCard size={18} color="$accent9" />
                 <Text flex={1} fontWeight="600">
@@ -198,7 +186,9 @@ export default function SettingsScreen() {
             {t('settings.version')} {appVersion}
           </Text>
         </YStack>
-    </ScrollView>
+      </ScrollView>
+      <TopSafeAreaScrim topInset={insets.top} />
+    </>
   );
 }
 

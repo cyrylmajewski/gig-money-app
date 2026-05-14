@@ -1,5 +1,6 @@
 import { computeNewDeferredPayments, distributeIncome } from '@/lib/distribution';
 import type { AppState, Debt, DeferredPayment, MonthlyCoverage } from '@/types/models';
+import { getExtraDebtPaymentTotal } from '@/lib/allocation-extra';
 import { roundPLN } from '@/lib/distribution/helpers';
 
 /**
@@ -56,11 +57,11 @@ function makeDebt(overrides: Partial<Debt> = {}): Debt {
  * Sum all allocations from a distribution result.
  */
 function totalAllocated(alloc: ReturnType<typeof distributeIncome>): number {
-  const { needs, minimumPayments, extraDebtPayment, deferredPayments } = alloc;
+  const { needs, minimumPayments, deferredPayments } = alloc;
   let total = deferredPayments;
   total += needs.housing + needs.food + needs.transport + needs.other;
   total += Object.values(minimumPayments).reduce((s, v) => s + v, 0);
-  if (extraDebtPayment) total += extraDebtPayment.amount;
+  total += getExtraDebtPaymentTotal(alloc);
   return roundPLN(total);
 }
 
@@ -91,8 +92,8 @@ describe('distributeIncome', () => {
     expect(result.extraDebtPayment).toBeNull();
   });
 
-  // ─── Test 8: Debt minimums proportional consistency ─────────────────
-  it('should allocate debt minimums proportionally when income is insufficient', () => {
+  // ─── Test 8: Debt minimums snowball focus ────────────────────────────
+  it('should allocate insufficient debt minimums to the snowball target first', () => {
     const state = makeState({
       debts: [
         makeDebt({ id: 'debt_A', label: 'A', minimumPayment: 200, remainingAmount: 1000 }),
@@ -102,12 +103,11 @@ describe('distributeIncome', () => {
 
     const result = distributeIncome(100, state, testDate);
 
-    // needs are all 0, so 100 goes to Step 3 (debt minimums)
-    // total minimums = 500, available = 100
-    // A: 100 * 200/500 = 40, B: 100 - 40 = 60
-    expect(result.minimumPayments['debt_A']).toBe(40);
-    expect(result.minimumPayments['debt_B']).toBe(60);
-    expect(roundPLN(result.minimumPayments['debt_A'] + result.minimumPayments['debt_B'])).toBe(100);
+    // needs are all 0, so 100 goes to Step 3. Debt A is the snowball target
+    // because it has the smallest balance.
+    expect(result.minimumPayments['debt_A']).toBe(100);
+    expect(result.minimumPayments['debt_B']).toBeUndefined();
+    expect(result.unallocated).toBe(0);
   });
 
   // ─── Sufficient income for all tiers + snowball ─────────────────────
@@ -129,16 +129,14 @@ describe('distributeIncome', () => {
     expect(result.needs.transport).toBe(500);
     expect(result.needs.other).toBe(300);
 
-    // Snowball: smallest remaining is d1 (500), already paid 100 minimum
-    // max extra = 500 - 100 = 400
+    // Snowball: d1 is closed first, then the rest cascades to d2.
     // remaining after tiers = 10000 - 2000 - 1000 - 100 - 300 - 500 - 300 = 5800
-    // snowball gets min(5800, 400) = 400
     expect(result.extraDebtPayment).not.toBeNull();
     expect(result.extraDebtPayment!.debtId).toBe('d1');
     expect(result.extraDebtPayment!.amount).toBe(400);
+    expect(result.extraDebtPayments).toEqual({ d1: 400, d2: 4700 });
 
-    // unallocated = 5800 - 400 = 5400
-    expect(result.unallocated).toBe(5400);
+    expect(result.unallocated).toBe(700);
   });
 
   // ─── Deficit at Tier 1 — both categories get non-zero ──────────────
@@ -164,8 +162,8 @@ describe('distributeIncome', () => {
     expect(result.unallocated).toBe(0);
   });
 
-  // ─── Partial Tier 1 + partial Tier 2 ───────────────────────────────
-  it('should progress through tiers and partially cover Tier 2 when income bridges both', () => {
+  // ─── Partial needs coverage ────────────────────────────────────────
+  it('should finish higher-priority needs before allocating to debt minimums', () => {
     const state = makeState({
       monthlyNeeds: { housing: 500, food: 300, transport: 400, other: 200 },
       debts: [
@@ -173,25 +171,50 @@ describe('distributeIncome', () => {
       ],
     });
 
-    // Tier 1: housing(500) + food(300) = 800
-    // Tier 2 (Step 3): min payment = 100
-    // Tier 3 (Step 4): transport(400) + other(200) = 600
-    // Total needed before snowball: 800 + 100 + 600 = 1500
-    // Income: 1100 => covers Tier 1 (800) + Tier 2 (100) + partial Tier 3 (200)
+    // Needs before minimums:
+    // housing(500) + food(300) = 800, remaining income = 300.
+    // transport(400) + other(200) are attempted next, so no debt minimum is paid yet.
     const result = distributeIncome(1100, state, testDate);
 
     expect(result.needs.housing).toBe(500);
     expect(result.needs.food).toBe(300);
-    expect(result.minimumPayments['d1']).toBe(100);
+    expect(result.minimumPayments['d1']).toBeUndefined();
 
-    // Tier 3: transport floor=0.3*400=120, other floor=0
-    // remaining = 1100 - 800 - 100 = 200
-    // sumFloors = 120 + 0 = 120, 200 >= 120
-    // pass 1: transport=120, other=0, rem=80
-    // waterfall: transport(pri=1) needs 280 more, gets 80 => transport=200
-    // other(pri=2) gets nothing
-    expect(result.needs.transport).toBe(200);
+    // transport floor=0.3*400=120, other floor=0
+    // pass 1: transport=120, other=0, rem=180
+    // waterfall: transport(pri=1) needs 280 more, gets 180 => transport=300
+    expect(result.needs.transport).toBe(300);
     expect(result.needs.other).toBe(0);
+    expect(result.unallocated).toBe(0);
+  });
+
+  it('should allocate an exact remaining needs amount only to needs', () => {
+    const coverage: MonthlyCoverage = {
+      month: '2024-06',
+      needs: { housing: 2100, food: 900, transport: 0, other: 0 },
+      minimumPayments: {},
+    };
+    const state = makeState({
+      monthlyNeeds: { housing: 3500, food: 1000, transport: 400, other: 230 },
+      monthlyCoverage: [coverage],
+      debts: [
+        makeDebt({
+          id: 'pekao',
+          label: 'Pekao',
+          remainingAmount: 62000,
+          minimumPayment: 1220,
+        }),
+      ],
+    });
+
+    const result = distributeIncome(2130, state, testDate);
+
+    expect(result.needs.housing).toBe(1400);
+    expect(result.needs.food).toBe(100);
+    expect(result.needs.transport).toBe(400);
+    expect(result.needs.other).toBe(230);
+    expect(result.minimumPayments['pekao']).toBeUndefined();
+    expect(result.extraDebtPayment).toBeNull();
     expect(result.unallocated).toBe(0);
   });
 
@@ -367,15 +390,14 @@ describe('distributeIncome', () => {
 
     // minimums: d1=100, d2=50, d3=75 = 225
     // remaining after minimums = 1000 - 225 = 775
-    // snowball target = d2 (smallest: 200)
-    // max extra for d2 = 200 - 50 = 150
-    // snowball amount = min(775, 150) = 150
+    // snowball target = d2 (smallest: 200), then d3 receives the rest
     const result = distributeIncome(1000, state, testDate);
 
     expect(result.extraDebtPayment).not.toBeNull();
     expect(result.extraDebtPayment!.debtId).toBe('d2');
     expect(result.extraDebtPayment!.amount).toBe(150);
-    expect(result.unallocated).toBe(625);
+    expect(result.extraDebtPayments).toEqual({ d2: 150, d3: 625 });
+    expect(result.unallocated).toBe(0);
   });
 
   // ─── Snowball tie-breaking: alphabetical by label ──────────────────
@@ -459,7 +481,7 @@ describe('distributeIncome', () => {
   });
 
   // ─── Income only enough for partial debt minimums ──────────────────
-  it('should proportionally split across debts when income is less than total minimums', () => {
+  it('should continue to the next minimum after covering the snowball target', () => {
     const state = makeState({
       debts: [
         makeDebt({ id: 'd1', label: 'A', remainingAmount: 5000, minimumPayment: 400 }),
@@ -467,13 +489,12 @@ describe('distributeIncome', () => {
       ],
     });
 
-    // total minimums = 1000, available = 500
-    // d1: 500 * 400/1000 = 200
-    // d2: 500 - 200 = 300
-    const result = distributeIncome(500, state, testDate);
+    // total minimums = 1000, available = 700. The snowball target is d2
+    // because it has the smaller balance, so it is covered before d1.
+    const result = distributeIncome(700, state, testDate);
 
-    expect(result.minimumPayments['d1']).toBe(200);
-    expect(result.minimumPayments['d2']).toBe(300);
+    expect(result.minimumPayments['d2']).toBe(600);
+    expect(result.minimumPayments['d1']).toBe(100);
     expect(result.unallocated).toBe(0);
     expect(result.extraDebtPayment).toBeNull();
   });
@@ -516,11 +537,11 @@ describe('distributeIncome', () => {
     const result = distributeIncome(1000, state, testDate);
 
     expect(result.minimumPayments['d1']).toBe(50);
-    // snowball: max extra = 1000 - 50 - 150 = 800
+    // snowball caps against current remaining balance, not monthly minimum coverage
     // remaining after min = 1000 - 50 = 950
     expect(result.extraDebtPayment!.debtId).toBe('d1');
-    expect(result.extraDebtPayment!.amount).toBe(800);
-    expect(result.unallocated).toBe(150);
+    expect(result.extraDebtPayment!.amount).toBe(950);
+    expect(result.unallocated).toBe(0);
   });
 
   // ─── Determinism: same inputs always produce same outputs ──────────

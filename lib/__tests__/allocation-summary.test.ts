@@ -19,18 +19,19 @@ describe('summarizeAllocation', () => {
       needs: { housing: 100, food: 50, transport: 25, other: 0 },
       minimumPayments: { d1: 200, d2: 100 },
       extraDebtPayment: { debtId: 'd1', amount: 75 },
+      extraDebtPayments: { d1: 75, d2: 25 },
       unallocated: 25,
     });
 
     expect(summary).toEqual({
       needs: 175,
       minimums: 300,
-      extra: 75,
+      extra: 100,
       unallocated: 25,
       segments: [
         { key: 'needs', amount: 175 },
         { key: 'minimums', amount: 300 },
-        { key: 'extra', amount: 75 },
+        { key: 'extra', amount: 100 },
         { key: 'unallocated', amount: 25 },
       ],
     });

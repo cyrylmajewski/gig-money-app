@@ -8,6 +8,7 @@ export {
   getMonthKey,
   getOutstandingMinimums,
   getOutstandingNeeds,
+  getSnowballQueue,
   getSnowballTarget,
   getUnresolvedDeferred,
   roundPLN,

@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppStore } from '@/store';
-import type { DeferredPayment, Income } from '@/types/models';
+import type { Debt, DeferredPayment, Income } from '@/types/models';
+import { getMonthKey } from '@/lib/distribution/helpers';
 
 vi.mock('react-native-mmkv', () => ({
   createMMKV: () => {
@@ -53,6 +54,21 @@ const income: Income = {
   },
 };
 
+const debt: Debt = {
+  id: 'd1',
+  label: 'Karta mBank test',
+  type: 'credit_card',
+  creditorKind: 'bank',
+  creditorId: 'mbank',
+  originalAmount: 4200,
+  remainingAmount: 4200,
+  minimumPayment: 50,
+  interestRate: 18.5,
+  paymentDay: 12,
+  createdAt: '2026-01-01T00:00:00.000Z',
+  closedAt: null,
+};
+
 beforeEach(() => {
   useAppStore.setState({
     schemaVersion: 1,
@@ -103,6 +119,91 @@ describe('useAppStore deferred payment lifecycle', () => {
     expect(useAppStore.getState().deferredPayments).toEqual([
       existingDeferred,
       newDeferred,
+    ]);
+  });
+
+  it('resolves current-month need deferred payments once the category is covered', () => {
+    useAppStore.setState({
+      monthlyNeeds: { housing: 100, food: 0, transport: 0, other: 0 },
+      deferredPayments: [existingDeferred],
+    });
+
+    useAppStore.getState().processIncome({
+      ...income,
+      allocation: {
+        ...income.allocation,
+        needs: { housing: 100, food: 0, transport: 0, other: 0 },
+        unallocated: 400,
+      },
+    });
+
+    expect(useAppStore.getState().deferredPayments).toEqual([
+      { ...existingDeferred, resolved: true },
+    ]);
+  });
+
+  it('resolves current-month minimum payment deferred payments once the minimum is covered', () => {
+    useAppStore.setState({
+      debts: [debt],
+      deferredPayments: [newDeferred],
+    });
+
+    useAppStore.getState().processIncome({
+      ...income,
+      allocation: {
+        ...income.allocation,
+        minimumPayments: { d1: 50 },
+        unallocated: 450,
+      },
+    });
+
+    expect(useAppStore.getState().deferredPayments).toEqual([
+      { ...newDeferred, resolved: true },
+    ]);
+  });
+
+  it('keeps prior-month deferred payments pending when current-month coverage is complete', () => {
+    useAppStore.setState({
+      monthlyNeeds: { housing: 100, food: 0, transport: 0, other: 0 },
+      deferredPayments: [existingDeferred],
+    });
+
+    useAppStore.getState().processIncome({
+      ...income,
+      date: '2026-02-03T00:00:00.000Z',
+      allocation: {
+        ...income.allocation,
+        needs: { housing: 100, food: 0, transport: 0, other: 0 },
+        unallocated: 400,
+      },
+    });
+
+    expect(useAppStore.getState().deferredPayments).toEqual([
+      existingDeferred,
+    ]);
+  });
+
+  it('reconciles stale current-month deferred payments from existing state', () => {
+    const currentDeferred = {
+      ...existingDeferred,
+      deferredAt: new Date().toISOString(),
+    };
+    useAppStore.setState({
+      monthlyNeeds: { housing: 100, food: 0, transport: 0, other: 0 },
+      monthlyCoverage: [
+        {
+          month: getMonthKey(new Date()),
+          needs: { housing: 100, food: 0, transport: 0, other: 0 },
+          minimumPayments: {},
+        },
+      ],
+      deferredPayments: [currentDeferred],
+    });
+
+    useAppStore.getState().reconcileDeferredPayments();
+
+    expect(useAppStore.getState().deferredPayments).toEqual([
+      { ...currentDeferred, resolved: true },
     ]);
   });
 
