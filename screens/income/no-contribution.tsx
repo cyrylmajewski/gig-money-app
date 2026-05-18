@@ -3,14 +3,6 @@ import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView } from 'react-native';
-import Animated, {
-  Easing,
-  cancelAnimation,
-  runOnJS,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Button,
@@ -31,8 +23,6 @@ import type {
   DeferredPaymentReason,
   DeferredPaymentReasons,
 } from '@/types/models';
-
-const HOLD_DURATION = 3000;
 
 const L4_REASONS: Array<{
   value: DeferredPaymentReason;
@@ -75,12 +65,11 @@ export default function NoContributionScreen() {
   );
 
   const [selectedReason, setSelectedReason] =
-    useState<DeferredPaymentReason>('postponing');
+    useState<DeferredPaymentReason | null>(null);
   const completedRef = useRef(false);
-  const progress = useSharedValue(0);
 
   function handleConfirm() {
-    if (completedRef.current) return;
+    if (completedRef.current || selectedReason === null) return;
     completedRef.current = true;
     const reasons = parseJsonParam<DeferredPaymentReasons>(params.reasons, {});
     for (const debt of activeDebts) {
@@ -97,27 +86,6 @@ export default function NoContributionScreen() {
       },
     });
   }
-
-  function startHold() {
-    if (completedRef.current) return;
-    progress.value = 0;
-    progress.value = withTiming(
-      1,
-      { duration: HOLD_DURATION, easing: Easing.linear },
-      (finished) => {
-        if (finished) runOnJS(handleConfirm)();
-      },
-    );
-  }
-
-  function cancelHold() {
-    cancelAnimation(progress);
-    progress.value = withTiming(0, { duration: 200, easing: Easing.out(Easing.quad) });
-  }
-
-  const fillStyle = useAnimatedStyle(() => ({
-    transform: [{ scaleX: progress.value }],
-  }));
 
   function getCreditorLabel(debtId: string): string {
     const debt = activeDebts.find((d) => d.id === debtId);
@@ -271,44 +239,19 @@ export default function NoContributionScreen() {
             </ScrollView>
 
             <YStack px="$4" pt="$3" pb="$4" gap="$3">
-              <Pressable
-                onPressIn={startHold}
-                onPressOut={cancelHold}
+              <Button
+                size="$5"
+                theme="error"
+                bg="$color5"
+                pressStyle={{ bg: '$color6' }}
+                onPress={handleConfirm}
+                disabled={selectedReason === null}
+                opacity={selectedReason === null ? 0.45 : 1}
               >
-                <Theme name="error">
-                  <YStack
-                    bg="$color5"
-                    rounded="$4"
-                    height={52}
-                    items="center"
-                    justify="center"
-                    overflow="hidden"
-                  >
-                    <Animated.View
-                      style={[
-                        {
-                          position: 'absolute',
-                          left: 0,
-                          top: 0,
-                          bottom: 0,
-                          right: 0,
-                          backgroundColor: 'rgba(220, 38, 38, 1)',
-                          transformOrigin: 'left',
-                        },
-                        fillStyle,
-                      ]}
-                    />
-                    <Text
-                      color="white"
-                      fontWeight="600"
-                      fontSize="$4"
-                      z={1}
-                    >
-                      {t('income.allocate.guardrail.l4.confirmHold')}
-                    </Text>
-                  </YStack>
-                </Theme>
-              </Pressable>
+                <Button.Text color="white" fontWeight="600" fontSize="$4">
+                  {t('income.allocate.guardrail.l4.confirm')}
+                </Button.Text>
+              </Button>
 
               <Button
                 size="$4"

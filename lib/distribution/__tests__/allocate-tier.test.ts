@@ -134,7 +134,7 @@ describe('allocateTier', () => {
       { key: 'food', outstanding: 0, floor: 400, priority: 2 },
     ];
 
-    const result = allocateTier([], 500);
+    const result = allocateTier(categories, 500);
 
     expect(result.allocations).toEqual({});
     expect(result.remaining).toBe(500);

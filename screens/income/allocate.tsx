@@ -791,11 +791,6 @@ export default function AllocateScreen() {
     const reasonsJson = JSON.stringify(reasons);
 
     if (shortfalls.length > 0) {
-      console.log('[Allocate] finalizeWithReasons -> shortfall', {
-        reasons,
-        shortfalls,
-        finalAllocation,
-      });
       push({
         pathname: '/income/shortfall',
         params: {
@@ -808,10 +803,6 @@ export default function AllocateScreen() {
         },
       });
     } else {
-      console.log('[Allocate] finalizeWithReasons -> confirm', {
-        reasons,
-        finalAllocation,
-      });
       push({
         pathname: '/income/confirm',
         params: {
@@ -827,36 +818,8 @@ export default function AllocateScreen() {
 
   function handleConfirm() {
     const remaining = roundPLN(incomeAmount - editedSpent);
-    const debtContributions = activeDebtsList.map((debt) => {
-      const minimum = editedAllocation.minimumPayments[debt.id] ?? 0;
-      const extra = computedSnowballPayments[debt.id] ?? 0;
-      return {
-        id: debt.id,
-        label: debt.label,
-        minimum,
-        extra,
-        total: minimum + extra,
-      };
-    });
-
-    console.log('[Allocate] handleConfirm:start', {
-      incomeAmount,
-      editedSpent,
-      remaining,
-      computedSnowball,
-      computedSnowballPayments,
-      debtContributions,
-      needs: editedAllocation.needs,
-      minimumPayments: editedAllocation.minimumPayments,
-      deferredPayments: editedAllocation.deferredPayments,
-    });
 
     if (remaining < 0) {
-      console.log('[Allocate] handleConfirm:blocked-negative-remaining', {
-        remaining,
-        incomeAmount,
-        editedSpent,
-      });
       return;
     }
 
@@ -878,10 +841,6 @@ export default function AllocateScreen() {
         unallocated: roundPLN(Math.max(0, remaining)),
         wasAdjustedByUser: true,
       };
-      console.log('[Allocate] handleConfirm -> no-contribution', {
-        finalAllocation,
-        debtContributions,
-      });
       push({
         pathname: '/income/no-contribution',
         params: {
@@ -897,14 +856,7 @@ export default function AllocateScreen() {
 
     // L3 check
     const queue = buildL3Queue();
-    console.log('[Allocate] handleConfirm:L3 queue', {
-      queue,
-      queueLength: queue.length,
-    });
     if (queue.length > 0) {
-      console.log('[Allocate] handleConfirm -> open L3 sheet', {
-        firstItem: queue[0],
-      });
       setL3Queue(queue);
       setL3QueueIndex(0);
       l3CollectedReasonsRef.current = {};
@@ -913,17 +865,12 @@ export default function AllocateScreen() {
       return;
     }
 
-    console.log('[Allocate] handleConfirm -> finalize without L3 reasons');
     finalizeWithReasons({});
   }
 
   function handleL3Save() {
     const currentItem = l3Queue[l3QueueIndex];
     if (!currentItem) {
-      console.log('[Allocate] handleL3Save:missing-current-item', {
-        l3Queue,
-        l3QueueIndex,
-      });
       return;
     }
 
@@ -933,23 +880,10 @@ export default function AllocateScreen() {
     };
     l3CollectedReasonsRef.current = updated;
 
-    console.log('[Allocate] handleL3Save', {
-      currentItem,
-      l3QueueIndex,
-      queueLength: l3Queue.length,
-      reason: l3CurrentReason,
-      collectedReasons: updated,
-    });
-
     if (l3QueueIndex < l3Queue.length - 1) {
-      console.log('[Allocate] handleL3Save -> next L3 item', {
-        nextIndex: l3QueueIndex + 1,
-        nextItem: l3Queue[l3QueueIndex + 1],
-      });
       setL3QueueIndex((i) => i + 1);
       setL3CurrentReason('postponing');
     } else {
-      console.log('[Allocate] handleL3Save -> finalize with L3 reasons');
       setL3SheetOpen(false);
       finalizeWithReasons(updated);
     }
@@ -993,7 +927,7 @@ export default function AllocateScreen() {
 
             <RemainingCard
               incomeAmount={incomeAmount}
-              spent={editedSpent}
+              spent={roundPLN(editedSpent + computedSnowballTotal)}
               currency={currency}
             />
 

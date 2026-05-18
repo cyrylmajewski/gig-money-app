@@ -24,8 +24,9 @@ import {
  *   3. Minimum debt payments (snowball queue when there is not enough for all)
  *   4. Extra snowball payments (smallest remaining balance first)
  *
- * Existing deferred payments are manual-only: a new income never resolves them
- * or pays them automatically.
+ * This pure function does not resolve existing deferred payments directly.
+ * The store reconciles deferred records after applying confirmed income to
+ * monthly coverage and debt balances.
  *
  * This is a pure function: it reads state but never mutates it.
  * The caller is responsible for applying the result to the store.

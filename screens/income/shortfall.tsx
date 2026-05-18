@@ -1,6 +1,6 @@
-import { AlertTriangle, Check, Phone, Timer } from '@tamagui/lucide-icons-2';
+import { AlertTriangle, Check, Phone } from '@tamagui/lucide-icons-2';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Linking, Pressable, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -25,14 +25,6 @@ interface ShortfallItem {
   label: string;
   shortAmount: number;
   debtId?: string;
-}
-
-const CALL_TIMER_SECONDS = 30;
-
-function formatTimer(seconds: number): string {
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
 export default function ShortfallScreen() {
@@ -89,37 +81,12 @@ export default function ShortfallScreen() {
     bankContacts.flatMap((c) => (wasContactedThisMonth(c.id) ? [c.id] : []))
   );
 
-  const [calledBanks, setCalledBanks] = useState<Set<string>>(new Set());
-  const [timerSeconds, setTimerSeconds] = useState(0);
   const [confirmedCall, setConfirmedCall] = useState<Set<string>>(
     alreadyContactedBanks
   );
   const [confirmedLandlord, setConfirmedLandlord] = useState(
     landlordAlreadyContacted
   );
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, []);
-
-  function startCallTimer() {
-    if (timerRef.current) return;
-
-    setTimerSeconds(0);
-    timerRef.current = setInterval(() => {
-      setTimerSeconds((prev) => {
-        const next = prev + 1;
-        if (next >= CALL_TIMER_SECONDS && timerRef.current) {
-          clearInterval(timerRef.current);
-          timerRef.current = null;
-        }
-        return next;
-      });
-    }, 1000);
-  }
 
   const allConfirmed = strictMode
     ? (() => {
@@ -131,13 +98,9 @@ export default function ShortfallScreen() {
       })()
     : true;
 
-  function handleCall(phone: string, bankId: string) {
+  function handleCall(phone: string) {
     const cleaned = phone.replace(/\s/g, '');
     Linking.openURL(`tel:${cleaned}`);
-    if (strictMode) {
-      setCalledBanks((prev) => new Set(prev).add(bankId));
-      startCallTimer();
-    }
   }
 
   function handleConfirmBank(bankId: string) {
@@ -294,10 +257,7 @@ export default function ShortfallScreen() {
 
             {bankContacts.map((contact) => {
               if (!contact) return null;
-              const previouslyContacted = alreadyContactedBanks.has(contact.id);
-              const hasCalled = calledBanks.has(contact.id);
               const isConfirmed = confirmedCall.has(contact.id);
-              const timerDone = hasCalled && timerSeconds >= CALL_TIMER_SECONDS;
 
               return (
                 <YStack
@@ -351,9 +311,7 @@ export default function ShortfallScreen() {
                     ))}
                   </YStack>
 
-                  <Pressable
-                    onPress={() => handleCall(contact.phone, contact.id)}
-                  >
+                  <Pressable onPress={() => handleCall(contact.phone)}>
                     <XStack
                       bg="$accent3"
                       rounded="$4"
@@ -370,97 +328,44 @@ export default function ShortfallScreen() {
                     </XStack>
                   </Pressable>
 
-                  {strictMode && previouslyContacted && !hasCalled && (
-                    <XStack
-                      bg="$accent3"
-                      rounded="$4"
-                      px="$4"
-                      py="$3"
-                      items="center"
-                      gap="$2"
+                  {strictMode && (
+                    <Pressable
+                      onPress={() =>
+                        !isConfirmed && handleConfirmBank(contact.id)
+                      }
+                      disabled={isConfirmed}
                     >
-                      <Check size={14} color="$accent11" />
-                      <Text color="$accent11" flex={1} fontSize="$3">
-                        {t('income.shortfall.alreadyContacted')}
-                      </Text>
-                    </XStack>
-                  )}
-
-                  {strictMode && hasCalled && (
-                    <YStack gap="$2">
-                      {!timerDone && (
-                        <XStack
-                          bg="$color3"
-                          rounded="$4"
-                          px="$4"
-                          py="$2.5"
+                      <XStack
+                        bg={isConfirmed ? '$accent3' : '$color3'}
+                        rounded="$4"
+                        px="$4"
+                        py="$3"
+                        items="center"
+                        gap="$2"
+                      >
+                        <YStack
+                          width={20}
+                          height={20}
+                          rounded="$2"
+                          borderWidth={2}
+                          borderColor={isConfirmed ? '$accent9' : '$color6'}
+                          bg={isConfirmed ? '$accent9' : 'transparent'}
                           items="center"
-                          gap="$2"
+                          justify="center"
                         >
-                          <Timer size={14} color="$color9" />
-                          <Text color="$color9" fontSize="$3">
-                            {t('income.shortfall.timerWaiting', {
-                              time: formatTimer(
-                                CALL_TIMER_SECONDS - timerSeconds
-                              ),
-                            })}
-                          </Text>
-                        </XStack>
-                      )}
-
-                      {timerDone && !isConfirmed && (
-                        <Pressable
-                          onPress={() => handleConfirmBank(contact.id)}
+                          {isConfirmed && <Check size={12} color="white" />}
+                        </YStack>
+                        <Text
+                          color={isConfirmed ? '$accent11' : '$color11'}
+                          flex={1}
+                          fontSize="$3"
                         >
-                          <XStack
-                            bg="$color3"
-                            rounded="$4"
-                            px="$4"
-                            py="$3"
-                            items="center"
-                            gap="$2"
-                          >
-                            <YStack
-                              width={20}
-                              height={20}
-                              rounded="$2"
-                              borderWidth={2}
-                              borderColor="$color6"
-                              items="center"
-                              justify="center"
-                            />
-                            <Text color="$color11" flex={1} fontSize="$3">
-                              {t('income.shortfall.confirmCall')}
-                            </Text>
-                          </XStack>
-                        </Pressable>
-                      )}
-
-                      {isConfirmed && (
-                        <XStack
-                          bg="$accent3"
-                          rounded="$4"
-                          px="$4"
-                          py="$3"
-                          items="center"
-                          gap="$2"
-                        >
-                          <YStack
-                            width={20}
-                            height={20}
-                            rounded="$2"
-                            bg="$accent9"
-                            items="center"
-                            justify="center"
-                          >
-                            <Check size={12} color="white" />
-                          </YStack>
-                          <Text color="$accent11" flex={1} fontSize="$3">
-                            {t('income.shortfall.confirmed')}
-                          </Text>
-                        </XStack>
-                      )}
-                    </YStack>
+                          {isConfirmed
+                            ? t('income.shortfall.confirmed')
+                            : t('income.shortfall.confirmCall')}
+                        </Text>
+                      </XStack>
+                    </Pressable>
                   )}
                 </YStack>
               );

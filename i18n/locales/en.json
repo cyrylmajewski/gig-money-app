@@ -198,7 +198,7 @@
           "reasonAgreedDelayBody": "The bank or creditor knows the payment will be late.",
           "reasonOtherTitle": "I am changing this month's plan",
           "reasonOtherBody": "I am consciously skipping the payment and will return to it later.",
-          "confirmHold": "Hold to confirm",
+          "confirm": "Confirm decision",
           "back": "Back to edit"
         }
       },
@@ -240,7 +240,7 @@
       "callBankTitle": "Call {{bank}}",
       "callBankPhone": "Number: {{phone}}",
       "callBankHours": "Hours: {{hours}}",
-      "callNow": "Call now",
+      "callNow": "Open phone number",
       "stepsTitle": "What to say:",
       "step1": "Introduce yourself and provide your loan agreement number",
       "step2": "Explain that you're having temporary financial difficulties",
@@ -248,11 +248,10 @@
       "step4": "Ask about \"credit holidays\" — option to suspend payments",
       "landlordTitle": "Contact your landlord",
       "landlordTip": "Talk to your landlord about delaying payment. Most landlords prefer open communication over silence.",
-      "confirmCall": "I confirm I called",
+      "confirmCall": "I confirm contact with the creditor",
       "confirmLandlord": "I confirm I contacted the landlord",
       "confirmed": "Confirmed",
       "alreadyContacted": "Already contacted this month",
-      "timerWaiting": "Wait {{time}} to confirm",
       "continue": "I understand, continue"
     },
     "confirm": {
