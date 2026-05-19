@@ -1,16 +1,19 @@
-import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
-import { mmkvStorage } from './storage';
+import { getExtraDebtPaymentAmount } from '@/lib/allocation-extra';
+import { getMonthKey, roundPLN } from '@/lib/distribution/helpers';
 import type {
+  Allocation,
   AppState,
   Debt,
+  DebtPaymentMap,
   DeferredPayment,
   Income,
+  MonthlyCoverage,
   MonthlyNeeds,
   Settings,
 } from '@/types/models';
-import { getExtraDebtPaymentAmount } from '@/lib/allocation-extra';
-import { getMonthKey, roundPLN } from '@/lib/distribution/helpers';
+import { create } from 'zustand';
+import { createJSONStorage, persist } from 'zustand/middleware';
+import { mmkvStorage } from './storage';
 
 const isSameMonth = (isoDate: string, monthKey: string) =>
   getMonthKey(new Date(isoDate)) === monthKey;
@@ -24,7 +27,7 @@ function resolveCoveredDeferredPayments(
   state: Pick<AppState, 'monthlyNeeds'>,
   monthlyCoverage: AppState['monthlyCoverage'],
   debts: Debt[],
-  monthKey: string,
+  monthKey: string
 ): DeferredPayment[] {
   const coverage = monthlyCoverage.find((c) => c.month === monthKey);
   if (!coverage) return payments;
@@ -70,6 +73,95 @@ function resolveCoveredDeferredPayments(
   return changed ? resolved : payments;
 }
 
+function applyCoverage(
+  coverages: MonthlyCoverage[],
+  allocation: Allocation,
+  monthKey: string
+): MonthlyCoverage[] {
+  let found = false;
+  const next = coverages.map((coverage) => {
+    if (coverage.month !== monthKey) return coverage;
+
+    found = true;
+    return {
+      ...coverage,
+      needs: addNeeds(coverage.needs, allocation.needs),
+      minimumPayments: addPayments(
+        coverage.minimumPayments,
+        allocation.minimumPayments
+      ),
+    };
+  });
+
+  if (found) return next;
+
+  return [
+    ...next,
+    {
+      month: monthKey,
+      needs: { ...allocation.needs },
+      minimumPayments: { ...allocation.minimumPayments },
+    },
+  ];
+}
+
+function addNeeds(current: MonthlyNeeds, incoming: MonthlyNeeds): MonthlyNeeds {
+  return {
+    housing: roundPLN(current.housing + incoming.housing),
+    food: roundPLN(current.food + incoming.food),
+    transport: roundPLN(current.transport + incoming.transport),
+    other: roundPLN(current.other + incoming.other),
+  };
+}
+
+function addPayments(
+  current: DebtPaymentMap,
+  incoming: DebtPaymentMap
+): DebtPaymentMap {
+  const next = { ...current };
+
+  for (const [debtId, amount] of Object.entries(incoming)) {
+    next[debtId] = roundPLN((next[debtId] ?? 0) + amount);
+  }
+
+  return next;
+}
+
+function applyDebtPayments(
+  debts: Debt[],
+  allocation: Allocation,
+  date: Date
+): Debt[] {
+  return debts.map((debt) => {
+    const reduction = getDebtReduction(allocation, debt.id);
+    if (reduction <= 0) return debt;
+
+    const remainingAmount = roundPLN(
+      Math.max(0, debt.remainingAmount - reduction)
+    );
+
+    return {
+      ...debt,
+      remainingAmount,
+      closedAt: remainingAmount <= 0 ? date.toISOString() : debt.closedAt,
+    };
+  });
+}
+
+function getDebtReduction(allocation: Allocation, debtId: string): number {
+  return roundPLN(
+    (allocation.minimumPayments[debtId] ?? 0) +
+      getExtraDebtPaymentAmount(allocation, debtId)
+  );
+}
+
+function withNewDeferredPayments(
+  current: DeferredPayment[],
+  incoming?: DeferredPayment[]
+): DeferredPayment[] {
+  return incoming ? [...current, ...incoming] : current;
+}
+
 interface AppActions {
   setOnboardingCompleted: (completed: boolean) => void;
   setMonthlyNeeds: (needs: MonthlyNeeds) => void;
@@ -77,7 +169,10 @@ interface AppActions {
   updateDebt: (id: string, updates: Partial<Debt>) => void;
   removeDebt: (id: string) => void;
   addIncome: (income: Income) => void;
-  processIncome: (income: Income, newDeferredPayments?: DeferredPayment[]) => void;
+  processIncome: (
+    income: Income,
+    newDeferredPayments?: DeferredPayment[]
+  ) => void;
   addDeferredPayment: (payment: DeferredPayment) => void;
   resolveDeferredPayment: (id: string) => void;
   reconcileDeferredPayments: () => void;
@@ -99,7 +194,16 @@ const initialState: AppState = {
   monthlyCoverage: [],
   realityChecks: [],
   shortfallContacts: [],
-  settings: { currency: 'PLN', locale: 'pl', strictMode: false, deprioritizeCreditCards: false, snowballTargetOverride: null, lastCelebrationDebtId: null, lastRealityCheckAt: null, tier1PriorityOrder: 'food_first' },
+  settings: {
+    currency: 'PLN',
+    locale: 'pl',
+    strictMode: false,
+    deprioritizeCreditCards: false,
+    snowballTargetOverride: null,
+    lastCelebrationDebtId: null,
+    lastRealityCheckAt: null,
+    tier1PriorityOrder: 'food_first',
+  },
 };
 
 export const useAppStore = create<AppStore>()(
@@ -110,11 +214,9 @@ export const useAppStore = create<AppStore>()(
       setOnboardingCompleted: (completed) =>
         set({ onboardingCompleted: completed }),
 
-      setMonthlyNeeds: (needs) =>
-        set({ monthlyNeeds: needs }),
+      setMonthlyNeeds: (needs) => set({ monthlyNeeds: needs }),
 
-      addDebt: (debt) =>
-        set((state) => ({ debts: [...state.debts, debt] })),
+      addDebt: (debt) => set((state) => ({ debts: [...state.debts, debt] })),
 
       updateDebt: (id, updates) =>
         set((state) => ({
@@ -135,66 +237,24 @@ export const useAppStore = create<AppStore>()(
         set((state) => {
           const allocation = income.allocation;
           const date = new Date(income.date);
-
-          // 1. Add income record
-          const incomes = [...state.incomes, income];
-
-          // 2. Update monthly coverage
           const monthKey = getMonthKey(date);
-          let coverageFound = false;
-          const monthlyCoverage = state.monthlyCoverage.map((c) => {
-            if (c.month !== monthKey) return c;
-            coverageFound = true;
-            const needs = {
-              housing: roundPLN(c.needs.housing + allocation.needs.housing),
-              food: roundPLN(c.needs.food + allocation.needs.food),
-              transport: roundPLN(c.needs.transport + allocation.needs.transport),
-              other: roundPLN(c.needs.other + allocation.needs.other),
-            };
-            const minimumPayments = { ...c.minimumPayments };
-            for (const [debtId, amount] of Object.entries(allocation.minimumPayments)) {
-              minimumPayments[debtId] = roundPLN((minimumPayments[debtId] ?? 0) + amount);
-            }
-            return { ...c, needs, minimumPayments };
-          });
-          if (!coverageFound) {
-            const minimumPayments: Record<string, number> = {};
-            for (const [debtId, amount] of Object.entries(allocation.minimumPayments)) {
-              minimumPayments[debtId] = amount;
-            }
-            monthlyCoverage.push({
-              month: monthKey,
-              needs: { ...allocation.needs },
-              minimumPayments,
-            });
-          }
 
-          // 3. Apply payments to debt balances
-          const debts = state.debts.map((d) => {
-            let reduction = 0;
-            if (allocation.minimumPayments[d.id]) {
-              reduction += allocation.minimumPayments[d.id];
-            }
-            reduction += getExtraDebtPaymentAmount(allocation, d.id);
-            if (reduction <= 0) return d;
-
-            const newRemaining = roundPLN(Math.max(0, d.remainingAmount - reduction));
-            return {
-              ...d,
-              remainingAmount: newRemaining,
-              closedAt: newRemaining <= 0 ? date.toISOString() : d.closedAt,
-            };
-          });
-
-          const unresolvedAndNew = newDeferredPayments
-            ? [...state.deferredPayments, ...newDeferredPayments]
-            : state.deferredPayments;
+          const incomes = [...state.incomes, income];
+          const monthlyCoverage = applyCoverage(
+            state.monthlyCoverage,
+            allocation,
+            monthKey
+          );
+          const debts = applyDebtPayments(state.debts, allocation, date);
           const deferredPayments = resolveCoveredDeferredPayments(
-            unresolvedAndNew,
+            withNewDeferredPayments(
+              state.deferredPayments,
+              newDeferredPayments
+            ),
             state,
             monthlyCoverage,
             debts,
-            monthKey,
+            monthKey
           );
 
           return { incomes, monthlyCoverage, debts, deferredPayments };
@@ -220,7 +280,7 @@ export const useAppStore = create<AppStore>()(
             state,
             state.monthlyCoverage,
             state.debts,
-            monthKey,
+            monthKey
           );
           if (deferredPayments === state.deferredPayments) return state;
           return { deferredPayments };
@@ -246,7 +306,8 @@ export const useAppStore = create<AppStore>()(
           settings: { ...state.settings, ...updates },
         })),
 
-      resetState: () => set({ ...initialState, installationDate: new Date().toISOString() }),
+      resetState: () =>
+        set({ ...initialState, installationDate: new Date().toISOString() }),
     }),
     {
       name: 'gigmoney-app-state',

@@ -1,38 +1,52 @@
-export type DebtType = 'payday_loan' | 'credit' | 'credit_card' | 'installment' | 'other';
+export type DebtType =
+  | 'payday_loan'
+  | 'credit'
+  | 'credit_card'
+  | 'installment'
+  | 'other';
 
-export type CreditorKind = 'bank' | 'payday_lender' | 'landlord' | 'private_person' | 'employer' | 'other';
+export type CreditorKind =
+  | 'bank'
+  | 'payday_lender'
+  | 'landlord'
+  | 'private_person'
+  | 'employer'
+  | 'other';
 
 export interface Debt {
   id: string;
   label: string;
   type: DebtType;
   creditorKind: CreditorKind;
-  creditorId: string | null;   // references a known creditor (e.g. bank ID from POLISH_CREDITORS)
-  originalAmount: number;      // initial debt amount in PLN
-  remainingAmount: number;     // current outstanding balance in PLN
-  minimumPayment: number;      // required monthly payment in PLN
-  interestRate: number;        // annual rate as decimal, 0 if unknown
-  paymentDay: number | null;   // day of month (1-31) when payment is due, null if unknown
-  createdAt: string;           // ISO 8601 date
-  closedAt: string | null;     // ISO date when marked as closed
+  creditorId: string | null;
+  originalAmount: number;
+  remainingAmount: number;
+  minimumPayment: number;
+  interestRate: number;
+  paymentDay: number | null;
+  createdAt: string;
+  closedAt: string | null;
 }
 
 export interface MonthlyNeeds {
-  housing: number;   // PLN
-  food: number;      // PLN
-  transport: number; // PLN
-  other: number;     // PLN
+  housing: number;
+  food: number;
+  transport: number;
+  other: number;
+}
+
+export type NeedCategory = keyof MonthlyNeeds;
+export type DebtPaymentMap = Record<string, number>;
+
+export interface DebtPayment {
+  debtId: string;
+  amount: number;
 }
 
 export interface MonthlyCoverage {
-  month: string; // "YYYY-MM"
-  needs: {
-    housing: number;
-    food: number;
-    transport: number;
-    other: number;
-  };
-  minimumPayments: Record<string, number>; // debtId -> amount paid this month
+  month: string;
+  needs: MonthlyNeeds;
+  minimumPayments: DebtPaymentMap;
 }
 
 export type DeferredPaymentReason = 'agreed_delay' | 'postponing' | 'other';
@@ -42,16 +56,15 @@ export type DeferredPaymentReasons = Record<string, DeferredPaymentReason>;
 export interface DeferredPayment {
   id: string;
   kind: 'need' | 'minimum_payment';
-  needCategory?: keyof MonthlyNeeds;
+  needCategory?: NeedCategory;
   debtId?: string;
-  amount: number;            // PLN
-  deferredAt: string;        // ISO date
+  amount: number;
+  deferredAt: string;
   reason: DeferredPaymentReason;
   note?: string;
   resolved: boolean;
 }
 
-/** Category within a distribution tier (internal, not persisted). */
 export interface TierCategory {
   key: string;
   outstanding: number;
@@ -59,7 +72,6 @@ export interface TierCategory {
   priority: number;
 }
 
-/** Result of allocating within a single tier. */
 export interface TierResult {
   allocations: Record<string, number>;
   remaining: number;
@@ -67,28 +79,20 @@ export interface TierResult {
 
 export interface Allocation {
   deferredPayments: number;
-  needs: {
-    housing: number;
-    food: number;
-    transport: number;
-    other: number;
-  };
-  minimumPayments: Record<string, number>; // debtId -> amount
-  extraDebtPayment: {
-    debtId: string;
-    amount: number;
-  } | null;
-  /** Additional snowball payments. New records use this map; extraDebtPayment is kept for older saved data. */
-  extraDebtPayments?: Record<string, number>; // debtId -> amount
+  needs: MonthlyNeeds;
+  minimumPayments: DebtPaymentMap;
+  // Kept for older saved allocations. New records use extraDebtPayments.
+  extraDebtPayment: DebtPayment | null;
+  extraDebtPayments?: DebtPaymentMap;
   unallocated: number;
   wasAdjustedByUser: boolean;
 }
 
 export interface Income {
   id: string;
-  amount: number;    // PLN
+  amount: number;
   source?: string;
-  date: string;      // ISO date
+  date: string;
   allocation: Allocation;
 }
 
@@ -96,7 +100,7 @@ export interface RealityCheckResponse {
   id: string;
   date: string;
   question: string;
-  category: keyof MonthlyNeeds | 'general';
+  category: NeedCategory | 'general';
   answer: 'yes' | 'barely' | 'no';
 }
 
@@ -105,20 +109,17 @@ export interface Settings {
   locale: 'pl' | 'en';
   strictMode: boolean;
   deprioritizeCreditCards: boolean;
-  snowballTargetOverride: string | null;  // debtId, or null = auto-pick
-  lastCelebrationDebtId: string | null;   // debt label of last celebrated closure
+  snowballTargetOverride: string | null;
+  lastCelebrationDebtId: string | null;
   lastRealityCheckAt: string | null;
   tier1PriorityOrder: 'food_first' | 'housing_first';
-  floorOverrides?: Partial<Record<keyof MonthlyNeeds, number>>;
+  floorOverrides?: Partial<Record<NeedCategory, number>>;
 }
 
-/** Tracks that a creditor/landlord was contacted about a shortfall this month. */
 export interface ShortfallContact {
-  /** 'landlord' or a creditor ID (e.g. 'pko_bp') */
   contactId: string;
-  /** Month key "YYYY-MM" when contact was confirmed */
   month: string;
-  confirmedAt: string; // ISO date
+  confirmedAt: string;
 }
 
 export interface AppState {
