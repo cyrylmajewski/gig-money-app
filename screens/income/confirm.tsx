@@ -48,9 +48,7 @@ export default function ConfirmScreen() {
     amount: string;
     source?: string;
     allocation: string;
-    wasAdjustedByUser?: string;
     reasons?: string;
-    note?: string;
   }>();
 
   const processIncome = useAppStore((s) => s.processIncome);
@@ -63,8 +61,6 @@ export default function ConfirmScreen() {
   const incomeAmount = parseFloat(params.amount ?? '0');
   const source = params.source ?? '';
   const currency = t('common.currency');
-  const wasAdjustedByUser = params.wasAdjustedByUser === 'true';
-  const note = params.note ?? undefined;
 
   const reasons = useMemo(() => {
     return parseJsonParam<DeferredPaymentReasons>(params.reasons, {});
@@ -73,21 +69,17 @@ export default function ConfirmScreen() {
   const allocation: Allocation = useMemo(() => {
     const parsed = parseJsonParam<Allocation | null>(params.allocation, null);
 
-    if (parsed) return { ...parsed, wasAdjustedByUser };
+    if (parsed) return parsed;
 
     return {
-      deferredPayments: 0,
       needs: { housing: 0, food: 0, transport: 0, other: 0 },
       minimumPayments: {},
-      extraDebtPayment: null,
       unallocated: 0,
-      wasAdjustedByUser,
     };
-  }, [params.allocation, wasAdjustedByUser]);
+  }, [params.allocation]);
 
   const stateSnapshot: AppState = useMemo(
     () => ({
-      schemaVersion: 1,
       installationDate: '',
       onboardingCompleted: true,
       monthlyNeeds,
@@ -95,7 +87,6 @@ export default function ConfirmScreen() {
       incomes: [],
       deferredPayments,
       monthlyCoverage,
-      realityChecks: [],
       shortfallContacts: [],
       settings,
     }),
@@ -126,8 +117,7 @@ export default function ConfirmScreen() {
     const newDeferred = computeDeferredWithReasons(
       allocation,
       stateSnapshot,
-      reasons,
-      note
+      reasons
     );
     const income: Income = {
       id: generateId(),
@@ -145,7 +135,6 @@ export default function ConfirmScreen() {
     allocation,
     stateSnapshot,
     reasons,
-    note,
     processIncome,
     dismissAll,
     replace,
@@ -219,19 +208,6 @@ export default function ConfirmScreen() {
                 <Text color="$color9" fontSize="$1" letterSpacing={1} py="$2">
                   {t('income.confirm.allocationSection').toUpperCase()}
                 </Text>
-
-                {allocation.deferredPayments > 0 && (
-                  <>
-                    <AmountRow
-                      label={t('income.confirm.rows.deferred')}
-                      amount={allocation.deferredPayments}
-                      currency={currency}
-                      accent
-                      bold
-                    />
-                    <Separator borderColor="$color3" />
-                  </>
-                )}
 
                 {allocation.needs.housing > 0 && (
                   <>

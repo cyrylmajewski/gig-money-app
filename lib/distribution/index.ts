@@ -1,4 +1,8 @@
-export { distributeIncome, computeNewDeferredPayments, computeDeferredWithReasons } from './distribute-income';
+export {
+  computeDeferredWithReasons,
+  computeNewDeferredPayments,
+  distributeIncome,
+} from './distribute-income';
 export {
   allocateTier,
   getActiveDebts,

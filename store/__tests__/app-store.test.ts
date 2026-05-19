@@ -1,7 +1,7 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { getMonthKey } from '@/lib/distribution/helpers';
 import { useAppStore } from '@/store';
 import type { Debt, DeferredPayment, Income } from '@/types/models';
-import { getMonthKey } from '@/lib/distribution/helpers';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('react-native-mmkv', () => ({
   createMMKV: () => {
@@ -45,12 +45,9 @@ const income: Income = {
   amount: 500,
   date: '2026-01-03T00:00:00.000Z',
   allocation: {
-    deferredPayments: 0,
     needs: { housing: 0, food: 0, transport: 0, other: 0 },
     minimumPayments: {},
-    extraDebtPayment: null,
     unallocated: 500,
-    wasAdjustedByUser: false,
   },
 };
 
@@ -65,13 +62,11 @@ const debt: Debt = {
   minimumPayment: 50,
   interestRate: 18.5,
   paymentDay: 12,
-  createdAt: '2026-01-01T00:00:00.000Z',
   closedAt: null,
 };
 
 beforeEach(() => {
   useAppStore.setState({
-    schemaVersion: 1,
     installationDate: '2026-01-01T00:00:00.000Z',
     onboardingCompleted: true,
     monthlyNeeds: { housing: 0, food: 0, transport: 0, other: 0 },
@@ -79,17 +74,14 @@ beforeEach(() => {
     incomes: [],
     deferredPayments: [],
     monthlyCoverage: [],
-    realityChecks: [],
     shortfallContacts: [],
     settings: {
-      currency: 'PLN',
       locale: 'pl',
       strictMode: false,
       deprioritizeCreditCards: false,
       snowballTargetOverride: null,
       lastCelebrationDebtId: null,
       lastRealityCheckAt: null,
-      tier1PriorityOrder: 'food_first',
     },
   });
 });
@@ -178,9 +170,7 @@ describe('useAppStore deferred payment lifecycle', () => {
       },
     });
 
-    expect(useAppStore.getState().deferredPayments).toEqual([
-      existingDeferred,
-    ]);
+    expect(useAppStore.getState().deferredPayments).toEqual([existingDeferred]);
   });
 
   it('reconciles stale current-month deferred payments from existing state', () => {

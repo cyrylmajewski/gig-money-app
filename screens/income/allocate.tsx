@@ -445,7 +445,6 @@ export default function AllocateScreen() {
 
   const stateSnapshot: AppState = useMemo(
     () => ({
-      schemaVersion: 1,
       installationDate: '',
       onboardingCompleted: true,
       monthlyNeeds,
@@ -453,7 +452,6 @@ export default function AllocateScreen() {
       incomes: [],
       deferredPayments,
       monthlyCoverage,
-      realityChecks: [],
       shortfallContacts: [],
       settings,
     }),
@@ -467,7 +465,6 @@ export default function AllocateScreen() {
 
   const [editedAllocation, setEditedAllocation] =
     useState<Allocation>(seededAllocation);
-  const [wasAdjustedByUser, setWasAdjustedByUser] = useState(false);
 
   const [l3SheetOpen, setL3SheetOpen] = useState(false);
   const [l3Queue, setL3Queue] = useState<L3QueueItem[]>([]);
@@ -500,8 +497,7 @@ export default function AllocateScreen() {
         Object.values(editedAllocation.minimumPayments).reduce(
           (s, v) => s + v,
           0
-        ) +
-        editedAllocation.deferredPayments
+        )
     );
   }, [editedAllocation]);
 
@@ -549,12 +545,9 @@ export default function AllocateScreen() {
     [computedSnowballEntries]
   );
 
-  const computedSnowball = computedSnowballEntries[0] ?? null;
-
   const previewAllocation: Allocation = useMemo(
     () => ({
       ...editedAllocation,
-      extraDebtPayment: computedSnowball,
       extraDebtPayments:
         computedSnowballEntries.length > 0
           ? computedSnowballPayments
@@ -565,7 +558,6 @@ export default function AllocateScreen() {
     }),
     [
       editedAllocation,
-      computedSnowball,
       computedSnowballEntries.length,
       computedSnowballPayments,
       incomeAmount,
@@ -608,10 +600,7 @@ export default function AllocateScreen() {
     const hasShortfall = covered < totalNeeds;
 
     const tips: string[] = [];
-    if (
-      coveredNeeds.food < monthlyNeeds.food &&
-      monthlyNeeds.food > 0
-    ) {
+    if (coveredNeeds.food < monthlyNeeds.food && monthlyNeeds.food > 0) {
       tips.push('income.allocate.tips.food');
     }
     if (
@@ -647,12 +636,7 @@ export default function AllocateScreen() {
 
   const priorMonthName = useMemo(getPriorMonthName, [settings.locale]);
 
-  function markAdjusted() {
-    if (!wasAdjustedByUser) setWasAdjustedByUser(true);
-  }
-
   function updateNeed(cat: keyof MonthlyNeeds, value: number) {
-    markAdjusted();
     setEditedAllocation((prev) => ({
       ...prev,
       needs: { ...prev.needs, [cat]: value },
@@ -660,7 +644,6 @@ export default function AllocateScreen() {
   }
 
   function updateMinimum(debtId: string, value: number) {
-    markAdjusted();
     setEditedAllocation((prev) => ({
       ...prev,
       minimumPayments: { ...prev.minimumPayments, [debtId]: value },
@@ -705,11 +688,7 @@ export default function AllocateScreen() {
     ];
 
     for (const { cat, label } of needCategories) {
-      const floor = getFloorForCategory(
-        cat,
-        outstanding.needs[cat],
-        settings.floorOverrides
-      );
+      const floor = getFloorForCategory(cat, outstanding.needs[cat]);
       const covered = coverage.needs[cat] ?? 0;
       const outstandingCat = Math.max(0, floor - covered);
       if (outstandingCat > 0 && (editedAllocation.needs[cat] ?? 0) === 0) {
@@ -736,7 +715,6 @@ export default function AllocateScreen() {
   function finalizeWithReasons(reasons: DeferredPaymentReasons) {
     const finalAllocation: Allocation = {
       ...editedAllocation,
-      extraDebtPayment: computedSnowball,
       extraDebtPayments:
         computedSnowballEntries.length > 0
           ? computedSnowballPayments
@@ -744,7 +722,6 @@ export default function AllocateScreen() {
       unallocated: roundPLN(
         Math.max(0, incomeAmount - editedSpent - computedSnowballTotal)
       ),
-      wasAdjustedByUser: true,
     };
 
     const shortfalls: {
@@ -798,7 +775,6 @@ export default function AllocateScreen() {
           source: params.source ?? '',
           allocation: allocationJson,
           shortfalls: JSON.stringify(shortfalls),
-          wasAdjustedByUser: 'true',
           reasons: reasonsJson,
         },
       });
@@ -809,7 +785,6 @@ export default function AllocateScreen() {
           amount: params.amount,
           source: params.source ?? '',
           allocation: allocationJson,
-          wasAdjustedByUser: wasAdjustedByUser ? 'true' : 'false',
           reasons: reasonsJson,
         },
       });
@@ -836,10 +811,8 @@ export default function AllocateScreen() {
     ) {
       const finalAllocation: Allocation = {
         ...editedAllocation,
-        extraDebtPayment: null,
         extraDebtPayments: undefined,
         unallocated: roundPLN(Math.max(0, remaining)),
-        wasAdjustedByUser: true,
       };
       push({
         pathname: '/income/no-contribution',
@@ -848,7 +821,6 @@ export default function AllocateScreen() {
           source: params.source ?? '',
           allocation: JSON.stringify(finalAllocation),
           reasons: JSON.stringify({}),
-          wasAdjustedByUser: 'true',
         },
       });
       return;
@@ -897,7 +869,6 @@ export default function AllocateScreen() {
   }
 
   const isConfirmDisabled = roundPLN(incomeAmount - editedSpent) < 0;
-  const hasDeferred = editedAllocation.deferredPayments > 0;
 
   return (
     <>
@@ -993,19 +964,6 @@ export default function AllocateScreen() {
               rounded="$6"
               px="$4"
             >
-              {hasDeferred && (
-                <>
-                  <ReadOnlyRow
-                    label={t('income.allocate.rows.deferred')}
-                    sublabel={t('income.allocate.rows.deferredSublabel')}
-                    amount={editedAllocation.deferredPayments}
-                    currency={currency}
-                    highlight
-                  />
-                  <Separator borderColor="$color3" />
-                </>
-              )}
-
               {outstanding.needs.housing > 0 && (
                 <>
                   <EditableRow

@@ -4,12 +4,9 @@ import { summarizeAllocation } from '@/lib/allocation-summary';
 import type { Allocation } from '@/types/models';
 
 const baseAllocation: Allocation = {
-  deferredPayments: 0,
   needs: { housing: 0, food: 0, transport: 0, other: 0 },
   minimumPayments: {},
-  extraDebtPayment: null,
   unallocated: 0,
-  wasAdjustedByUser: false,
 };
 
 describe('summarizeAllocation', () => {
@@ -18,7 +15,6 @@ describe('summarizeAllocation', () => {
       ...baseAllocation,
       needs: { housing: 100, food: 50, transport: 25, other: 0 },
       minimumPayments: { d1: 200, d2: 100 },
-      extraDebtPayment: { debtId: 'd1', amount: 75 },
       extraDebtPayments: { d1: 75, d2: 25 },
       unallocated: 25,
     });

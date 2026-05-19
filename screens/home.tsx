@@ -38,12 +38,7 @@ import {
   getRealityCheckTrigger,
 } from '@/lib/triggers';
 import { useAppStore } from '@/store';
-import type {
-  Debt,
-  Income,
-  MonthlyNeeds,
-  RealityCheckResponse,
-} from '@/types/models';
+import type { Debt, Income, MonthlyNeeds } from '@/types/models';
 
 const SOURCE_KEY: Record<SnowballTargetSource, string> = {
   manual: 'home.snowball.targetSourceManual',
@@ -376,9 +371,7 @@ function ProgressOverviewCard({
       />
       <ProgressMetricCard
         label={t('home.progress.debt')}
-        value={
-          debtTotal > 0 ? `${debtPct}%` : `${formatAmount(0)} ${currency}`
-        }
+        value={debtTotal > 0 ? `${debtPct}%` : `${formatAmount(0)} ${currency}`}
         detail={
           debtTotal > 0
             ? t('home.progress.debtDetail', {
@@ -679,17 +672,9 @@ export default function HomeScreen() {
     replace,
   ]);
 
-  function handleRealityCheckAnswer(answer: 'yes' | 'barely' | 'no') {
+  function handleRealityCheckAnswer(_answer: 'yes' | 'barely' | 'no') {
     if (!realityCheckTrigger.shouldShow) return;
-    const response: RealityCheckResponse = {
-      id: `rc-${Date.now()}`,
-      date: new Date().toISOString(),
-      question: realityCheckTrigger.questionKey,
-      category: realityCheckTrigger.category,
-      answer,
-    };
     useAppStore.setState((s) => ({
-      realityChecks: [...s.realityChecks, response],
       settings: { ...s.settings, lastRealityCheckAt: new Date().toISOString() },
     }));
     setDismissedRC(true);

@@ -37,7 +37,6 @@ export default function ShortfallScreen() {
     allocation: string;
     shortfalls: string;
     reasons?: string;
-    wasAdjustedByUser?: string;
   }>();
 
   const debts = useAppStore((s) => s.debts);
@@ -121,7 +120,6 @@ export default function ShortfallScreen() {
         source: params.source ?? '',
         allocation: params.allocation,
         reasons: params.reasons ?? '{}',
-        wasAdjustedByUser: params.wasAdjustedByUser ?? 'false',
       },
     });
   }

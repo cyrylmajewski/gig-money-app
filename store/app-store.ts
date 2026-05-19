@@ -184,7 +184,6 @@ interface AppActions {
 type AppStore = AppState & AppActions;
 
 const initialState: AppState = {
-  schemaVersion: 1,
   installationDate: new Date().toISOString(),
   onboardingCompleted: false,
   monthlyNeeds: { housing: 0, food: 0, transport: 0, other: 0 },
@@ -192,17 +191,14 @@ const initialState: AppState = {
   incomes: [],
   deferredPayments: [],
   monthlyCoverage: [],
-  realityChecks: [],
   shortfallContacts: [],
   settings: {
-    currency: 'PLN',
     locale: 'pl',
     strictMode: false,
     deprioritizeCreditCards: false,
     snowballTargetOverride: null,
     lastCelebrationDebtId: null,
     lastRealityCheckAt: null,
-    tier1PriorityOrder: 'food_first',
   },
 };
 

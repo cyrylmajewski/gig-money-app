@@ -1,5 +1,5 @@
 import { AlertTriangle, ArrowLeft, Check } from '@tamagui/lucide-icons-2';
-import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView } from 'react-native';
@@ -54,14 +54,13 @@ export default function NoContributionScreen() {
     source?: string;
     allocation: string;
     reasons: string;
-    wasAdjustedByUser: string;
   }>();
 
   const debts = useAppStore((s) => s.debts);
   const currency = t('common.currency');
 
   const activeDebts = debts.filter(
-    (d) => d.closedAt === null && d.remainingAmount > 0,
+    (d) => d.closedAt === null && d.remainingAmount > 0
   );
 
   const [selectedReason, setSelectedReason] =
@@ -82,7 +81,6 @@ export default function NoContributionScreen() {
         source: params.source ?? '',
         allocation: params.allocation,
         reasons: JSON.stringify(reasons),
-        wasAdjustedByUser: params.wasAdjustedByUser ?? 'true',
       },
     });
   }
@@ -94,7 +92,9 @@ export default function NoContributionScreen() {
       const creditor = getCreditorById(debt.creditorId);
       if (creditor) return creditor.name;
     }
-    return t(`debts.creditorKinds.${debt.creditorKind}`, { defaultValue: debt.creditorKind });
+    return t(`debts.creditorKinds.${debt.creditorKind}`, {
+      defaultValue: debt.creditorKind,
+    });
   }
 
   return (
@@ -118,155 +118,159 @@ export default function NoContributionScreen() {
         <YStack flex={1}>
           <ScrollView>
             <YStack px="$4" pt="$4" pb="$6" gap="$4">
-                <Theme name="error">
-                  <YStack
-                    bg="$color3"
-                    borderWidth={1}
-                    borderLeftWidth={3}
-                    borderColor="$color7"
-                    borderLeftColor="$color9"
-                    rounded="$6"
-                    p="$4"
-                    gap="$3"
-                  >
-                    <XStack items="center" gap="$2">
-                      <AlertTriangle size={18} color="$color9" />
-                      <H3 color="$color11" fontSize="$5" fontWeight="700">
-                        {t('income.allocate.guardrail.l4.title')}
-                      </H3>
-                    </XStack>
-                    <Paragraph color="$color11" fontSize="$3">
-                      {t('income.allocate.guardrail.l4.subtitle')}
-                    </Paragraph>
-                  </YStack>
-                </Theme>
-
-                {activeDebts.length > 0 && (
-                  <YStack
-                    bg="$color2"
-                    borderWidth={1}
-                    borderColor="$color4"
-                    rounded="$6"
-                    px="$4"
-                  >
-                    {activeDebts.map((debt, i) => (
-                      <YStack key={debt.id}>
-                        <XStack py="$3" justify="space-between" items="center">
-                          <YStack flex={1} pr="$3" gap="$0.5">
-                            <Text color="$color11" fontWeight="600" fontSize="$3">
-                              {debt.label}
-                            </Text>
-                            <Text color="$color9" fontSize="$2">
-                              {getCreditorLabel(debt.id)}
-                            </Text>
-                          </YStack>
-                          <XStack items="center" gap="$2">
-                            <Text color="$color9" fontSize="$3">
-                              {formatAmount(debt.minimumPayment)} {currency}
-                            </Text>
-                            <Theme name="error">
-                              <Text color="$color9" fontSize="$3" fontWeight="700">
-                                → 0 {currency}
-                              </Text>
-                            </Theme>
-                          </XStack>
-                        </XStack>
-                        {i < activeDebts.length - 1 && (
-                          <Separator borderColor="$color3" />
-                        )}
-                      </YStack>
-                    ))}
-                  </YStack>
-                )}
-
-                <YStack gap="$3">
-                  <YStack gap="$1">
-                    <Text color="$color11" fontWeight="600" fontSize="$3">
-                      {t('income.allocate.guardrail.l4.reasonTitle')}
-                    </Text>
-                    <Text color="$color9" fontSize="$2" lineHeight={18}>
-                      {t('income.allocate.guardrail.l4.reasonSubtitle')}
-                    </Text>
-                  </YStack>
-
-                  {L4_REASONS.map((reason) => {
-                    const selected = selectedReason === reason.value;
-                    return (
-                      <Pressable
-                        key={reason.value}
-                        onPress={() => setSelectedReason(reason.value)}
-                      >
-                        <XStack
-                          bg={selected ? '$accent3' : '$color2'}
-                          borderWidth={1}
-                          borderColor={selected ? '$accent7' : '$color4'}
-                          rounded="$5"
-                          p="$3"
-                          gap="$3"
-                          items="flex-start"
-                        >
-                          <YStack
-                            width={22}
-                            height={22}
-                            rounded="$10"
-                            borderWidth={2}
-                            borderColor={selected ? '$accent9' : '$color6'}
-                            bg={selected ? '$accent9' : 'transparent'}
-                            items="center"
-                            justify="center"
-                            mt="$0.5"
-                          >
-                            {selected && <Check size={13} color="white" />}
-                          </YStack>
-                          <YStack flex={1} gap="$1">
-                            <Text
-                              color={selected ? '$accent11' : '$color11'}
-                              fontWeight="600"
-                              fontSize="$3"
-                            >
-                              {t(reason.titleKey)}
-                            </Text>
-                            <Text color="$color9" fontSize="$2" lineHeight={18}>
-                              {t(reason.bodyKey)}
-                            </Text>
-                          </YStack>
-                        </XStack>
-                      </Pressable>
-                    );
-                  })}
+              <Theme name="error">
+                <YStack
+                  bg="$color3"
+                  borderWidth={1}
+                  borderLeftWidth={3}
+                  borderColor="$color7"
+                  borderLeftColor="$color9"
+                  rounded="$6"
+                  p="$4"
+                  gap="$3"
+                >
+                  <XStack items="center" gap="$2">
+                    <AlertTriangle size={18} color="$color9" />
+                    <H3 color="$color11" fontSize="$5" fontWeight="700">
+                      {t('income.allocate.guardrail.l4.title')}
+                    </H3>
+                  </XStack>
+                  <Paragraph color="$color11" fontSize="$3">
+                    {t('income.allocate.guardrail.l4.subtitle')}
+                  </Paragraph>
                 </YStack>
+              </Theme>
+
+              {activeDebts.length > 0 && (
+                <YStack
+                  bg="$color2"
+                  borderWidth={1}
+                  borderColor="$color4"
+                  rounded="$6"
+                  px="$4"
+                >
+                  {activeDebts.map((debt, i) => (
+                    <YStack key={debt.id}>
+                      <XStack py="$3" justify="space-between" items="center">
+                        <YStack flex={1} pr="$3" gap="$0.5">
+                          <Text color="$color11" fontWeight="600" fontSize="$3">
+                            {debt.label}
+                          </Text>
+                          <Text color="$color9" fontSize="$2">
+                            {getCreditorLabel(debt.id)}
+                          </Text>
+                        </YStack>
+                        <XStack items="center" gap="$2">
+                          <Text color="$color9" fontSize="$3">
+                            {formatAmount(debt.minimumPayment)} {currency}
+                          </Text>
+                          <Theme name="error">
+                            <Text
+                              color="$color9"
+                              fontSize="$3"
+                              fontWeight="700"
+                            >
+                              → 0 {currency}
+                            </Text>
+                          </Theme>
+                        </XStack>
+                      </XStack>
+                      {i < activeDebts.length - 1 && (
+                        <Separator borderColor="$color3" />
+                      )}
+                    </YStack>
+                  ))}
+                </YStack>
+              )}
+
+              <YStack gap="$3">
+                <YStack gap="$1">
+                  <Text color="$color11" fontWeight="600" fontSize="$3">
+                    {t('income.allocate.guardrail.l4.reasonTitle')}
+                  </Text>
+                  <Text color="$color9" fontSize="$2" lineHeight={18}>
+                    {t('income.allocate.guardrail.l4.reasonSubtitle')}
+                  </Text>
+                </YStack>
+
+                {L4_REASONS.map((reason) => {
+                  const selected = selectedReason === reason.value;
+                  return (
+                    <Pressable
+                      key={reason.value}
+                      onPress={() => setSelectedReason(reason.value)}
+                    >
+                      <XStack
+                        bg={selected ? '$accent3' : '$color2'}
+                        borderWidth={1}
+                        borderColor={selected ? '$accent7' : '$color4'}
+                        rounded="$5"
+                        p="$3"
+                        gap="$3"
+                        items="flex-start"
+                      >
+                        <YStack
+                          width={22}
+                          height={22}
+                          rounded="$10"
+                          borderWidth={2}
+                          borderColor={selected ? '$accent9' : '$color6'}
+                          bg={selected ? '$accent9' : 'transparent'}
+                          items="center"
+                          justify="center"
+                          mt="$0.5"
+                        >
+                          {selected && <Check size={13} color="white" />}
+                        </YStack>
+                        <YStack flex={1} gap="$1">
+                          <Text
+                            color={selected ? '$accent11' : '$color11'}
+                            fontWeight="600"
+                            fontSize="$3"
+                          >
+                            {t(reason.titleKey)}
+                          </Text>
+                          <Text color="$color9" fontSize="$2" lineHeight={18}>
+                            {t(reason.bodyKey)}
+                          </Text>
+                        </YStack>
+                      </XStack>
+                    </Pressable>
+                  );
+                })}
               </YStack>
-            </ScrollView>
-
-            <YStack px="$4" pt="$3" pb="$4" gap="$3">
-              <Button
-                size="$5"
-                theme="error"
-                bg="$color5"
-                pressStyle={{ bg: '$color6' }}
-                onPress={handleConfirm}
-                disabled={selectedReason === null}
-                opacity={selectedReason === null ? 0.45 : 1}
-              >
-                <Button.Text color="white" fontWeight="600" fontSize="$4">
-                  {t('income.allocate.guardrail.l4.confirm')}
-                </Button.Text>
-              </Button>
-
-              <Button
-                size="$4"
-                variant="outlined"
-                borderColor="$color6"
-                bg="transparent"
-                onPress={back}
-                pressStyle={{ bg: '$color3' }}
-              >
-                <Button.Text color="$color11">
-                  {t('income.allocate.guardrail.l4.back')}
-                </Button.Text>
-              </Button>
             </YStack>
+          </ScrollView>
+
+          <YStack px="$4" pt="$3" pb="$4" gap="$3">
+            <Button
+              size="$5"
+              theme="error"
+              bg="$color5"
+              pressStyle={{ bg: '$color6' }}
+              onPress={handleConfirm}
+              disabled={selectedReason === null}
+              opacity={selectedReason === null ? 0.45 : 1}
+            >
+              <Button.Text color="white" fontWeight="600" fontSize="$4">
+                {t('income.allocate.guardrail.l4.confirm')}
+              </Button.Text>
+            </Button>
+
+            <Button
+              size="$4"
+              variant="outlined"
+              borderColor="$color6"
+              bg="transparent"
+              onPress={back}
+              pressStyle={{ bg: '$color3' }}
+            >
+              <Button.Text color="$color11">
+                {t('income.allocate.guardrail.l4.back')}
+              </Button.Text>
+            </Button>
           </YStack>
+        </YStack>
       </SafeAreaView>
     </>
   );

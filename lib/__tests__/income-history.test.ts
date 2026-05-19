@@ -4,12 +4,9 @@ import { groupIncomesByDay } from '@/lib/income-history';
 import type { Allocation, Income } from '@/types/models';
 
 const allocation: Allocation = {
-  deferredPayments: 0,
   needs: { housing: 0, food: 0, transport: 0, other: 0 },
   minimumPayments: {},
-  extraDebtPayment: null,
   unallocated: 0,
-  wasAdjustedByUser: false,
 };
 
 function income(id: string, amount: number, date: string): Income {

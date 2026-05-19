@@ -8,13 +8,9 @@ export interface ExtraDebtPaymentEntry {
 export function getExtraDebtPaymentEntries(
   allocation: Allocation
 ): ExtraDebtPaymentEntry[] {
-  const entries = Object.entries(allocation.extraDebtPayments ?? {})
+  return Object.entries(allocation.extraDebtPayments ?? {})
     .filter(([, amount]) => amount > 0)
     .map(([debtId, amount]) => ({ debtId, amount }));
-
-  if (entries.length > 0) return entries;
-
-  return allocation.extraDebtPayment ? [allocation.extraDebtPayment] : [];
 }
 
 export function getExtraDebtPaymentAmount(

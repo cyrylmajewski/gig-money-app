@@ -28,7 +28,6 @@ export default function NewDebtScreen() {
       minimumPayment: parseAmount(value.minimumPayment),
       interestRate: parseAmount(value.interestRate),
       paymentDay: value.paymentDay ? parseInt(value.paymentDay, 10) : null,
-      createdAt: new Date().toISOString(),
       closedAt: null,
     });
 

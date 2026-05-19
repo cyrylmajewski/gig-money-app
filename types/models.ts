@@ -24,7 +24,6 @@ export interface Debt {
   minimumPayment: number;
   interestRate: number;
   paymentDay: number | null;
-  createdAt: string;
   closedAt: string | null;
 }
 
@@ -37,11 +36,6 @@ export interface MonthlyNeeds {
 
 export type NeedCategory = keyof MonthlyNeeds;
 export type DebtPaymentMap = Record<string, number>;
-
-export interface DebtPayment {
-  debtId: string;
-  amount: number;
-}
 
 export interface MonthlyCoverage {
   month: string;
@@ -61,7 +55,6 @@ export interface DeferredPayment {
   amount: number;
   deferredAt: string;
   reason: DeferredPaymentReason;
-  note?: string;
   resolved: boolean;
 }
 
@@ -78,14 +71,10 @@ export interface TierResult {
 }
 
 export interface Allocation {
-  deferredPayments: number;
   needs: MonthlyNeeds;
   minimumPayments: DebtPaymentMap;
-  // Kept for older saved allocations. New records use extraDebtPayments.
-  extraDebtPayment: DebtPayment | null;
   extraDebtPayments?: DebtPaymentMap;
   unallocated: number;
-  wasAdjustedByUser: boolean;
 }
 
 export interface Income {
@@ -96,24 +85,13 @@ export interface Income {
   allocation: Allocation;
 }
 
-export interface RealityCheckResponse {
-  id: string;
-  date: string;
-  question: string;
-  category: NeedCategory | 'general';
-  answer: 'yes' | 'barely' | 'no';
-}
-
 export interface Settings {
-  currency: 'PLN';
   locale: 'pl' | 'en';
   strictMode: boolean;
   deprioritizeCreditCards: boolean;
   snowballTargetOverride: string | null;
   lastCelebrationDebtId: string | null;
   lastRealityCheckAt: string | null;
-  tier1PriorityOrder: 'food_first' | 'housing_first';
-  floorOverrides?: Partial<Record<NeedCategory, number>>;
 }
 
 export interface ShortfallContact {
@@ -123,7 +101,6 @@ export interface ShortfallContact {
 }
 
 export interface AppState {
-  schemaVersion: number;
   installationDate: string;
   onboardingCompleted: boolean;
   monthlyNeeds: MonthlyNeeds;
@@ -131,7 +108,6 @@ export interface AppState {
   incomes: Income[];
   deferredPayments: DeferredPayment[];
   monthlyCoverage: MonthlyCoverage[];
-  realityChecks: RealityCheckResponse[];
   shortfallContacts: ShortfallContact[];
   settings: Settings;
 }

@@ -11,26 +11,25 @@ import type {
 } from '@/types/models';
 
 const allocation: Allocation = {
-  deferredPayments: 0,
   needs: { housing: 0, food: 0, transport: 0, other: 0 },
   minimumPayments: {},
-  extraDebtPayment: null,
   unallocated: 0,
-  wasAdjustedByUser: false,
 };
 
 const settings: Settings = {
-  currency: 'PLN',
   locale: 'pl',
   strictMode: false,
   deprioritizeCreditCards: false,
   snowballTargetOverride: null,
   lastCelebrationDebtId: null,
   lastRealityCheckAt: null,
-  tier1PriorityOrder: 'food_first',
 };
 
-function debt(id: string, remainingAmount: number, closedAt: string | null = null): Debt {
+function debt(
+  id: string,
+  remainingAmount: number,
+  closedAt: string | null = null
+): Debt {
   return {
     id,
     label: id,
@@ -42,7 +41,6 @@ function debt(id: string, remainingAmount: number, closedAt: string | null = nul
     minimumPayment: 100,
     interestRate: 0,
     paymentDay: null,
-    createdAt: '2026-01-01T00:00:00.000Z',
     closedAt,
   };
 }

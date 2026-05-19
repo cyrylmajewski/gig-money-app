@@ -2,7 +2,6 @@ import type {
   Allocation,
   AppState,
   Debt,
-  DebtPayment,
   DebtPaymentMap,
   DeferredPayment,
   DeferredPaymentReasons,
@@ -53,12 +52,12 @@ export function distributeIncome(
   const activeDebts = getActiveDebts(state.debts);
 
   const primaryNeeds = allocateTier(
-    createPrimaryNeedTier(outstanding, state.settings),
+    createPrimaryNeedTier(outstanding),
     roundPLN(amount)
   );
 
   const secondaryNeeds = allocateTier(
-    createSecondaryNeedTier(outstanding, state.settings),
+    createSecondaryNeedTier(outstanding),
     primaryNeeds.remaining
   );
 
@@ -76,10 +75,8 @@ export function distributeIncome(
     minimums.minimumPayments,
     minimums.remaining
   );
-  const extraDebtPayment = firstDebtPayment(extra.extraDebtPayments);
 
   return {
-    deferredPayments: 0,
     needs: {
       housing: primaryNeeds.allocations['housing'] ?? 0,
       food: primaryNeeds.allocations['food'] ?? 0,
@@ -87,39 +84,31 @@ export function distributeIncome(
       other: secondaryNeeds.allocations['other'] ?? 0,
     },
     minimumPayments: minimums.minimumPayments,
-    extraDebtPayment,
-    extraDebtPayments: extraDebtPayment ? extra.extraDebtPayments : undefined,
+    extraDebtPayments:
+      Object.keys(extra.extraDebtPayments).length > 0
+        ? extra.extraDebtPayments
+        : undefined,
     unallocated: roundPLN(extra.remaining),
-    wasAdjustedByUser: false,
   };
 }
 
-function createPrimaryNeedTier(
-  outstanding: MonthlyNeeds,
-  settings: Settings
-): TierCategory[] {
-  const foodFirst = settings.tier1PriorityOrder === 'food_first';
-
+function createPrimaryNeedTier(outstanding: MonthlyNeeds): TierCategory[] {
   return [
-    createNeedCategory('housing', outstanding, settings, foodFirst ? 2 : 1),
-    createNeedCategory('food', outstanding, settings, foodFirst ? 1 : 2),
+    createNeedCategory('food', outstanding, 1),
+    createNeedCategory('housing', outstanding, 2),
   ];
 }
 
-function createSecondaryNeedTier(
-  outstanding: MonthlyNeeds,
-  settings: Settings
-): TierCategory[] {
+function createSecondaryNeedTier(outstanding: MonthlyNeeds): TierCategory[] {
   return [
-    createNeedCategory('transport', outstanding, settings, 1),
-    createNeedCategory('other', outstanding, settings, 2),
+    createNeedCategory('transport', outstanding, 1),
+    createNeedCategory('other', outstanding, 2),
   ];
 }
 
 function createNeedCategory(
   category: NeedCategory,
   outstanding: MonthlyNeeds,
-  settings: Settings,
   priority: number
 ): TierCategory {
   const amount = outstanding[category];
@@ -127,7 +116,7 @@ function createNeedCategory(
   return {
     key: category,
     outstanding: amount,
-    floor: getFloorForCategory(category, amount, settings.floorOverrides),
+    floor: getFloorForCategory(category, amount),
     priority,
   };
 }
@@ -193,13 +182,6 @@ function allocateExtraDebtPayments(
   }
 
   return { extraDebtPayments, remaining };
-}
-
-function firstDebtPayment(payments: DebtPaymentMap): DebtPayment | null {
-  const [first] = Object.entries(payments);
-  if (!first) return null;
-
-  return { debtId: first[0], amount: first[1] };
 }
 
 function sumPayments(payments: DebtPaymentMap): number {
@@ -284,7 +266,6 @@ export function computeDeferredWithReasons(
   allocation: Allocation,
   state: AppState,
   reasons: DeferredPaymentReasons,
-  note?: string,
   date?: Date
 ): DeferredPayment[] {
   const base = computeNewDeferredPayments(allocation, state, date);
@@ -293,21 +274,14 @@ export function computeDeferredWithReasons(
     const key =
       dp.kind === 'need' ? `need:${dp.needCategory}` : `debt:${dp.debtId}`;
     const reason = reasons[key] ?? 'postponing';
-    const next: DeferredPayment = { ...dp, reason };
-    if (reason === 'other' && note !== undefined) {
-      next.note = note;
-    }
-    return next;
+    return { ...dp, reason };
   });
 }
 
 function emptyAllocation(): Allocation {
   return {
-    deferredPayments: 0,
     needs: { housing: 0, food: 0, transport: 0, other: 0 },
     minimumPayments: {},
-    extraDebtPayment: null,
     unallocated: 0,
-    wasAdjustedByUser: false,
   };
 }
